@@ -83,6 +83,7 @@
 #include "qgssimplifymethod.h"
 
 #include "diagram/qgsdiagram.h"
+#include "qgslabellayer.h"
 
 #ifdef TESTPROVIDERLIB
 #include <dlfcn.h>
@@ -1585,6 +1586,9 @@ bool QgsVectorLayer::readSymbology( const QDomNode& node, QString& errorMessage 
     //also restore custom properties (for labeling-ng)
     readCustomProperties( node, "labeling" );
 
+    // read label layer
+    mLabelLayer = node.toElement().attribute( "labelLayer" );
+
     // Test if labeling is on or off
     QDomNode labelnode = node.namedItem( "label" );
     QDomElement element = labelnode.toElement();
@@ -1819,6 +1823,9 @@ bool QgsVectorLayer::writeSymbology( QDomNode& node, QDomDocument& doc, QString&
 
     //save customproperties (for labeling ng)
     writeCustomProperties( node, doc );
+
+    //save the label layer
+    mapLayerNode.setAttribute( "labelLayer", mLabelLayer );
 
     // add the blend mode field
     QDomElement blendModeElem  = doc.createElement( "blendMode" );
@@ -3885,4 +3892,16 @@ bool QgsAttributeEditorRelation::init( QgsRelationManager* relationManager )
 {
   mRelation = relationManager->relation( mRelationId );
   return mRelation.isValid();
+}
+
+QString QgsVectorLayer::labelLayer() const
+{
+  return mLabelLayer.isEmpty() ? QgsLabelLayer::MainLayerId : mLabelLayer;
+}
+
+void QgsVectorLayer::setLabelLayer( QString labelLayerName )
+{
+  QString old = labelLayer();
+  mLabelLayer = labelLayerName;
+  emit labelLayerChanged( old );
 }

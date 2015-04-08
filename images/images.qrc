@@ -118,6 +118,7 @@
         <file>themes/default/mActionAddPostgisLayer.svg</file>
         <file>themes/default/mActionAddPart.png</file>
         <file>themes/default/mActionAddRasterLayer.svg</file>
+        <file>themes/default/mActionAddLabelLayer.svg</file>
         <file>themes/default/mActionAddRing.png</file>
         <file>themes/default/mActionAddSpatiaLiteLayer.svg</file>
         <file>themes/default/mActionAddVertex.png</file>
@@ -369,6 +370,7 @@
         <file>themes/default/mIconWms.svg</file>
         <file>themes/default/mIconZip.png</file>
         <file>themes/default/mIconZoom.svg</file>
+        <file>themes/default/mIconLabelLayer.svg</file>
         <file>themes/default/mMapserverExport.png</file>
         <file>themes/default/north_arrow.png</file>
         <file>themes/default/pie-chart.png</file>

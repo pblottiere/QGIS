@@ -25,7 +25,6 @@
 
 QgsMapLayerRegistry::QgsMapLayerRegistry( QObject *parent ) : QObject( parent )
 {
-  // constructor does nothing
 }
 
 QgsMapLayerRegistry::~QgsMapLayerRegistry()
@@ -135,7 +134,7 @@ void QgsMapLayerRegistry::removeAllMapLayers()
   // now let all canvas observers know to clear themselves,
   // and then consequently any of their map legends
   removeMapLayers( mMapLayers.keys() );
-  mMapLayers.clear();
+  //mMapLayers.clear();
 } // QgsMapLayerRegistry::removeAllMapLayers()
 
 void QgsMapLayerRegistry::clearAllLayerCaches()

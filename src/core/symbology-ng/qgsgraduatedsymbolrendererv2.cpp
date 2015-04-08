@@ -366,7 +366,14 @@ QgsSymbolV2* QgsGraduatedSymbolRendererV2::originalSymbolForFeature( QgsFeature&
   return symbolForValue( value.toDouble() );
 }
 
-void QgsGraduatedSymbolRendererV2::startRender( QgsRenderContext& context, const QgsFields& fields )
+QStringList QgsGraduatedSymbolRendererV2::filterReferencedColumns() const
+{
+  QStringList l;
+  l << mAttrName;
+  return l;
+}
+
+bool QgsGraduatedSymbolRendererV2::prepareFilter( const QgsRenderContext& context, const QgsFields& fields )
 {
   mCounting = context.rendererScale() == 0.0;
 
@@ -376,8 +383,14 @@ void QgsGraduatedSymbolRendererV2::startRender( QgsRenderContext& context, const
   if ( mAttrNum == -1 )
   {
     mExpression.reset( new QgsExpression( mAttrName ) );
-    mExpression->prepare( fields );
+    return mExpression->prepare( fields );
   }
+  return true;
+}
+
+void QgsGraduatedSymbolRendererV2::startRender( QgsRenderContext& context, const QgsFields& fields )
+{
+  prepareFilter( context, fields );
 
   QgsRangeList::iterator it = mRanges.begin();
   for ( ; it != mRanges.end(); ++it )

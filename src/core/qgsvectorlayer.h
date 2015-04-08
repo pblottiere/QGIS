@@ -1482,6 +1482,13 @@ class CORE_EXPORT QgsVectorLayer : public QgsMapLayer
      */
     bool simplifyDrawingCanbeApplied( const QgsRenderContext& renderContext, QgsVectorSimplifyMethod::SimplifyHint simplifyHint ) const;
 
+    /** Returns the label layer's id this vector layer is attached to.
+     */
+    QString labelLayer() const;
+
+    /** Sets the label layer's id this vector layer is attached to. Set to an empty string to detach it */
+    void setLabelLayer( QString labelLayerName );
+
   public slots:
     /**
      * Select feature by its ID
@@ -1661,6 +1668,12 @@ class CORE_EXPORT QgsVectorLayer : public QgsMapLayer
      */
     void writeCustomSymbology( QDomElement& element, QDomDocument& doc, QString& errorMessage ) const;
 
+    /**
+     * Signal emitted when the label layer is changed, through setLabelLayer()
+     * @param oldLabelLayer the previous label layer name, before the change occured
+     */
+    void labelLayerChanged( const QString& oldLabelLayer ) const;
+
   private slots:
     void onRelationsLoaded();
     void onJoinedFieldsChanged();
@@ -1824,6 +1837,8 @@ class CORE_EXPORT QgsVectorLayer : public QgsMapLayer
 
     // Feature counts for each renderer symbol
     QMap<QgsSymbolV2*, long> mSymbolFeatureCountMap;
+
+    QString mLabelLayer;
 
     friend class QgsVectorLayerFeatureSource;
 };

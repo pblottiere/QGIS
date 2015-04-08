@@ -21,6 +21,7 @@
 #include <qgsvectorlayer.h>
 #include <qgsvectordataprovider.h>
 #include <qgsmaplayerregistry.h>
+#include <qgslabellayer.h>
 
 #include "qgsdatadefinedbutton.h"
 #include "qgslabelengineconfigdialog.h"
@@ -87,6 +88,8 @@ QgsLabelingGui::QgsLabelingGui( QgsVectorLayer* layer, QgsMapCanvas* mapCanvas, 
   // main layer label-enabling connections
   connect( chkEnableLabeling, SIGNAL( toggled( bool ) ), mFieldExpressionWidget, SLOT( setEnabled( bool ) ) );
   connect( chkEnableLabeling, SIGNAL( toggled( bool ) ), mLabelingFrame, SLOT( setEnabled( bool ) ) );
+
+  connect( mUseLabelLayerChkBox, SIGNAL( toggled( bool ) ), mLabelLayerCmbBox, SLOT( setEnabled( bool ) ) );
 
   // connections for groupboxes with separate activation checkboxes (that need to honor data defined setting)
   connect( mBufferDrawChkBx, SIGNAL( toggled( bool ) ), this, SLOT( updateUi() ) );
@@ -161,6 +164,15 @@ QgsLabelingGui::QgsLabelingGui( QgsVectorLayer* layer, QgsMapCanvas* mapCanvas, 
   mFieldExpressionWidget->setGeomCalculator( myDa );
 
   populateFontCapitalsComboBox();
+
+  // populate label layers combo
+  foreach( QgsMapLayer* ml, QgsMapLayerRegistry::instance()->mapLayers() )
+  {
+    if ( ml->type() == QgsMapLayer::LabelLayer )
+    {
+      mLabelLayerCmbBox->addItem( ml->name(), ml->id() );
+    }
+  }
 
   // color buttons
   mPreviewBackgroundBtn->setColorDialogTitle( tr( "Select fill color" ) );
@@ -509,6 +521,26 @@ void QgsLabelingGui::init()
 
   enableDataDefinedAlignment( mCoordXDDBtn->isActive() && mCoordYDDBtn->isActive() );
 
+  // set label layer
+  if ( mLayer->labelLayer() != QgsLabelLayer::MainLayerId )
+  {
+    mUseLabelLayerChkBox->setChecked( true );
+
+    QgsMapLayer* ml = QgsMapLayerRegistry::instance()->mapLayer( mLayer->labelLayer() );
+    if (ml)
+    {
+      int idx = mLabelLayerCmbBox->findData( ml->id() );
+      if ( idx != -1 )
+      {
+        mLabelLayerCmbBox->setCurrentIndex(idx);
+      }
+    }
+  }
+  else
+  {
+    mUseLabelLayerChkBox->setChecked( false );
+  }
+
   updateUi(); // should come after data defined button setup
 }
 
@@ -848,6 +880,15 @@ QgsPalLayerSettings QgsLabelingGui::layerSettings()
   setDataDefinedProperty( mFontMaxPixelDDBtn, QgsPalLayerSettings::FontMaxPixel, lyr );
   setDataDefinedProperty( mShowLabelDDBtn, QgsPalLayerSettings::Show, lyr );
   setDataDefinedProperty( mAlwaysShowDDBtn, QgsPalLayerSettings::AlwaysShow, lyr );
+
+  if ( mUseLabelLayerChkBox->isChecked() )
+  {
+    mLayer->setLabelLayer( mLabelLayerCmbBox->itemData( mLabelLayerCmbBox->currentIndex() ).toString() );
+  }
+  else
+  {
+    mLayer->setLabelLayer("");
+  }
 
   return lyr;
 }

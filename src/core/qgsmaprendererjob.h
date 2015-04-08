@@ -29,6 +29,8 @@
 
 #include "qgsgeometrycache.h"
 
+#include "qgslabellayer.h"
+
 class QgsLabelingResults;
 class QgsMapLayerRenderer;
 class QgsMapRendererCache;
@@ -160,7 +162,6 @@ class CORE_EXPORT QgsMapRendererJob : public QObject
 
     static void drawLabeling( const QgsMapSettings& settings, QgsRenderContext& renderContext, QgsPalLabeling* labelingEngine, QPainter* painter );
     static void drawOldLabeling( const QgsMapSettings& settings, QgsRenderContext& renderContext );
-    static void drawNewLabeling( const QgsMapSettings& settings, QgsRenderContext& renderContext, QgsPalLabeling* labelingEngine );
 
     //! called when rendering has finished to update all layers' geometry caches
     void updateLayerGeometryCaches();

@@ -263,8 +263,6 @@ void QgsMapRendererJob::drawLabeling( const QgsMapSettings& settings, QgsRenderC
   // old labeling - to be removed at some point...
   drawOldLabeling( settings, renderContext );
 
-  drawNewLabeling( settings, renderContext, labelingEngine );
-
   QgsDebugMsg( QString( "Draw labeling took (seconds): %1" ).arg( t.elapsed() / 1000. ) );
 }
 
@@ -311,19 +309,6 @@ void QgsMapRendererJob::drawOldLabeling( const QgsMapSettings& settings, QgsRend
 }
 
 
-void QgsMapRendererJob::drawNewLabeling( const QgsMapSettings& settings, QgsRenderContext& renderContext, QgsPalLabeling* labelingEngine )
-{
-  if ( labelingEngine && !renderContext.renderingStopped() )
-  {
-    // set correct extent
-    renderContext.setExtent( settings.visibleExtent() );
-    renderContext.setCoordinateTransform( NULL );
-
-    labelingEngine->drawLabeling( renderContext );
-    labelingEngine->exit();
-  }
-}
-
 void QgsMapRendererJob::updateLayerGeometryCaches()
 {
   foreach ( QString id, mGeometryCaches.keys() )
@@ -338,15 +323,17 @@ void QgsMapRendererJob::updateLayerGeometryCaches()
 
 bool QgsMapRendererJob::needTemporaryImage( QgsMapLayer* ml )
 {
-  if ( mSettings.testFlag( QgsMapSettings::UseAdvancedEffects ) && ml->type() == QgsMapLayer::VectorLayer )
+  if ( mSettings.testFlag( QgsMapSettings::UseAdvancedEffects ) )
   {
+    if ( ml->blendMode() != QPainter::CompositionMode_SourceOver )
+      return true;
+
     QgsVectorLayer* vl = qobject_cast<QgsVectorLayer *>( ml );
-    if ((( vl->blendMode() != QPainter::CompositionMode_SourceOver )
-         || ( vl->featureBlendMode() != QPainter::CompositionMode_SourceOver )
-         || ( vl->layerTransparency() != 0 ) ) )
+    if ( vl && ( vl->featureBlendMode() != QPainter::CompositionMode_SourceOver || vl->layerTransparency() != 0 ) )
       return true;
   }
 
   return false;
 }
+
 

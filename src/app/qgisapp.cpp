@@ -207,6 +207,8 @@
 #include "qgsmessagelogviewer.h"
 #include "qgsdataitem.h"
 #include "qgsmaplayeractionregistry.h"
+#include "qgslabellayer.h"
+#include "qgslabellayerproperties.h"
 
 #include "qgssublayersdialog.h"
 #include "ogr/qgsopenvectorlayerdialog.h"
@@ -1207,6 +1209,7 @@ void QgisApp::createActions()
   connect( mActionAddLayerDefinition, SIGNAL( triggered() ), this, SLOT( addLayerDefinition() ) );
   connect( mActionAddOgrLayer, SIGNAL( triggered() ), this, SLOT( addVectorLayer() ) );
   connect( mActionAddRasterLayer, SIGNAL( triggered() ), this, SLOT( addRasterLayer() ) );
+  connect( mActionAddLabelLayer, SIGNAL( triggered() ), this, SLOT( addLabelLayer() ) );
   connect( mActionAddPgLayer, SIGNAL( triggered() ), this, SLOT( addDatabaseLayer() ) );
   connect( mActionAddSpatiaLiteLayer, SIGNAL( triggered() ), this, SLOT( addSpatiaLiteLayer() ) );
   connect( mActionAddMssqlLayer, SIGNAL( triggered() ), this, SLOT( addMssqlLayer() ) );
@@ -1963,6 +1966,7 @@ void QgisApp::setTheme( QString theThemeName )
   mActionExit->setIcon( QgsApplication::getThemeIcon( "/mActionFileExit.png" ) );
   mActionAddOgrLayer->setIcon( QgsApplication::getThemeIcon( "/mActionAddOgrLayer.svg" ) );
   mActionAddRasterLayer->setIcon( QgsApplication::getThemeIcon( "/mActionAddRasterLayer.svg" ) );
+  mActionAddLabelLayer->setIcon( QgsApplication::getThemeIcon( "/mActionAddLabelLayer.svg" ) );
 #ifdef HAVE_POSTGRESQL
   mActionAddPgLayer->setIcon( QgsApplication::getThemeIcon( "/mActionAddPostgisLayer.svg" ) );
 #endif
@@ -7093,6 +7097,8 @@ void QgisApp::removingLayers( QStringList theLayers )
 
 void QgisApp::removeAllLayers()
 {
+  // finish the current rendering, if any
+  mMapCanvas->stopRendering();
   QgsMapLayerRegistry::instance()->removeAllMapLayers();
 }
 
@@ -7127,6 +7133,9 @@ void QgisApp::removeLayer()
   {
     return;
   }
+
+  // finish the current rendering, if any
+  mMapCanvas->stopRendering();
 
   foreach ( QgsLayerTreeNode* node, selectedNodes )
   {
@@ -9853,7 +9862,12 @@ QgsPluginLayer* QgisApp::addPluginLayer( const QString& uri, const QString& base
   return layer;
 }
 
+void QgisApp::addLabelLayer()
+{
+  QgsLabelLayer* layer = new QgsLabelLayer( tr("labels") );
 
+  QgsMapLayerRegistry::instance()->addMapLayer( layer );
+}
 
 #ifdef ANDROID
 void QgisApp::keyReleaseEvent( QKeyEvent *event )
@@ -10163,6 +10177,12 @@ void QgisApp::showLayerProperties( QgsMapLayer *ml )
       activateDeactivateLayerRelatedActions( ml );
     }
     delete vlp; // delete since dialog cannot be reused without updating code
+  }
+  else if ( ml->type() == QgsMapLayer::LabelLayer )
+  {
+    QgsLabelLayer* ll = qobject_cast<QgsLabelLayer*>(ml);
+    QScopedPointer<QgsLabelLayerProperties> llp( new QgsLabelLayerProperties( ll, this ) );
+    llp->exec();
   }
   else if ( ml->type() == QgsMapLayer::PluginLayer )
   {
