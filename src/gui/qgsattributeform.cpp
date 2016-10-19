@@ -746,7 +746,7 @@ void QgsAttributeForm::updateConstraints( QgsEditorWidgetWrapper *eww )
 
 bool QgsAttributeForm::currentFormFeature( QgsFeature &feature )
 {
-  bool rc = true;
+  bool rc = false;
   feature = QgsFeature( mFeature );
   QgsAttributes src = feature.attributes();
   QgsAttributes dst = feature.attributes();
@@ -761,12 +761,10 @@ bool QgsAttributeForm::currentFormFeature( QgsFeature &feature )
       // need to check dstVar.isNull() != srcVar.isNull()
       // otherwise if dstVar=NULL and scrVar=0, then dstVar = srcVar
       if (( dstVar != srcVar || dstVar.isNull() != srcVar.isNull() ) && srcVar.isValid() && !mLayer->editFormConfig().readOnly( eww->fieldIdx() ) )
+      {
         dst[eww->fieldIdx()] = srcVar;
-    }
-    else
-    {
-      rc = false;
-      break;
+        rc = true;
+      }
     }
   }
 
