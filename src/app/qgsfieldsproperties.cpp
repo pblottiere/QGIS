@@ -954,11 +954,11 @@ void QgsFieldsProperties::apply()
     QString name = mLayer->fields().at( idx ).name();
     FieldConfig cfg = configForRow( i );
 
-    editFormConfig.setReadOnly( i, !cfg.mEditable );
-    editFormConfig.setLabelOnTop( i, cfg.mLabelOnTop );
-    editFormConfig.setNotNull( i, cfg.mNotNull );
-    editFormConfig.setContraintDescription( i, cfg.mConstraintDescription );
-    editFormConfig.setConstraintExpression( i, cfg.mConstraint );
+    editFormConfig.setReadOnly( idx, !cfg.mEditable );
+    editFormConfig.setLabelOnTop( idx, cfg.mLabelOnTop );
+    editFormConfig.setNotNull( idx, cfg.mNotNull );
+    editFormConfig.setContraintDescription( idx, cfg.mConstraintDescription );
+    editFormConfig.setConstraintExpression( idx, cfg.mConstraint );
 
     editFormConfig.setWidgetType( name, cfg.mEditorWidgetType );
     editFormConfig.setWidgetConfig( name, cfg.mEditorWidgetConfig );
