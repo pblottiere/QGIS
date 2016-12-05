@@ -703,15 +703,15 @@ bool QgsVectorLayer::countSymbolFeatures( bool showProgress )
 
   long nFeatures = featureCount();
 
-  QgsProgressDialogProxy progressDialogProxy( tr( "Updating feature count for layer %1" ).arg( name() ), tr( "Abort" ), 0, nFeatures );
-  progressDialogProxy.setWindowTitle( tr( "QGIS" ) );
-  progressDialogProxy.setWindowModality( Qt::WindowModal );
+  QgsProgressDialogProxy progressDialog( tr( "Updating feature count for layer %1" ).arg( name() ), tr( "Abort" ), 0, nFeatures );
+  progressDialog.setWindowTitle( tr( "QGIS" ) );
+  progressDialog.setWindowModality( Qt::WindowModal );
 
   if ( showProgress )
   {
     // Properly initialize to 0 as recommended in doc so that the evaluation
     // of the total time properly works
-    progressDialogProxy.setValue( 0 );
+    progressDialog.setValue( 0 );
   }
   int featuresCounted = 0;
 
@@ -721,9 +721,9 @@ bool QgsVectorLayer::countSymbolFeatures( bool showProgress )
   request.setSubsetOfAttributes( mRenderer->usedAttributes(), mFields );
   QgsFeatureIterator fit = getFeatures( request );
 
-  if ( ! progressDialogProxy.console() )
+  if ( ! progressDialog.console() )
   {
-    QgsVectorLayerInterruptionCheckerDuringCountSymbolFeatures interruptionCheck( progressDialogProxy.progressDialog() );
+    QgsVectorLayerInterruptionCheckerDuringCountSymbolFeatures interruptionCheck( progressDialog.progressDialog() );
 
     if ( showProgress )
     {
@@ -761,9 +761,9 @@ bool QgsVectorLayer::countSymbolFeatures( bool showProgress )
         time.restart();
         if ( featuresCounted > nFeatures ) //sometimes the feature count is not correct
         {
-          progressDialogProxy.setMaximum( 0 );
+          progressDialog.setMaximum( 0 );
         }
-        progressDialogProxy.setValue( featuresCounted );
+        progressDialog.setValue( featuresCounted );
       }
       // So that we get a chance of hitting the Abort button
 #ifdef Q_OS_LINUX
@@ -777,7 +777,7 @@ bool QgsVectorLayer::countSymbolFeatures( bool showProgress )
       {
         QCoreApplication::processEvents();
       }
-      if ( progressDialogProxy.wasCanceled() )
+      if ( progressDialog.wasCanceled() )
       {
         mSymbolFeatureCountMap.clear();
         mRenderer->stopRender( renderContext );
@@ -786,7 +786,7 @@ bool QgsVectorLayer::countSymbolFeatures( bool showProgress )
     }
   }
   mRenderer->stopRender( renderContext );
-  progressDialogProxy.setValue( nFeatures );
+  progressDialog.setValue( nFeatures );
   mSymbolFeatureCounted = true;
   return true;
 }
