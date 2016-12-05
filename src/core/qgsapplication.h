@@ -243,6 +243,9 @@ class CORE_EXPORT QgsApplication : public QApplication
     //! Returns the path with utility executables (help viewer, crssync, ...)
     static QString libexecPath();
 
+    //! Returns the QgisApp main window
+    static QWidget* mainWindow();
+
     //! Alters prefix path - used by 3rd party apps
     static void setPrefixPath( const QString &thePrefixPath, bool useDefaultPaths = false );
 

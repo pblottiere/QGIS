@@ -886,6 +886,20 @@ QString QgsApplication::libexecPath()
   return ABISYM( mLibexecPath );
 }
 
+QWidget* QgsApplication::mainWindow()
+{
+  QWidget* mainWindow = nullptr;
+  Q_FOREACH ( QWidget* widget, qApp->topLevelWidgets() )
+  {
+    if ( widget->objectName() == QLatin1String( "QgisApp" ) )
+    {
+      mainWindow = widget;
+      break;
+    }
+  }
+  return mainWindow;
+}
+
 QgsApplication::endian_t QgsApplication::endian()
 {
   return ( htonl( 1 ) == 1 ) ? XDR : NDR;

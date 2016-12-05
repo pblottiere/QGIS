@@ -83,6 +83,7 @@
 #include "qgssimplifymethod.h"
 #include "qgsexpressioncontext.h"
 #include "qgsfeedback.h"
+#include "qgsprogressdialog.h"
 
 #include "diagram/qgsdiagram.h"
 
@@ -702,24 +703,15 @@ bool QgsVectorLayer::countSymbolFeatures( bool showProgress )
 
   long nFeatures = featureCount();
 
-  QWidget* mainWindow = nullptr;
-  Q_FOREACH ( QWidget* widget, qApp->topLevelWidgets() )
-  {
-    if ( widget->objectName() == QLatin1String( "QgisApp" ) )
-    {
-      mainWindow = widget;
-      break;
-    }
-  }
+  QgsProgressDialogProxy progressDialogProxy( tr( "Updating feature count for layer %1" ).arg( name() ), tr( "Abort" ), 0, nFeatures );
+  progressDialogProxy.setWindowTitle( tr( "QGIS" ) );
+  progressDialogProxy.setWindowModality( Qt::WindowModal );
 
-  QProgressDialog progressDialog( tr( "Updating feature count for layer %1" ).arg( name() ), tr( "Abort" ), 0, nFeatures, mainWindow );
-  progressDialog.setWindowTitle( tr( "QGIS" ) );
-  progressDialog.setWindowModality( Qt::WindowModal );
   if ( showProgress )
   {
     // Properly initialize to 0 as recommended in doc so that the evaluation
     // of the total time properly works
-    progressDialog.setValue( 0 );
+    progressDialogProxy.setValue( 0 );
   }
   int featuresCounted = 0;
 
@@ -728,10 +720,15 @@ bool QgsVectorLayer::countSymbolFeatures( bool showProgress )
     request.setFlags( QgsFeatureRequest::NoGeometry );
   request.setSubsetOfAttributes( mRenderer->usedAttributes(), mFields );
   QgsFeatureIterator fit = getFeatures( request );
-  QgsVectorLayerInterruptionCheckerDuringCountSymbolFeatures interruptionCheck( &progressDialog );
-  if ( showProgress )
+
+  if ( ! progressDialogProxy.console() )
   {
-    fit.setInterruptionChecker( &interruptionCheck );
+    QgsVectorLayerInterruptionCheckerDuringCountSymbolFeatures interruptionCheck( progressDialogProxy.progressDialog() );
+
+    if ( showProgress )
+    {
+      fit.setInterruptionChecker( &interruptionCheck );
+    }
   }
 
   // Renderer (rule based) may depend on context scale, with scale is ignored if 0
@@ -764,9 +761,9 @@ bool QgsVectorLayer::countSymbolFeatures( bool showProgress )
         time.restart();
         if ( featuresCounted > nFeatures ) //sometimes the feature count is not correct
         {
-          progressDialog.setMaximum( 0 );
+          progressDialogProxy.setMaximum( 0 );
         }
-        progressDialog.setValue( featuresCounted );
+        progressDialogProxy.setValue( featuresCounted );
       }
       // So that we get a chance of hitting the Abort button
 #ifdef Q_OS_LINUX
@@ -780,7 +777,7 @@ bool QgsVectorLayer::countSymbolFeatures( bool showProgress )
       {
         QCoreApplication::processEvents();
       }
-      if ( progressDialog.wasCanceled() )
+      if ( progressDialogProxy.wasCanceled() )
       {
         mSymbolFeatureCountMap.clear();
         mRenderer->stopRender( renderContext );
@@ -789,7 +786,7 @@ bool QgsVectorLayer::countSymbolFeatures( bool showProgress )
     }
   }
   mRenderer->stopRender( renderContext );
-  progressDialog.setValue( nFeatures );
+  progressDialogProxy.setValue( nFeatures );
   mSymbolFeatureCounted = true;
   return true;
 }

@@ -184,6 +184,7 @@ SET(QGIS_CORE_SRCS
   qgsprojectbadlayerhandler.cpp
   qgsprojectfiletransform.cpp
   qgssnappingconfig.cpp
+  qgsprogressdialog.cpp
   qgsprojectproperty.cpp
   qgsprojectversion.cpp
   qgsprovidermetadata.cpp
@@ -491,6 +492,7 @@ SET(QGIS_CORE_MOC_HDRS
   qgspluginlayer.h
   qgspoint.h
   qgspointlocator.h
+  qgsprogressdialog.h
   qgsproject.h
   qgsrelationmanager.h
   qgsrunprocess.h
