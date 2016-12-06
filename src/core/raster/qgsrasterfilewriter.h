@@ -23,12 +23,12 @@
 
 #include "qgsraster.h"
 
-class QProgressDialog;
 class QgsRasterIterator;
 class QgsRasterPipe;
 class QgsRectangle;
 class QgsRasterDataProvider;
 class QgsRasterInterface;
+class QgsProgressDialogProxy;
 
 /** \ingroup core
  * The raster file writer which allows you to save a raster to a new file.
@@ -61,8 +61,7 @@ class CORE_EXPORT QgsRasterFileWriter
         @param outputExtent extent to output
         @param crs crs to reproject to
         @param p dialog to show progress in */
-    WriterError writeRaster( const QgsRasterPipe* pipe, int nCols, int nRows, const QgsRectangle &outputExtent,
-                             const QgsCoordinateReferenceSystem& crs, QProgressDialog* p = nullptr );
+    WriterError writeRaster( const QgsRasterPipe* pipe, int nCols, int nRows, const QgsRectangle &outputExtent, const QgsCoordinateReferenceSystem& crs, QgsProgressDialogProxy* p = nullptr );
 
     void setOutputFormat( const QString& format ) { mOutputFormat = format; }
     QString outputFormat() const { return mOutputFormat; }
@@ -99,8 +98,10 @@ class CORE_EXPORT QgsRasterFileWriter
 
   private:
     QgsRasterFileWriter(); //forbidden
+
+    // Helper method used by previous one
     WriterError writeDataRaster( const QgsRasterPipe* pipe, QgsRasterIterator* iter, int nCols, int nRows, const QgsRectangle& outputExtent,
-                                 const QgsCoordinateReferenceSystem& crs, QProgressDialog* progressDialog = nullptr );
+                                 const QgsCoordinateReferenceSystem& crs, QgsProgressDialogProxy* progressDialog = nullptr );
 
     // Helper method used by previous one
     WriterError writeDataRaster( const QgsRasterPipe* pipe,
@@ -112,10 +113,9 @@ class CORE_EXPORT QgsRasterFileWriter
                                  const QList<bool>& destHasNoDataValueList,
                                  const QList<double>& destNoDataValueList,
                                  QgsRasterDataProvider* destProvider,
-                                 QProgressDialog* progressDialog );
+                                 QgsProgressDialogProxy* progressDialog );
 
-    WriterError writeImageRaster( QgsRasterIterator* iter, int nCols, int nRows, const QgsRectangle& outputExtent,
-                                  const QgsCoordinateReferenceSystem& crs, QProgressDialog* progressDialog = nullptr );
+    WriterError writeImageRaster( QgsRasterIterator* iter, int nCols, int nRows, const QgsRectangle& outputExtent, const QgsCoordinateReferenceSystem& crs, QgsProgressDialogProxy* progressDialog = nullptr );
 
     /** \brief Initialize vrt member variables
      *  @param xSize width of vrt
@@ -181,7 +181,7 @@ class CORE_EXPORT QgsRasterFileWriter
     QDomDocument mVRTDocument;
     QList<QDomElement> mVRTBands;
 
-    QProgressDialog* mProgressDialog;
+    QgsProgressDialogProxy* mProgressDialog;
 
     const QgsRasterPipe* mPipe;
     const QgsRasterInterface* mInput;

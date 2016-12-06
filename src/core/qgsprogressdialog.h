@@ -17,22 +17,23 @@
 #ifndef QGSPROGRESSDIALOG_H
 #define QGSPROGRESSDIALOG_H
 
-#include <QObject>
+#include <QProgressDialog>
 
 class CORE_EXPORT QgsProgressDialog
 {
   public:
-    QgsProgressDialog( const QString &labelText, int minimum, int maximum );
+    QgsProgressDialog( int minimum, int maximum );
     ~QgsProgressDialog();
+
+    int maximum() const;
 
     void setMinimum( int minimum );
     void setMaximum( int maximum );
     void setValue( int progress );
 
-  private:
-    void printProgress();
+  protected:
+    void updateProgressBar();
 
-    QString mLabelText;
     int mMinimum;
     int mMaximum;
     int mValue;
@@ -41,7 +42,7 @@ class CORE_EXPORT QgsProgressDialog
 class CORE_EXPORT QgsProgressDialogProxy
 {
   public:
-    QgsProgressDialogProxy( const QString &labelText, const QString &cancelButtonText,
+    QgsProgressDialogProxy( const QString labelText, const QString cancelButtonText,
                             int minimum, int maximum );
     QgsProgressDialogProxy();
     ~QgsProgressDialogProxy();
@@ -50,16 +51,20 @@ class CORE_EXPORT QgsProgressDialogProxy
     QProgressDialog* progressDialog() const;
 
     // proxy methods
+    int maximum() const;
+
+    void setLabelText( QString text );
     void setMinimum( int minimum );
     void setMaximum( int maximum );
     void setValue( int progress );
     void setWindowTitle( QString windowTitle );
     void setWindowModality( Qt::WindowModality windowModality );
+    void show();
     bool wasCanceled() const;
 
-  private:
-    QScopedPointer<QgsProgressDialog> mConsoleProgressDialog;
-    QScopedPointer<QProgressDialog> mGuiProgressDialog;
+  protected:
+    QgsProgressDialog* mConsoleProgressDialog;
+    QProgressDialog* mGuiProgressDialog;
 };
 
 #endif

@@ -74,6 +74,7 @@
 #include <qgsapplication.h>
 #include <qgscomposition.h>
 #include <qgslayerstylingwidget.h>
+#include <qgsprogressdialog.h>
 
 #include <QNetworkReply>
 #include <QNetworkProxy>
@@ -6117,7 +6118,7 @@ void QgisApp::saveAsRasterFile()
     fileWriter.setMaxTileHeight( d.maximumTileSizeY() );
   }
 
-  QProgressDialog pd( QString(), tr( "Abort..." ), 0, 0 );
+  QgsProgressDialogProxy pd( QString(), tr( "Abort..." ), 0, 0 );
   // Show the dialo immediately because cloning pipe can take some time (WCS)
   pd.setLabelText( tr( "Reading raster" ) );
   pd.setWindowTitle( tr( "Saving raster" ) );

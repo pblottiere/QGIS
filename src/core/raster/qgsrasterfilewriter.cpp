@@ -23,9 +23,9 @@
 #include "qgsrasterprojector.h"
 #include "qgsrasterdataprovider.h"
 #include "qgsrasternuller.h"
+#include "qgsprogressdialog.h"
 
 #include <QCoreApplication>
-#include <QProgressDialog>
 #include <QTextStream>
 #include <QMessageBox>
 
@@ -62,8 +62,7 @@ QgsRasterFileWriter::QgsRasterFileWriter()
 
 }
 
-QgsRasterFileWriter::WriterError QgsRasterFileWriter::writeRaster( const QgsRasterPipe* pipe, int nCols, int nRows, const QgsRectangle& outputExtent,
-    const QgsCoordinateReferenceSystem& crs, QProgressDialog* progressDialog )
+QgsRasterFileWriter::WriterError QgsRasterFileWriter::writeRaster( const QgsRasterPipe* pipe, int nCols, int nRows, const QgsRectangle& outputExtent, const QgsCoordinateReferenceSystem& crs, QgsProgressDialogProxy* progressDialog )
 {
   QgsDebugMsgLevel( "Entered", 4 );
 
@@ -136,7 +135,7 @@ QgsRasterFileWriter::WriterError QgsRasterFileWriter::writeRaster( const QgsRast
 }
 
 QgsRasterFileWriter::WriterError QgsRasterFileWriter::writeDataRaster( const QgsRasterPipe* pipe, QgsRasterIterator* iter, int nCols, int nRows, const QgsRectangle& outputExtent,
-    const QgsCoordinateReferenceSystem& crs, QProgressDialog* progressDialog )
+    const QgsCoordinateReferenceSystem& crs, QgsProgressDialogProxy* progressDialog )
 {
   QgsDebugMsgLevel( "Entered", 4 );
   if ( !iter )
@@ -326,7 +325,7 @@ QgsRasterFileWriter::WriterError QgsRasterFileWriter::writeDataRaster(
   const QList<bool>& destHasNoDataValueList,
   const QList<double>& destNoDataValueList,
   QgsRasterDataProvider* destProvider,
-  QProgressDialog* progressDialog )
+  QgsProgressDialogProxy* progressDialog )
 {
   Q_UNUSED( pipe );
   Q_UNUSED( destHasNoDataValueList );
@@ -470,8 +469,7 @@ QgsRasterFileWriter::WriterError QgsRasterFileWriter::writeDataRaster(
   return NoError;
 }
 
-QgsRasterFileWriter::WriterError QgsRasterFileWriter::writeImageRaster( QgsRasterIterator* iter, int nCols, int nRows, const QgsRectangle& outputExtent,
-    const QgsCoordinateReferenceSystem& crs, QProgressDialog* progressDialog )
+QgsRasterFileWriter::WriterError QgsRasterFileWriter::writeImageRaster( QgsRasterIterator* iter, int nCols, int nRows, const QgsRectangle& outputExtent, const QgsCoordinateReferenceSystem& crs, QgsProgressDialogProxy* progressDialog )
 {
   QgsDebugMsgLevel( "Entered", 4 );
   if ( !iter )

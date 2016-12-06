@@ -21,10 +21,8 @@
 #include "qgsapplication.h"
 #include "qgsprogressdialog.h"
 
-QgsProgressDialog::QgsProgressDialog( const QString &labelText, int minimum,
-                                      int maximum )
-    : mLabelText( labelText )
-    , mMinimum( minimum )
+QgsProgressDialog::QgsProgressDialog( int minimum, int maximum )
+    : mMinimum( minimum )
     , mMaximum( maximum )
     , mValue( 0 )
 {
@@ -32,6 +30,11 @@ QgsProgressDialog::QgsProgressDialog( const QString &labelText, int minimum,
 
 QgsProgressDialog::~QgsProgressDialog()
 {
+}
+
+int QgsProgressDialog::maximum() const
+{
+  return mMaximum;
 }
 
 void QgsProgressDialog::setMaximum( int maximum )
@@ -48,10 +51,10 @@ void QgsProgressDialog::setMinimum( int minimum )
 void QgsProgressDialog::setValue( int progress )
 {
   mValue = progress;
-  printProgress();
+  updateProgressBar();
 }
 
-void QgsProgressDialog::printProgress()
+void QgsProgressDialog::updateProgressBar()
 {
   QString header = "[";
   QString footer = "] ";
@@ -66,26 +69,34 @@ void QgsProgressDialog::printProgress()
   std::cout << header.toStdString();
 
   for ( int i = 0; i < progressSize; i++ )
+  {
     std::cout << progress.toStdString();
+  }
 
   std::cout << cursor.toStdString();
 
   for ( int i = 0; i < ( barSize - progressSize ); i++ )
+  {
     std::cout << " ";
+  }
 
   std::cout << footer.toStdString();
   std::cout << " " << percentage << " %";
 
   if ( percentage >= 100 )
+  {
     std::cout << std::endl;
+  }
   else
+  {
     std::cout << "\r";
+  }
 
   std::cout << std::flush;
 }
 
-QgsProgressDialogProxy::QgsProgressDialogProxy( const QString &labelText,
-    const QString &cancelButtonText, int minimum, int maximum )
+QgsProgressDialogProxy::QgsProgressDialogProxy( const QString labelText,
+    const QString cancelButtonText, int minimum, int maximum )
     : mConsoleProgressDialog( nullptr )
     , mGuiProgressDialog( nullptr )
 {
@@ -93,13 +104,12 @@ QgsProgressDialogProxy::QgsProgressDialogProxy( const QString &labelText,
   QWidget *mainWindow = QgsApplication::mainWindow();
   if ( mainWindow )
   {
-    mGuiProgressDialog.reset( new QProgressDialog( labelText, cancelButtonText,
-                              minimum, maximum, mainWindow ) );
+    mGuiProgressDialog = new QProgressDialog( labelText, cancelButtonText,
+        minimum, maximum, mainWindow );
   }
   else
   {
-    mConsoleProgressDialog.reset( new QgsProgressDialog( labelText, minimum,
-                                  maximum ) );
+    mConsoleProgressDialog = new QgsProgressDialog( minimum, maximum );
   }
 }
 
@@ -110,38 +120,71 @@ QgsProgressDialogProxy::QgsProgressDialogProxy()
 
 QgsProgressDialogProxy::~QgsProgressDialogProxy()
 {
+  if ( mConsoleProgressDialog )
+    delete mConsoleProgressDialog;
+
+  if ( mGuiProgressDialog )
+    delete mGuiProgressDialog;
 }
 
 bool QgsProgressDialogProxy::console() const
 {
   if ( mConsoleProgressDialog )
+  {
     return true;
+  }
   else
+  {
     return false;
+  }
+}
+
+int QgsProgressDialogProxy::maximum() const
+{
+  if ( mConsoleProgressDialog )
+  {
+    return mConsoleProgressDialog->maximum();
+  }
+  else
+  {
+    return mGuiProgressDialog->maximum();
+  }
 }
 
 void QgsProgressDialogProxy::setMinimum( int minimum )
 {
   if ( mConsoleProgressDialog )
+  {
     mConsoleProgressDialog->setMinimum( minimum );
+  }
   else
+  {
     mGuiProgressDialog->setMinimum( minimum );
+  }
 }
 
 void QgsProgressDialogProxy::setMaximum( int maximum )
 {
   if ( mConsoleProgressDialog )
+  {
     mConsoleProgressDialog->setMaximum( maximum );
+  }
   else
+  {
     mGuiProgressDialog->setMaximum( maximum );
+  }
 }
 
 void QgsProgressDialogProxy::setValue( int progress )
 {
   if ( mConsoleProgressDialog )
+  {
     mConsoleProgressDialog->setValue( progress );
+  }
   else
+  {
     mGuiProgressDialog->setValue( progress );
+  }
 }
 
 void QgsProgressDialogProxy::setWindowTitle( QString windowTitle )
@@ -151,7 +194,9 @@ void QgsProgressDialogProxy::setWindowTitle( QString windowTitle )
     // nothing todo
   }
   else
+  {
     mGuiProgressDialog->setWindowTitle( windowTitle );
+  }
 }
 
 void QgsProgressDialogProxy::setWindowModality( Qt::WindowModality windowModality )
@@ -161,18 +206,48 @@ void QgsProgressDialogProxy::setWindowModality( Qt::WindowModality windowModalit
     // nothing todo
   }
   else
+  {
     mGuiProgressDialog->setWindowModality( windowModality );
+  }
 }
 
 bool QgsProgressDialogProxy::wasCanceled() const
 {
   if ( mConsoleProgressDialog )
+  {
     return false;
+  }
   else
+  {
     return mGuiProgressDialog->wasCanceled();
+  }
 }
 
 QProgressDialog* QgsProgressDialogProxy::progressDialog() const
 {
-  return mGuiProgressDialog.data();
+  return mGuiProgressDialog;
+}
+
+void QgsProgressDialogProxy::setLabelText( QString labelText )
+{
+  if ( mConsoleProgressDialog )
+  {
+    // nothing todo
+  }
+  else
+  {
+    mGuiProgressDialog->setLabelText( labelText );
+  }
+}
+
+void QgsProgressDialogProxy::show()
+{
+  if ( mConsoleProgressDialog )
+  {
+    // nothing todo
+  }
+  else
+  {
+    mGuiProgressDialog->show();
+  }
 }

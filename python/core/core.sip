@@ -117,6 +117,7 @@
 %Include qgsprojectproperty.sip
 %Include qgssnappingconfig.sip
 %Include qgsprojectversion.sip
+%Include qgsprogressdialog.sip
 %Include qgsprovidermetadata.sip
 %Include qgsproviderregistry.sip
 %Include qgspythonrunner.sip
