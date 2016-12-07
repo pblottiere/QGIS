@@ -19,19 +19,22 @@
 
 #include <QProgressDialog>
 
-class CORE_EXPORT QgsProgressDialog
+class CORE_EXPORT QgsProgressDialog : public QObject
 {
+    Q_OBJECT
+
   public:
     QgsProgressDialog( int minimum, int maximum );
     ~QgsProgressDialog();
 
     int maximum() const;
+    int value() const;
 
+  public slots:
     void setMinimum( int minimum );
     void setMaximum( int maximum );
     void setRange( int minimum, int maximum );
     void setValue( int progress );
-    int value() const;
 
   protected:
     void updateProgressBar();
@@ -41,8 +44,10 @@ class CORE_EXPORT QgsProgressDialog
     int mValue;
 };
 
-class CORE_EXPORT QgsProgressDialogProxy
+class CORE_EXPORT QgsProgressDialogProxy : public QObject
 {
+    Q_OBJECT
+
   public:
     QgsProgressDialogProxy( const QString labelText, const QString cancelButtonText,
                             int minimum, int maximum );
@@ -55,16 +60,18 @@ class CORE_EXPORT QgsProgressDialogProxy
     // proxy methods
     int maximum() const;
 
-    void setLabelText( QString text );
-    void setMinimum( int minimum );
-    void setMaximum( int maximum );
-    void setRange( int minimum, int maximum );
-    void setValue( int progress );
     void setWindowTitle( QString windowTitle );
     void setWindowModality( Qt::WindowModality windowModality );
     void show();
     int value() const;
     bool wasCanceled() const;
+
+  public slots:
+    void setLabelText( QString text );
+    void setMinimum( int minimum );
+    void setMaximum( int maximum );
+    void setValue( int progress );
+    void setRange( int minimum, int maximum );
 
   protected:
     QgsProgressDialog* mConsoleProgressDialog;

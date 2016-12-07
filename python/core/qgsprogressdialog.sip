@@ -1,4 +1,4 @@
-class QgsProgressDialog
+class QgsProgressDialog : QObject
 {
 %TypeHeaderCode
 #include <qgsprogressdialog.h>
@@ -8,15 +8,16 @@ class QgsProgressDialog
     ~QgsProgressDialog();
 
     int maximum() const;
+    int value() const;
 
+  public slots:
     void setMinimum( int minimum );
     void setMaximum( int maximum );
     void setRange( int minimum, int maximum );
     void setValue( int progress );
-    int value() const;
 };
 
-class QgsProgressDialogProxy
+class QgsProgressDialogProxy : QObject
 {
 %TypeHeaderCode
 #include <qgsprogressdialog.h>
@@ -33,14 +34,16 @@ class QgsProgressDialogProxy
     // proxy methods
     int maximum() const;
 
+    void show();
+    void setWindowTitle( QString windowTitle );
+    void setWindowModality( Qt::WindowModality windowModality );
+    int value() const;
+    bool wasCanceled() const;
+
+  public slots:
     void setLabelText( QString text );
     void setMinimum( int minimum );
     void setMaximum( int maximum );
     void setValue( int progress );
     void setRange( int minimum, int maximum );
-    void setWindowTitle( QString windowTitle );
-    void setWindowModality( Qt::WindowModality windowModality );
-    void show();
-    int value() const;
-    bool wasCanceled() const;
 };

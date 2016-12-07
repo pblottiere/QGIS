@@ -21,12 +21,12 @@
 #include "qgsmessagelog.h"
 #include "qgsnetworkaccessmanager.h"
 #include "qgswkbptr.h"
+#include "qgsprogressdialog.h"
 
 #include <QBuffer>
 #include <QList>
 #include <QNetworkRequest>
 #include <QNetworkReply>
-#include <QProgressDialog>
 #include <QSet>
 #include <QSettings>
 #include <QUrl>
@@ -101,26 +101,15 @@ int QgsGml::getFeatures( const QString& uri, QgsWkbTypes::Type* wkbType, QgsRect
   connect( reply, SIGNAL( downloadProgress( qint64, qint64 ) ), this, SLOT( handleProgressEvent( qint64, qint64 ) ) );
 
   //find out if there is a QGIS main window. If yes, display a progress dialog
-  QProgressDialog* progressDialog = nullptr;
-  QWidget* mainWindow = nullptr;
+  QgsProgressDialogProxy* progressDialog = nullptr;
   QWidgetList topLevelWidgets = qApp->topLevelWidgets();
-  for ( QWidgetList::const_iterator it = topLevelWidgets.constBegin(); it != topLevelWidgets.constEnd(); ++it )
-  {
-    if (( *it )->objectName() == QLatin1String( "QgisApp" ) )
-    {
-      mainWindow = *it;
-      break;
-    }
-  }
-  if ( mainWindow )
-  {
-    progressDialog = new QProgressDialog( tr( "Loading GML data\n%1" ).arg( mTypeName ), tr( "Abort" ), 0, 0, mainWindow );
-    progressDialog->setWindowModality( Qt::ApplicationModal );
-    connect( this, SIGNAL( dataReadProgress( int ) ), progressDialog, SLOT( setValue( int ) ) );
-    connect( this, SIGNAL( totalStepsUpdate( int ) ), progressDialog, SLOT( setMaximum( int ) ) );
-    connect( progressDialog, SIGNAL( canceled() ), this, SLOT( setFinished() ) );
-    progressDialog->show();
-  }
+
+  progressDialog = new QgsProgressDialogProxy( tr( "Loading GML data\n%1" ).arg( mTypeName ), tr( "Abort" ), 0, 0 );
+  progressDialog->setWindowModality( Qt::ApplicationModal );
+  connect( this, SIGNAL( dataReadProgress( int ) ), progressDialog, SLOT( setValue( int ) ) );
+  connect( this, SIGNAL( totalStepsUpdate( int ) ), progressDialog, SLOT( setMaximum( int ) ) );
+  connect( progressDialog, SIGNAL( canceled() ), this, SLOT( setFinished() ) );
+  progressDialog->show();
 
   int atEnd = 0;
   while ( !atEnd )
