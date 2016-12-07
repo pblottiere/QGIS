@@ -11,7 +11,9 @@ class QgsProgressDialog
 
     void setMinimum( int minimum );
     void setMaximum( int maximum );
+    void setRange( int minimum, int maximum );
     void setValue( int progress );
+    int value() const;
 };
 
 class QgsProgressDialogProxy
@@ -35,8 +37,10 @@ class QgsProgressDialogProxy
     void setMinimum( int minimum );
     void setMaximum( int maximum );
     void setValue( int progress );
+    void setRange( int minimum, int maximum );
     void setWindowTitle( QString windowTitle );
     void setWindowModality( Qt::WindowModality windowModality );
     void show();
+    int value() const;
     bool wasCanceled() const;
 };

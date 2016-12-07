@@ -29,7 +29,9 @@ class CORE_EXPORT QgsProgressDialog
 
     void setMinimum( int minimum );
     void setMaximum( int maximum );
+    void setRange( int minimum, int maximum );
     void setValue( int progress );
+    int value() const;
 
   protected:
     void updateProgressBar();
@@ -56,10 +58,12 @@ class CORE_EXPORT QgsProgressDialogProxy
     void setLabelText( QString text );
     void setMinimum( int minimum );
     void setMaximum( int maximum );
+    void setRange( int minimum, int maximum );
     void setValue( int progress );
     void setWindowTitle( QString windowTitle );
     void setWindowModality( Qt::WindowModality windowModality );
     void show();
+    int value() const;
     bool wasCanceled() const;
 
   protected:

@@ -27,12 +27,12 @@
 #include "qgsvectorlayerimport.h"
 #include "qgsdatasourceuri.h"
 #include "qgsmssqlprovider.h"
+#include "qgsprogressdialog.h"
 
 #include <QSettings>
 #include <QMessageBox>
 #include <QtSql/QSqlDatabase>
 #include <QtSql/QSqlError>
-#include <QProgressDialog>
 
 // ---------------------------------------------------------------------------
 QgsMssqlConnectionItem::QgsMssqlConnectionItem( QgsDataItem* parent, QString name, QString path )
@@ -387,7 +387,7 @@ bool QgsMssqlConnectionItem::handleDrop( const QMimeData* data, const QString& t
   // TODO: probably should show a GUI with settings etc
   qApp->setOverrideCursor( Qt::WaitCursor );
 
-  QProgressDialog *progress = new QProgressDialog( tr( "Copying features..." ), tr( "Abort" ), 0, 0, nullptr );
+  QgsProgressDialogProxy *progress = new QgsProgressDialogProxy( tr( "Copying features..." ), tr( "Abort" ), 0, 0 );
   progress->setWindowTitle( tr( "Import layer" ) );
   progress->setWindowModality( Qt::WindowModal );
   progress->show();

@@ -48,6 +48,12 @@ void QgsProgressDialog::setMinimum( int minimum )
   mMinimum = minimum;
 }
 
+void QgsProgressDialog::setRange( int minimum, int maximum )
+{
+  mMinimum = minimum;
+  mMaximum = maximum;
+}
+
 void QgsProgressDialog::setValue( int progress )
 {
   mValue = progress;
@@ -66,33 +72,38 @@ void QgsProgressDialog::updateProgressBar()
   int percentage = mValue * 100 / ( mMaximum - mMinimum );
   int progressSize = percentage * barSize / 100;
 
-  std::cout << header.toStdString();
+  QString progressBar;
+  progressBar += header;
 
   for ( int i = 0; i < progressSize; i++ )
   {
-    std::cout << progress.toStdString();
+    progressBar += progress;
   }
 
-  std::cout << cursor.toStdString();
+  progressBar += cursor;
 
   for ( int i = 0; i < ( barSize - progressSize ); i++ )
   {
-    std::cout << " ";
+    progressBar += " ";
   }
 
-  std::cout << footer.toStdString();
-  std::cout << " " << percentage << " %";
+  progressBar += footer + " " + QString::number( percentage ) + " %";
 
   if ( percentage >= 100 )
   {
-    std::cout << std::endl;
+    progressBar += "\n";
   }
   else
   {
-    std::cout << "\r";
+    progressBar += "\r";
   }
 
-  std::cout << std::flush;
+  std::cout << progressBar.toStdString() << std::flush;
+}
+
+int QgsProgressDialog::value() const
+{
+  return mValue;
 }
 
 QgsProgressDialogProxy::QgsProgressDialogProxy( const QString labelText,
@@ -187,6 +198,18 @@ void QgsProgressDialogProxy::setValue( int progress )
   }
 }
 
+void QgsProgressDialogProxy::setRange( int minimum, int maximum )
+{
+  if ( mConsoleProgressDialog )
+  {
+    mConsoleProgressDialog->setRange( minimum, maximum );
+  }
+  else
+  {
+    mGuiProgressDialog->setRange( minimum, maximum );
+  }
+}
+
 void QgsProgressDialogProxy::setWindowTitle( QString windowTitle )
 {
   if ( mConsoleProgressDialog )
@@ -249,5 +272,17 @@ void QgsProgressDialogProxy::show()
   else
   {
     mGuiProgressDialog->show();
+  }
+}
+
+int QgsProgressDialogProxy::value() const
+{
+  if ( mConsoleProgressDialog )
+  {
+    return mConsoleProgressDialog->value();
+  }
+  else
+  {
+    return mGuiProgressDialog->value();
   }
 }

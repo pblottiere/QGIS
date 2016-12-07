@@ -24,12 +24,12 @@
 #include "qgsmimedatautils.h"
 #include "qgsvectorlayerimport.h"
 #include "qgsvectorlayer.h"
+#include "qgsprogressdialog.h"
 
 #include <QSettings>
 #include <QMessageBox>
 //#include <QtSql/QSqlDatabase>
 //#include <QtSql/QSqlError>
-#include <QProgressDialog>
 
 static const QString PROVIDER_KEY = QStringLiteral( "DB2" );
 
@@ -321,7 +321,7 @@ bool QgsDb2ConnectionItem::handleDrop( const QMimeData* data, const QString& toS
   // TODO: probably should show a GUI with settings etc
   qApp->setOverrideCursor( Qt::WaitCursor );
 
-  QProgressDialog *progress = new QProgressDialog( tr( "Copying features..." ), tr( "Abort" ), 0, 0, nullptr );
+  QgsProgressDialogProxy *progress = new QgsProgressDialogProxy( tr( "Copying features..." ), tr( "Abort" ), 0, 0 );
   progress->setWindowTitle( tr( "Import layer" ) );
   progress->setWindowModality( Qt::WindowModal );
   progress->show();

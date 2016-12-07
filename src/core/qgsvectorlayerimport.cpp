@@ -29,8 +29,7 @@
 #include "qgscsexception.h"
 #include "qgsvectordataprovider.h"
 #include "qgsvectorlayer.h"
-
-#include <QProgressDialog>
+#include "qgsprogressdialog.h"
 
 #define FEATURE_BUFFER_SIZE 200
 
@@ -53,7 +52,7 @@ QgsVectorLayerImport::QgsVectorLayerImport( const QString &uri,
     const QgsCoordinateReferenceSystem& crs,
     bool overwrite,
     const QMap<QString, QVariant> *options,
-    QProgressDialog *progress )
+    QgsProgressDialogProxy *progress )
     : mErrorCount( 0 )
     , mAttributeCount( -1 )
     , mProgress( progress )
@@ -215,7 +214,7 @@ QgsVectorLayerImport::importLayer( QgsVectorLayer* layer,
                                    QString *errorMessage,
                                    bool skipAttributeCreation,
                                    QMap<QString, QVariant> *options,
-                                   QProgressDialog *progress )
+                                   QgsProgressDialogProxy *progress )
 {
   QgsCoordinateReferenceSystem outputCRS;
   QgsCoordinateTransform ct;
@@ -342,7 +341,7 @@ QgsVectorLayerImport::importLayer( QgsVectorLayer* layer,
   // write all features
   while ( fit.nextFeature( fet ) )
   {
-    if ( progress && progress->wasCanceled() )
+    if ( progress && ! progress->console() && progress->wasCanceled() )
     {
       cancelled = true;
       if ( errorMessage )

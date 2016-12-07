@@ -21,7 +21,7 @@
 
 #include "qgsfeature.h"
 
-class QProgressDialog;
+class QgsProgressDialogProxy;
 class QgsVectorDataProvider;
 class QgsVectorLayer;
 class QgsFields;
@@ -75,7 +75,7 @@ class CORE_EXPORT QgsVectorLayerImport
                                     QString *errorMessage = nullptr,
                                     bool skipAttributeCreation = false,
                                     QMap<QString, QVariant> *options = nullptr,
-                                    QProgressDialog *progress = nullptr
+                                    QgsProgressDialogProxy *progress = nullptr
                                   );
 
     /** Constructor for QgsVectorLayerImport.
@@ -96,7 +96,7 @@ class CORE_EXPORT QgsVectorLayerImport
                           const QgsCoordinateReferenceSystem& crs,
                           bool overwrite = false,
                           const QMap<QString, QVariant> *options = nullptr,
-                          QProgressDialog *progress = nullptr
+                          QgsProgressDialogProxy *progress = nullptr
                         );
 
     //! Checks whether there were any errors
@@ -133,7 +133,7 @@ class CORE_EXPORT QgsVectorLayerImport
     int mAttributeCount;
 
     QgsFeatureList mFeatureBuffer;
-    QProgressDialog *mProgress;
+    QgsProgressDialogProxy *mProgress;
 
   private:
 

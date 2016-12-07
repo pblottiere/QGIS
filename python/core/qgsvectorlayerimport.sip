@@ -9,7 +9,7 @@ class QgsVectorLayerImport
 %TypeHeaderCode
 #include <qgsvectorlayerimport.h>
 #include <qgsfield.h>
-class QProgressDialog;
+class QgsProgressDialogProxy;
 %End
 
   public:
@@ -53,7 +53,7 @@ class QProgressDialog;
                                     QString *errorMessage /Out/ = nullptr,
                                     bool skipAttributeCreation = false,
                                     QMap<QString, QVariant> *options = nullptr,
-                                    QProgressDialog *progress = nullptr
+                                    QgsProgressDialogProxy *progress = nullptr
                                   );
 
     /** Constructor for QgsVectorLayerImport.
@@ -74,7 +74,7 @@ class QProgressDialog;
                           const QgsCoordinateReferenceSystem& crs,
                           bool overwrite = false,
                           const QMap<QString, QVariant> *options = nullptr,
-                          QProgressDialog *progress = nullptr
+                          QgsProgressDialogProxy *progress = nullptr
                         );
 
     /** Checks whether there were any errors */

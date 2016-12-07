@@ -23,11 +23,11 @@
 #include "qgsvectorlayerimport.h"
 #include "qgsmessageoutput.h"
 #include "qgsvectorlayer.h"
+#include "qgsprogressdialog.h"
 
 #include <QAction>
 #include <QMessageBox>
 #include <QSettings>
-#include <QProgressDialog>
 
 QGISEXTERN bool deleteLayer( const QString& dbPath, const QString& tableName, QString& errCause );
 
@@ -205,7 +205,7 @@ bool QgsSLConnectionItem::handleDrop( const QMimeData * data, Qt::DropAction )
 
   qApp->setOverrideCursor( Qt::WaitCursor );
 
-  QProgressDialog *progress = new QProgressDialog( tr( "Copying features..." ), tr( "Abort" ), 0, 0, nullptr );
+  QgsProgressDialogProxy *progress = new QgsProgressDialogProxy( tr( "Copying features..." ), tr( "Abort" ), 0, 0 );
   progress->setWindowTitle( tr( "Import layer" ) );
   progress->setWindowModality( Qt::WindowModal );
   progress->show();
