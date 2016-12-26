@@ -43,6 +43,7 @@ QgsWCSServer::QgsWCSServer(
   , QMap<QString, QString> &parameters
   , QgsWCSProjectParser* pp
   , QgsRequestHandler* rh
+  , const QgsProject* project
 #ifdef HAVE_SERVER_PYTHON_PLUGINS
   , const QgsAccessControl* accessControl
 #endif
@@ -51,6 +52,7 @@ QgsWCSServer::QgsWCSServer(
       configFilePath
       , parameters
       , rh
+      , project
 #ifdef HAVE_SERVER_PYTHON_PLUGINS
       , accessControl
 #endif
@@ -58,19 +60,6 @@ QgsWCSServer::QgsWCSServer(
     , mConfigParser(
       pp
     )
-{
-}
-
-QgsWCSServer::QgsWCSServer()
-    : QgsOWSServer(
-      QString()
-      , QMap<QString, QString>()
-      , nullptr
-#ifdef HAVE_SERVER_PYTHON_PLUGINS
-      , nullptr
-#endif
-    )
-    , mConfigParser( nullptr )
 {
 }
 
@@ -179,14 +168,10 @@ QDomDocument QgsWCSServer::getCapabilities()
   dcpTypeElement.appendChild( httpElement );
 
   //Prepare url
-  QString hrefString;
-  if ( mConfigParser )
+  QString hrefString = QgsServerProjectUtils::wcsServiceUrl( *mProject );
+  if ( hrefString.isEmpty() )
   {
-    hrefString = mConfigParser->wcsServiceUrl();
-    if ( hrefString.isEmpty() )
-    {
-      hrefString = mConfigParser->serviceUrl();
-    }
+    hrefString = QgsServerProjectUtils::wmsServiceUrl( *mProject );
   }
   if ( hrefString.isEmpty() )
   {

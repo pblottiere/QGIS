@@ -104,10 +104,6 @@ class SERVER_EXPORT QgsServerProjectParser
     @return name or a null string in case of error*/
     QString layerName( const QDomElement& layerElem ) const;
 
-    QString serviceUrl() const;
-    QString wfsServiceUrl() const;
-    QString wcsServiceUrl() const;
-
     QStringList wfsLayers() const;
     QStringList wcsLayers() const;
 

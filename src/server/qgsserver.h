@@ -41,6 +41,8 @@
 #include "qgsserverinterfaceimpl.h"
 #endif
 
+class QgsProject;
+
 
 /** \ingroup server
  * The QgsServer class provides OGC web services.
@@ -124,6 +126,9 @@ class SERVER_EXPORT QgsServer
     //! Initialization must run once for all servers
     static bool sInitialised;
     static bool sCaptureOutput;
+
+    // map of QgsProject
+    QMap<QString, const QgsProject*> mProjectStore;
 };
 #endif // QGSSERVER_H
 

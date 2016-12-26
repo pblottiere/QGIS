@@ -92,9 +92,10 @@ QgsSLDConfigParser::~QgsSLDConfigParser()
   delete mXMLDoc;
 }
 
-void QgsSLDConfigParser::layersAndStylesCapabilities( QDomElement& parentElement, QDomDocument& doc, const QString& version, bool fullProjectSettings ) const
+void QgsSLDConfigParser::layersAndStylesCapabilities( QDomElement& parentElement, QDomDocument& doc, const QString& version, const QString& serviceUrl, bool fullProjectSettings ) const
 {
   Q_UNUSED( version );
+  Q_UNUSED( serviceUrl );
   Q_UNUSED( fullProjectSettings );
 
   //iterate over all <UserLayer> nodes
@@ -481,11 +482,11 @@ QDomDocument QgsSLDConfigParser::getStyles( QStringList& layerList ) const
   return styleDoc;
 }
 
-QDomDocument QgsSLDConfigParser::describeLayer( QStringList& layerList, const QString& hrefString ) const
+QDomDocument QgsSLDConfigParser::describeLayer( QStringList& layerList, const QString& wfsHrefString, const QString& wcsHrefString ) const
 {
   if ( mFallbackParser )
   {
-    return mFallbackParser->describeLayer( layerList, hrefString );
+    return mFallbackParser->describeLayer( layerList, wfsHrefString, wcsHrefString );
   }
   return QDomDocument();
 }
@@ -570,15 +571,6 @@ void QgsSLDConfigParser::loadLabelSettings() const
   {
     mFallbackParser->loadLabelSettings();
   }
-}
-
-QString QgsSLDConfigParser::serviceUrl() const
-{
-  if ( mFallbackParser )
-  {
-    return mFallbackParser->serviceUrl();
-  }
-  return QString();
 }
 
 QStringList QgsSLDConfigParser::wfsLayerNames() const
@@ -677,24 +669,6 @@ const QFont& QgsSLDConfigParser::legendItemFont() const
     return mFallbackParser->legendItemFont();
   }
   return mLegendItemFont;
-}
-
-double QgsSLDConfigParser::maxWidth() const
-{
-  if ( mFallbackParser )
-  {
-    return mFallbackParser->maxWidth();
-  }
-  return -1;
-}
-
-double QgsSLDConfigParser::maxHeight() const
-{
-  if ( mFallbackParser )
-  {
-    return mFallbackParser->maxHeight();
-  }
-  return -1;
 }
 
 double QgsSLDConfigParser::imageQuality() const

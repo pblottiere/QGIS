@@ -68,6 +68,7 @@ class QgsWmsServer: public QgsOWSServer
       , QgsWmsConfigParser* cp
       , QgsRequestHandler* rh
       , QgsCapabilitiesCache* capCache
+      , const QgsProject* project
 #ifdef HAVE_SERVER_PYTHON_PLUGINS
       , const QgsAccessControl* accessControl
 #endif
@@ -123,8 +124,6 @@ class QgsWmsServer: public QgsOWSServer
     QDomDocument getSchemaExtension();
 
   private:
-    //! Don't use the default constructor
-    QgsWmsServer();
 
     /** Initializes WMS layers and configures rendering.
      * @param layersList out: list with WMS layer names

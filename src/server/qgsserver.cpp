@@ -39,6 +39,7 @@
 #include "qgsnetworkaccessmanager.h"
 #include "qgsserverlogger.h"
 #include "qgseditorwidgetregistry.h"
+#include "qgsserverprojectutils.h"
 #ifdef HAVE_SERVER_PYTHON_PLUGINS
 #include "qgsaccesscontrolfilter.h"
 #endif
@@ -460,6 +461,23 @@ QPair<QByteArray, QByteArray> QgsServer::handleRequest( const QString& queryStri
     theRequestHandler->setHeader( QStringLiteral( "Content-Disposition" ), "attachment; filename=\"" + outputFileName + "\"" );
   }
 
+  // load the project if needed and not empty
+  auto projectIt = mProjectStore.find( configFilePath );
+  if ( projectIt == mProjectStore.constEnd() )
+  {
+    // load the project
+    QgsProject* project = new QgsProject();
+    project->setFileName( configFilePath );
+    if ( project->read() )
+    {
+      projectIt = mProjectStore.insert( configFilePath, project );
+    }
+    else
+    {
+      theRequestHandler->setServiceException( QgsMapServiceException( QStringLiteral( "Project file error" ), QStringLiteral( "Error reading the project file" ) ) );
+    }
+  }
+
   // Enter core services main switch
   if ( !theRequestHandler->exceptionRaised() )
   {
@@ -482,6 +500,7 @@ QPair<QByteArray, QByteArray> QgsServer::handleRequest( const QString& queryStri
           , parameterMap
           , p
           , theRequestHandler.data()
+          , projectIt.value()
 #ifdef HAVE_SERVER_PYTHON_PLUGINS
           , accessControl
 #endif
@@ -508,6 +527,7 @@ QPair<QByteArray, QByteArray> QgsServer::handleRequest( const QString& queryStri
           , parameterMap
           , p
           , theRequestHandler.data()
+          , projectIt.value()
 #ifdef HAVE_SERVER_PYTHON_PLUGINS
           , accessControl
 #endif
@@ -535,6 +555,7 @@ QPair<QByteArray, QByteArray> QgsServer::handleRequest( const QString& queryStri
           , p
           , theRequestHandler.data()
           , sCapabilitiesCache
+          , projectIt.value()
 #ifdef HAVE_SERVER_PYTHON_PLUGINS
           , accessControl
 #endif

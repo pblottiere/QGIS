@@ -41,6 +41,7 @@ class QgsWCSServer: public QgsOWSServer
       , QMap<QString, QString>& parameters
       , QgsWCSProjectParser* pp
       , QgsRequestHandler* rh
+      , const QgsProject* project
 #ifdef HAVE_SERVER_PYTHON_PLUGINS
       , const QgsAccessControl* accessControl
 #endif
@@ -61,9 +62,6 @@ class QgsWCSServer: public QgsOWSServer
     void setAdminConfigParser( QgsWCSProjectParser* parser ) { mConfigParser = parser; }
 
   private:
-    //! Don't use the default constructor
-    QgsWCSServer();
-
     //! Get service address from REQUEST_URI if not specified in the configuration
     QString serviceUrl() const;
 

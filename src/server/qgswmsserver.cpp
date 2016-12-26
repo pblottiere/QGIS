@@ -76,6 +76,7 @@ QgsWmsServer::QgsWmsServer(
   , QgsWmsConfigParser* cp
   , QgsRequestHandler* rh
   , QgsCapabilitiesCache* capCache
+  , const QgsProject* project
 #ifdef HAVE_SERVER_PYTHON_PLUGINS
   , const QgsAccessControl* accessControl
 #endif
@@ -84,29 +85,13 @@ QgsWmsServer::QgsWmsServer(
       configFilePath
       , parameters
       , rh
+      , project
 #ifdef HAVE_SERVER_PYTHON_PLUGINS
       , accessControl
 #endif
     )
     , mCapabilitiesCache( capCache )
     , mConfigParser( cp )
-    , mOwnsConfigParser( false )
-    , mDrawLegendLayerLabel( true )
-    , mDrawLegendItemLabel( true )
-{
-}
-
-QgsWmsServer::QgsWmsServer()
-    : QgsOWSServer(
-      QString()
-      , QMap<QString, QString>()
-      , nullptr
-#ifdef HAVE_SERVER_PYTHON_PLUGINS
-      , nullptr
-#endif
-    )
-    , mCapabilitiesCache()
-    , mConfigParser( nullptr )
     , mOwnsConfigParser( false )
     , mDrawLegendLayerLabel( true )
     , mDrawLegendItemLabel( true )
@@ -428,11 +413,7 @@ QDomDocument QgsWmsServer::getCapabilities( const QString& version, bool fullPro
   QDomElement wmsCapabilitiesElement;
 
   //Prepare url
-  QString hrefString;
-  if ( mConfigParser )
-  {
-    hrefString = mConfigParser->serviceUrl();
-  }
+  QString hrefString = QgsServerProjectUtils::wmsServiceUrl( *mProject );
   if ( hrefString.isEmpty() )
   {
     hrefString = serviceUrl();
@@ -626,7 +607,8 @@ QDomDocument QgsWmsServer::getCapabilities( const QString& version, bool fullPro
   QgsMessageLog::logMessage( QStringLiteral( "calling layersAndStylesCapabilities" ) );
   if ( mConfigParser )
   {
-    mConfigParser->layersAndStylesCapabilities( capabilityElement, doc, version, fullProjectInformation );
+    QString wmsServiceUrl = QgsServerProjectUtils::wmsServiceUrl( *mProject );
+    mConfigParser->layersAndStylesCapabilities( capabilityElement, doc, version, wmsServiceUrl, fullProjectInformation );
   }
   QgsMessageLog::logMessage( QStringLiteral( "layersAndStylesCapabilities returned" ) );
 
@@ -666,7 +648,7 @@ QDomDocument QgsWmsServer::getContext()
   if ( mConfigParser )
   {
     //Prepare url
-    QString hrefString = mConfigParser->serviceUrl();
+    QString hrefString = QgsServerProjectUtils::wmsServiceUrl( *mProject );
     if ( hrefString.isEmpty() )
     {
       hrefString = serviceUrl();
@@ -1242,13 +1224,23 @@ QDomDocument QgsWmsServer::describeLayer()
   }
 
   //Prepare url
-  QString hrefString = mConfigParser->serviceUrl();
+  QString hrefString = QgsServerProjectUtils::wmsServiceUrl( *mProject );
   if ( hrefString.isEmpty() )
   {
     hrefString = serviceUrl();
   }
+  QString wfsHrefString = QgsServerProjectUtils::wfsServiceUrl( *mProject );
+  if ( wfsHrefString.isEmpty() )
+  {
+    wfsHrefString = hrefString;
+  }
+  QString wcsHrefString = QgsServerProjectUtils::wcsServiceUrl( *mProject );
+  if ( wcsHrefString.isEmpty() )
+  {
+    wcsHrefString = hrefString;
+  }
 
-  return mConfigParser->describeLayer( layersList, hrefString );
+  return mConfigParser->describeLayer( layersList, wfsHrefString, wcsHrefString );
 }
 
 QByteArray* QgsWmsServer::getPrint( const QString& formatString )
@@ -3018,23 +3010,26 @@ void QgsWmsServer::restoreOpacities( QList< QPair< QgsVectorLayer*, QgsFeatureRe
 bool QgsWmsServer::checkMaximumWidthHeight() const
 {
   //test if maxWidth / maxHeight set and WIDTH / HEIGHT parameter is in the range
-  if ( mConfigParser->maxWidth() != -1 )
+  int wmsMaxWidth = QgsServerProjectUtils::wmsMaxWidth( *mProject );
+  if ( wmsMaxWidth != -2 )
   {
     QMap<QString, QString>::const_iterator widthIt = mParameters.find( QStringLiteral( "WIDTH" ) );
     if ( widthIt != mParameters.constEnd() )
     {
-      if ( widthIt->toInt() > mConfigParser->maxWidth() )
+      if ( widthIt->toInt() > wmsMaxWidth )
       {
         return false;
       }
     }
   }
-  if ( mConfigParser->maxHeight() != -1 )
+
+  int wmsMaxHeight = QgsServerProjectUtils::wmsMaxHeight( *mProject );
+  if ( wmsMaxHeight != -1 )
   {
     QMap<QString, QString>::const_iterator heightIt = mParameters.find( QStringLiteral( "HEIGHT" ) );
     if ( heightIt != mParameters.constEnd() )
     {
-      if ( heightIt->toInt() > mConfigParser->maxHeight() )
+      if ( heightIt->toInt() > wmsMaxHeight )
       {
         return false;
       }

@@ -74,7 +74,7 @@ QgsWmsProjectParser::~QgsWmsProjectParser()
   delete mProjectParser;
 }
 
-void QgsWmsProjectParser::layersAndStylesCapabilities( QDomElement& parentElement, QDomDocument& doc, const QString& version, bool fullProjectSettings ) const
+void QgsWmsProjectParser::layersAndStylesCapabilities( QDomElement& parentElement, QDomDocument& doc, const QString& version, const QString& serviceUrl, bool fullProjectSettings ) const
 {
   QStringList nonIdentifiableLayers = identifyDisabledLayers();
 
@@ -126,7 +126,7 @@ void QgsWmsProjectParser::layersAndStylesCapabilities( QDomElement& parentElemen
   QHash<QString, QString> idNameMap;
   QStringList layerIDList;
 
-  addLayers( doc, layerParentElem, legendElem, projectLayerTreeGroup(), layerMap, nonIdentifiableLayers, version, fullProjectSettings, idNameMap, layerIDList );
+  addLayers( doc, layerParentElem, legendElem, projectLayerTreeGroup(), layerMap, nonIdentifiableLayers, version, serviceUrl, fullProjectSettings, idNameMap, layerIDList );
 
   parentElement.appendChild( layerParentElem );
   mProjectParser->combineExtentAndCrsOfGroupChildren( layerParentElem, doc, true );
@@ -327,10 +327,6 @@ void QgsWmsProjectParser::addLayersFromGroup( const QDomElement& legendGroupElem
   }
 }
 
-QString QgsWmsProjectParser::serviceUrl() const
-{
-  return mProjectParser->serviceUrl();
-}
 
 QStringList QgsWmsProjectParser::wfsLayerNames() const
 {
@@ -387,36 +383,6 @@ const QFont& QgsWmsProjectParser::legendLayerFont() const
 const QFont& QgsWmsProjectParser::legendItemFont() const
 {
   return mLegendItemFont;
-}
-
-double QgsWmsProjectParser::maxWidth() const
-{
-  double maxWidth = -1;
-  QDomElement propertiesElem = mProjectParser->propertiesElem();
-  if ( !propertiesElem.isNull() )
-  {
-    QDomElement maxWidthElem = propertiesElem.firstChildElement( QStringLiteral( "WMSMaxWidth" ) );
-    if ( !maxWidthElem.isNull() )
-    {
-      maxWidth = maxWidthElem.text().toInt();
-    }
-  }
-  return maxWidth;
-}
-
-double QgsWmsProjectParser::maxHeight() const
-{
-  double maxHeight = -1;
-  QDomElement propertiesElem = mProjectParser->propertiesElem();
-  if ( !propertiesElem.isNull() )
-  {
-    QDomElement maxWidthElem = propertiesElem.firstChildElement( QStringLiteral( "WMSMaxHeight" ) );
-    if ( !maxWidthElem.isNull() )
-    {
-      maxHeight = maxWidthElem.text().toInt();
-    }
-  }
-  return maxHeight;
 }
 
 double QgsWmsProjectParser::imageQuality() const
@@ -1007,7 +973,7 @@ void QgsWmsProjectParser::addDrawingOrder( QDomElement& parentElem, QDomDocument
   }
 }
 
-void QgsWmsProjectParser::addLayerStyles( QgsMapLayer* currentLayer, QDomDocument& doc, QDomElement& layerElem, const QString& version ) const
+void QgsWmsProjectParser::addLayerStyles( QgsMapLayer* currentLayer, QDomDocument& doc, QDomElement& layerElem, const QString& version, const QString& serviceUrl ) const
 {
   Q_FOREACH ( QString styleName, currentLayer->styleManager()->styles() )
   {
@@ -1035,7 +1001,7 @@ void QgsWmsProjectParser::addLayerStyles( QgsMapLayer* currentLayer, QDomDocumen
     else
     {
       customHrefString = false;
-      hrefString = serviceUrl();
+      hrefString = serviceUrl;
     }
     if ( hrefString.isEmpty() )
     {
@@ -1104,6 +1070,7 @@ void QgsWmsProjectParser::addLayers( QDomDocument &doc,
                                      const QMap<QString, QgsMapLayer *> &layerMap,
                                      const QStringList &nonIdentifiableLayers,
                                      const QString& version, //1.1.1 or 1.3.0
+                                     const QString& serviceUrl,
                                      bool fullProjectSettings,
                                      QHash<QString, QString> &idNameMap,
                                      QStringList &layerIDList ) const
@@ -1226,12 +1193,12 @@ void QgsWmsProjectParser::addLayers( QDomDocument &doc,
             pLayerMap.insert( pp->layerId( elem ), pp->createLayerFromElement( elem ) );
           }
 
-          p->addLayers( doc, layerElem, embeddedGroupElem, embeddedLayerTreeGroup->findGroup( name ), pLayerMap, pIdDisabled, version, fullProjectSettings, idNameMap, layerIDList );
+          p->addLayers( doc, layerElem, embeddedGroupElem, embeddedLayerTreeGroup->findGroup( name ), pLayerMap, pIdDisabled, version, serviceUrl, fullProjectSettings, idNameMap, layerIDList );
         }
       }
       else //normal (not embedded) legend group
       {
-        addLayers( doc, layerElem, currentChildElem, ltGroup, layerMap, nonIdentifiableLayers, version, fullProjectSettings, idNameMap, layerIDList );
+        addLayers( doc, layerElem, currentChildElem, ltGroup, layerMap, nonIdentifiableLayers, version, serviceUrl, fullProjectSettings, idNameMap, layerIDList );
       }
 
       // combine bounding boxes of children (groups/layers)
@@ -1353,7 +1320,7 @@ void QgsWmsProjectParser::addLayers( QDomDocument &doc,
       }
 
       // add details about supported styles of the layer
-      addLayerStyles( currentLayer, doc, layerElem, version );
+      addLayerStyles( currentLayer, doc, layerElem, version, serviceUrl );
 
       //min/max scale denominatormScaleBasedVisibility
       if ( currentLayer->hasScaleBasedVisibility() )
@@ -1878,7 +1845,7 @@ QDomDocument QgsWmsProjectParser::getStyles( QStringList& layerList ) const
   return myDocument;
 }
 
-QDomDocument QgsWmsProjectParser::describeLayer( QStringList& layerList, const QString& hrefString ) const
+QDomDocument QgsWmsProjectParser::describeLayer( QStringList& layerList, const QString& wfsHrefString, const QString& wcsHrefString ) const
 {
   QDomDocument myDocument = QDomDocument();
 
@@ -1898,18 +1865,6 @@ QDomDocument QgsWmsProjectParser::describeLayer( QStringList& layerList, const Q
   QDomElement versionNode = myDocument.createElement( QStringLiteral( "Version" ) );
   versionNode.appendChild( myDocument.createTextNode( QStringLiteral( "1.1.0" ) ) );
   root.appendChild( versionNode );
-
-  //Prepare url
-  QString wfsHrefString = mProjectParser->wfsServiceUrl();
-  if ( wfsHrefString.isEmpty() )
-  {
-    wfsHrefString = hrefString;
-  }
-  QString wcsHrefString = mProjectParser->wcsServiceUrl();
-  if ( wcsHrefString.isEmpty() )
-  {
-    wcsHrefString = hrefString;
-  }
 
   //WFS layers
   QStringList wfsLayers = wfsLayerNames();

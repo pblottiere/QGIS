@@ -29,6 +29,12 @@ import osgeo.gdal
 import tempfile
 import base64
 
+try:
+    import xml.etree.cElementTree as ET
+except ImportError:
+    import xml.etree.ElementTree as ET
+
+
 # Strip path and content length because path may vary
 RE_STRIP_UNCHECKABLE = b'MAP=[^"]+|Content-Length: \d+'
 RE_ATTRIBUTES = b'[^>\s]+=[^>\s]+'
@@ -110,13 +116,25 @@ class TestQgsServer(unittest.TestCase):
     def test_api(self):
         """Using an empty query string (returns an XML exception)
         we are going to test if headers and body are returned correctly"""
-        # Test as a whole
+
+        # Test response when a qgs project is not specified
         header, body = [_v for _v in self.server.handleRequest()]
+        response = self.strip_version_xmlns(header + body)
+        expected = self.strip_version_xmlns(b'Content-Length: 197\nContent-Type: text/xml; charset=utf-8\n\n<ServiceExceptionReport version="1.3.0" xmlns="http://www.opengis.net/ogc">\n <ServiceException code="Project file error">Error reading the project file</ServiceException>\n</ServiceExceptionReport>\n')
+        self.assertEqual(response, expected)
+        expected = b'Content-Length: 197\nContent-Type: text/xml; charset=utf-8\n\n'
+        self.assertEqual(header, expected)
+
+        # Test response when project is specified but without service
+        project = self.testdata_path + "test_project_wfs.qgs"
+        qs = 'MAP=%s' % (urllib.parse.quote(project))
+        header, body = [_v for _v in self.server.handleRequest(qs)]
         response = self.strip_version_xmlns(header + body)
         expected = self.strip_version_xmlns(b'Content-Length: 206\nContent-Type: text/xml; charset=utf-8\n\n<ServiceExceptionReport version="1.3.0" xmlns="http://www.opengis.net/ogc">\n <ServiceException code="Service configuration error">Service unknown or unsupported</ServiceException>\n</ServiceExceptionReport>\n')
         self.assertEqual(response, expected)
         expected = b'Content-Length: 206\nContent-Type: text/xml; charset=utf-8\n\n'
         self.assertEqual(header, expected)
+
         # Test body
         expected = self.strip_version_xmlns(b'<ServiceExceptionReport version="1.3.0" xmlns="http://www.opengis.net/ogc">\n <ServiceException code="Service configuration error">Service unknown or unsupported</ServiceException>\n</ServiceExceptionReport>\n')
         self.assertEqual(self.strip_version_xmlns(body), expected)
@@ -343,6 +361,39 @@ class TestQgsServer(unittest.TestCase):
             header, body
         )
 
+    def test_wfs_getcapabilities_url(self):
+        # empty url in project
+        project = os.path.join(self.testdata_path, "test_project_without_urls.qgs")
+        qs = "&".join(["%s=%s" % i for i in list({
+            "MAP": urllib.parse.quote(project),
+            "SERVICE": "WFS",
+            "VERSION": "1.3.0",
+            "REQUEST": "GetCapabilities",
+            "STYLES": ""
+        }.items())])
+
+        r, h = self._result(self.server.handleRequest(qs))
+
+        for item in str(r).split("\\n"):
+            if "onlineResource" in item:
+                self.assertEqual("onlineResource=\"http:\"" in item, True)
+
+          # url well defined in project
+        project = os.path.join(self.testdata_path, "test_project_with_urls.qgs")
+        qs = "&".join(["%s=%s" % i for i in list({
+            "MAP": urllib.parse.quote(project),
+            "SERVICE": "WFS",
+            "VERSION": "1.3.0",
+            "REQUEST": "GetCapabilities",
+            "STYLES": ""
+        }.items())])
+
+        r, h = self._result(self.server.handleRequest(qs))
+
+        for item in str(r).split("\\n"):
+            if "onlineResource" in item:
+                self.assertEqual("onlineResource=\"my_wfs_advertised_url\"" in item, True)
+
     def result_compare(self, file_name, error_msg_header, header, body):
         self.assert_headers(header, body)
         response = header + body
@@ -418,6 +469,64 @@ class TestQgsServer(unittest.TestCase):
         for id, req in tests:
             self.wfs_getfeature_post_compare(id, req)
 
+    def test_wms_getcapabilities_url(self):
+        # empty url in project
+        project = os.path.join(self.testdata_path, "test_project_without_urls.qgs")
+        qs = "&".join(["%s=%s" % i for i in list({
+            "MAP": urllib.parse.quote(project),
+            "SERVICE": "WMS",
+            "VERSION": "1.3.0",
+            "REQUEST": "GetCapabilities",
+            "STYLES": ""
+        }.items())])
+
+        r, h = self._result(self.server.handleRequest(qs))
+
+        item_found = False
+        for item in str(r).split("\\n"):
+            if "OnlineResource" in item:
+                self.assertEqual("xlink:href=\"http:?" in item, True)
+                item_found = True
+        self.assertTrue(item_found)
+
+        # url well defined in project
+        project = os.path.join(self.testdata_path, "test_project_with_urls.qgs")
+        qs = "&".join(["%s=%s" % i for i in list({
+            "MAP": urllib.parse.quote(project),
+            "SERVICE": "WMS",
+            "VERSION": "1.3.0",
+            "REQUEST": "GetCapabilities",
+            "STYLES": ""
+        }.items())])
+
+        r, h = self._result(self.server.handleRequest(qs))
+
+        item_found = False
+        for item in str(r).split("\\n"):
+            if "OnlineResource" in item:
+                self.assertEqual("xlink:href=\"my_wms_advertised_url?" in item, True)
+                item_found = True
+        self.assertTrue(item_found)
+
+    def test_wms_getmap_invalid_size(self):
+        project = os.path.join(self.testdata_path, "test_project_with_size.qgs")
+        qs = "&".join(["%s=%s" % i for i in list({
+            "MAP": urllib.parse.quote(project),
+            "SERVICE": "WMS",
+            "VERSION": "1.3.0",
+            "REQUEST": "GetMap",
+            "LAYERS": "Hello",
+            "STYLES": "",
+            "FORMAT": "image/png",
+            "HEIGHT": "5001",
+            "WIDTH": "5000"
+        }.items())])
+
+        expected = self.strip_version_xmlns(b'<ServiceExceptionReport version="1.3.0" xmlns="http://www.opengis.net/ogc">\n <ServiceException code="Size error">The requested map size is too large</ServiceException>\n</ServiceExceptionReport>\n')
+        r, h = self._result(self.server.handleRequest(qs))
+
+        self.assertEqual(self.strip_version_xmlns(r), expected)
+
     def test_wms_getmap_order(self):
         qs = "&".join(["%s=%s" % i for i in list({
             "MAP": urllib.parse.quote(self.projectPath),
@@ -455,7 +564,7 @@ class TestQgsServer(unittest.TestCase):
         self._img_diff_error(r, h, "WMS_GetMap_SRS")
 
     def test_wms_getmap_style(self):
-      # default style
+        # default style
         qs = "&".join(["%s=%s" % i for i in list({
             "MAP": urllib.parse.quote(self.projectPath),
             "SERVICE": "WMS",
@@ -473,7 +582,7 @@ class TestQgsServer(unittest.TestCase):
         r, h = self._result(self.server.handleRequest(qs))
         self._img_diff_error(r, h, "WMS_GetMap_StyleDefault")
 
-      # custom style
+        # custom style
         qs = "&".join(["%s=%s" % i for i in list({
             "MAP": urllib.parse.quote(self.projectPath),
             "SERVICE": "WMS",

@@ -19,6 +19,7 @@
 #define QGSOWSSERVER_H
 
 #include "qgsrequesthandler.h"
+#include "qgsserverprojectutils.h"
 #ifdef HAVE_SERVER_PYTHON_PLUGINS
 #include "qgsaccesscontrol.h"
 #endif
@@ -34,6 +35,7 @@ class QgsOWSServer
       const QString& configFilePath
       , const QMap<QString, QString>& parameters
       , QgsRequestHandler* rh
+      , const QgsProject* project
 #ifdef HAVE_SERVER_PYTHON_PLUGINS
       , const QgsAccessControl* ac
 #endif
@@ -41,6 +43,7 @@ class QgsOWSServer
         : mParameters( parameters )
         , mRequestHandler( rh )
         , mConfigFilePath( configFilePath )
+        , mProject( project )
 #ifdef HAVE_SERVER_PYTHON_PLUGINS
         , mAccessControl( ac )
 #endif
@@ -54,13 +57,11 @@ class QgsOWSServer
      */
     static void restoreLayerFilters( const QHash < QgsMapLayer*, QString >& filterMap );
 
-  private:
-    QgsOWSServer() {}
-
   protected:
     QMap<QString, QString> mParameters;
     QgsRequestHandler* mRequestHandler;
     QString mConfigFilePath;
+    const QgsProject* mProject;
 #ifdef HAVE_SERVER_PYTHON_PLUGINS
     //! The access control helper
     const QgsAccessControl* mAccessControl;

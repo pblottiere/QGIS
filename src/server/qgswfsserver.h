@@ -62,6 +62,7 @@ class QgsWfsServer: public QgsOWSServer
       , QMap<QString, QString>& parameters
       , QgsWfsProjectParser* cp
       , QgsRequestHandler* rh
+      , const QgsProject* project
 #ifdef HAVE_SERVER_PYTHON_PLUGINS
       , const QgsAccessControl* accessControl
 #endif
@@ -87,9 +88,6 @@ class QgsWfsServer: public QgsOWSServer
     void setAdminConfigParser( QgsWfsProjectParser* parser ) { mConfigParser = parser; }
 
   private:
-    //! Don't use the default constructor
-    QgsWfsServer();
-
     //! Get service address from REQUEST_URI if not specified in the configuration
     QString serviceUrl() const;
 

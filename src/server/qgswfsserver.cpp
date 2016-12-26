@@ -67,6 +67,7 @@ QgsWfsServer::QgsWfsServer(
   , QMap<QString, QString> &parameters
   , QgsWfsProjectParser* cp
   , QgsRequestHandler* rh
+  , const QgsProject* project
 #ifdef HAVE_SERVER_PYTHON_PLUGINS
   , const QgsAccessControl* accessControl
 #endif
@@ -75,6 +76,7 @@ QgsWfsServer::QgsWfsServer(
       configFilePath
       , parameters
       , rh
+      , project
 #ifdef HAVE_SERVER_PYTHON_PLUGINS
       , accessControl
 #endif
@@ -83,21 +85,6 @@ QgsWfsServer::QgsWfsServer(
     , mConfigParser( cp )
 {
 }
-
-QgsWfsServer::QgsWfsServer()
-    : QgsOWSServer(
-      QString()
-      , QMap<QString, QString>()
-      , nullptr
-#ifdef HAVE_SERVER_PYTHON_PLUGINS
-      , nullptr
-#endif
-    )
-    , mWithGeom( true )
-    , mConfigParser( nullptr )
-{
-}
-
 
 void QgsWfsServer::executeRequest()
 {
@@ -221,14 +208,10 @@ QDomDocument QgsWfsServer::getCapabilities()
   dcpTypeElement.appendChild( httpElement );
 
   //Prepare url
-  QString hrefString;
-  if ( mConfigParser )
+  QString hrefString = QgsServerProjectUtils::wfsServiceUrl( *mProject );
+  if ( hrefString.isEmpty() )
   {
-    hrefString = mConfigParser->wfsServiceUrl();
-    if ( hrefString.isEmpty() )
-    {
-      hrefString = mConfigParser->serviceUrl();
-    }
+    hrefString = QgsServerProjectUtils::wmsServiceUrl( *mProject );
   }
   if ( hrefString.isEmpty() )
   {
@@ -1235,10 +1218,10 @@ void QgsWfsServer::startGetFeature( QgsRequestHandler& request, const QString& f
   else
   {
     //Prepare url
-    QString hrefString = mConfigParser->wfsServiceUrl();
+    QString hrefString = QgsServerProjectUtils::wfsServiceUrl( *mProject );
     if ( hrefString.isEmpty() )
     {
-      hrefString = mConfigParser->serviceUrl();
+      hrefString = QgsServerProjectUtils::wmsServiceUrl( *mProject );
     }
     if ( hrefString.isEmpty() )
     {

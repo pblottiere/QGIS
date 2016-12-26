@@ -27,4 +27,5 @@
 %Include qgswmsprojectparser.sip
 %Include qgswfsprojectparser.sip
 %Include qgsconfigcache.sip
+%Include qgsserverprojectutils.sip
 %Include qgsserver.sip
