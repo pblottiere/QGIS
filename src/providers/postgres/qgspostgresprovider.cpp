@@ -27,6 +27,7 @@
 #include <qgsvectorlayer.h>
 
 #include <QMessageBox>
+#include <QSettings>
 
 #include "qgsvectorlayerexporter.h"
 #include "qgspostgresprovider.h"
@@ -1322,7 +1323,9 @@ bool QgsPostgresProvider::determinePrimaryKey()
       }
       else if ( type == QLatin1String( "v" ) || type == QLatin1String( "m" ) ) // the relation is a view
       {
-        determinePrimaryKeyFromUriKeyColumn();
+        QSettings settings;
+        bool checkPrimaryKeyUnicity = !settings.value( QStringLiteral( "/qgis/trustProject" ), false ).toBool();
+        determinePrimaryKeyFromUriKeyColumn( checkPrimaryKeyUnicity );
       }
       else
       {
@@ -1449,7 +1452,7 @@ QStringList QgsPostgresProvider::parseUriKey( const QString &key )
   return cols;
 }
 
-void QgsPostgresProvider::determinePrimaryKeyFromUriKeyColumn()
+void QgsPostgresProvider::determinePrimaryKeyFromUriKeyColumn( bool checkPrimaryKeyUnicity )
 {
   QString primaryKey = mUri.keyColumn();
   mPrimaryKeyType = PktUnknown;
@@ -1481,7 +1484,11 @@ void QgsPostgresProvider::determinePrimaryKeyFromUriKeyColumn()
 
     if ( !mPrimaryKeyAttrs.isEmpty() )
     {
-      if ( mUseEstimatedMetadata || uniqueData( primaryKey ) )
+      bool unique = true;
+      if ( checkPrimaryKeyUnicity )
+        unique = uniqueData( primaryKey );
+
+      if ( mUseEstimatedMetadata || unique )
       {
         mPrimaryKeyType = PktFidMap; // Map by default
         if ( mPrimaryKeyAttrs.size() == 1 )
