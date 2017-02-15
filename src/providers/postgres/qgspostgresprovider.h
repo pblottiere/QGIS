@@ -184,6 +184,14 @@ class QgsPostgresProvider : public QgsVectorDataProvider
     virtual QList<QgsRelation> discoverRelations( const QgsVectorLayer *self, const QList<QgsVectorLayer *> &layers ) const override;
     virtual QgsAttrPalIndexNameHash palAttributeIndexNames() const override;
 
+    /** Return true if the data source has metadata, false otherwise. For
+      * example, if the kind of relation for the layer is a view or a
+      * materialized view, then no metadata are associated with the data
+      * source.
+      * @return true if data source has metadata, false otherwise.
+      */
+    virtual bool dataSourceHasMetadata() const override;
+
   signals:
 
     /**
@@ -206,6 +214,20 @@ class QgsPostgresProvider : public QgsVectorDataProvider
     void repaintRequested();
 
   private:
+    enum Relkind
+    {
+      Unknown,
+      OrdinaryTable, // r
+      Index, // i
+      Sequence, // s
+      View, // v
+      MaterializedView, // m
+      CompositeType, // c
+      ToastTable, // t
+      ForeignTable // f
+    };
+
+    Relkind relkind() const;
 
     bool declareCursor( const QString &cursorName,
                         const QgsAttributeList &fetchAttributes,

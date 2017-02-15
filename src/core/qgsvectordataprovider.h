@@ -539,6 +539,11 @@ class CORE_EXPORT QgsVectorDataProvider : public QgsDataProvider, public QgsFeat
      */
     virtual QString translateMetadataValue( const QString &mdKey, const QVariant &value ) const { Q_UNUSED( mdKey ); return value.toString(); }
 
+    /** Return true if the data source has metadata, false otherwise.
+      * @return true if data source has metadata, false otherwise.
+      */
+    virtual bool dataSourceHasMetadata() const { return true; };
+
   signals:
 
     /**

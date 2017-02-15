@@ -1281,12 +1281,8 @@ bool QgsPostgresProvider::determinePrimaryKey()
       // an oid column that can be used instead.
       // If the relation is a view try to find a suitable column to use as
       // the primary key.
-
-      sql = QStringLiteral( "SELECT relkind FROM pg_class WHERE oid=regclass(%1)::oid" ).arg( quotedValue( mQuery ) );
-      res = connectionRO()->PQexec( sql );
-      QString type = res.PQgetvalue( 0, 0 );
-
-      if ( type == QLatin1String( "r" ) ) // the relation is a table
+      QgsPostgresProvider::Relkind kind = relkind();
+      if ( kind == Relkind::OrdinaryTable )
       {
         QgsDebugMsg( "Relation is a table. Checking to see if it has an oid column." );
 
@@ -1321,7 +1317,7 @@ bool QgsPostgresProvider::determinePrimaryKey()
           }
         }
       }
-      else if ( type == QLatin1String( "v" ) || type == QLatin1String( "m" ) ) // the relation is a view
+      else if ( kind == Relkind::View || kind == Relkind::MaterializedView )
       {
         QSettings settings;
         bool checkPrimaryKeyUnicity = !settings.value( QStringLiteral( "/qgis/trustProject" ), false ).toBool();
@@ -1329,7 +1325,7 @@ bool QgsPostgresProvider::determinePrimaryKey()
       }
       else
       {
-        QgsMessageLog::logMessage( tr( "Unexpected relation type '%1'." ).arg( type ), tr( "PostGIS" ) );
+        QgsMessageLog::logMessage( tr( "Unexpected relation kind '%1'." ).arg( kind ), tr( "PostGIS" ) );
       }
     }
     else
@@ -1398,6 +1394,63 @@ bool QgsPostgresProvider::determinePrimaryKey()
   mValid = mPrimaryKeyType != PktUnknown;
 
   return mValid;
+}
+
+QgsPostgresProvider::Relkind QgsPostgresProvider::relkind() const
+{
+  QString sql = QStringLiteral( "SELECT relkind FROM pg_class WHERE oid=regclass(%1)::oid" ).arg( quotedValue( mQuery ) );
+  QgsPostgresResult res( connectionRO()->PQexec( sql ) );
+  QString type = res.PQgetvalue( 0, 0 );
+
+  QgsPostgresProvider::Relkind kind = Relkind::Unknown;
+
+  if ( type == QLatin1String( "r" ) )
+  {
+    kind = Relkind::OrdinaryTable;
+  }
+  else if ( type == QLatin1String( "i" ) )
+  {
+    kind = Relkind::Index;
+  }
+  else if ( type == QLatin1String( "s" ) )
+  {
+    kind = Relkind::Sequence;
+  }
+  else if ( type == QLatin1String( "v" ) )
+  {
+    kind = Relkind::View;
+  }
+  else if ( type == QLatin1String( "m" ) )
+  {
+    kind = Relkind::MaterializedView;
+  }
+  else if ( type == QLatin1String( "c" ) )
+  {
+    kind = Relkind::CompositeType;
+  }
+  else if ( type == QLatin1String( "t" ) )
+  {
+    kind = Relkind::ToastTable;
+  }
+  else if ( type == QLatin1String( "f" ) )
+  {
+    kind = Relkind::ForeignTable;
+  }
+
+  return kind;
+}
+
+bool QgsPostgresProvider::dataSourceHasMetadata() const
+{
+  bool hasMetadata = true;
+  QgsPostgresProvider::Relkind kind = relkind();
+
+  if ( kind == Relkind::View || kind == Relkind::MaterializedView )
+  {
+    hasMetadata = false;
+  }
+
+  return hasMetadata;
 }
 
 /* static */

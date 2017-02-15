@@ -798,8 +798,24 @@ QgsRectangle QgsVectorLayer::extent() const
 
   if ( !mValidExtent && mLazyExtent && mDataProvider )
   {
-    // get the extent
-    QgsRectangle mbr = mDataProvider->extent();
+    QgsRectangle mbr;
+
+    // get the extent from project if conditions are met
+    if ( !mDataProvider->dataSourceHasMetadata() && !mExtentProject.isNull() )
+    {
+      QSettings settings;
+      bool trustProject = settings.value( QStringLiteral( "/qgis/trustProject" ), false ).toBool();
+      if ( trustProject )
+      {
+        mbr = mExtentProject;
+      }
+    }
+
+    // get extent directly from data
+    if ( mbr.isNull() )
+    {
+      mbr = mDataProvider->extent();
+    }
 
     // show the extent
     QgsDebugMsg( "Extent of layer: " + mbr.toString() );
@@ -1389,6 +1405,13 @@ bool QgsVectorLayer::readXml( const QDomNode &layer_node, const QgsReadWriteCont
     {
       mDataProvider->setEncoding( encodingString );
     }
+  }
+
+  // read extent from project
+  QDomNode extentNode = layer_node.namedItem( QStringLiteral( "extent" ) );
+  if ( !extentNode.isNull() )
+  {
+    mExtentProject = QgsXmlUtils::readRectangle( extentNode.toElement() );
   }
 
   // load vector joins - does not resolve references to layers yet
