@@ -46,6 +46,7 @@
 #include "qgssettings.h"
 #include "qgsmaplayerlistutils.h"
 #include "qgslayoutmanager.h"
+#include "qgsziputils.h"
 
 #include <QApplication>
 #include <QFileInfo>
@@ -390,6 +391,75 @@ bool QgsProject::isDirty() const
 void QgsProject::setDirty( bool b )
 {
   mDirty = b;
+}
+
+bool QgsProject::unzip( const QString &filename )
+{
+  clearError();
+  clearZip();
+
+  // extract the archive in a temporary directory and returns all filenames
+  QTemporaryDir tmpDir;
+  tmpDir.setAutoRemove( false );
+  QStringList files = QgsZipUtils::unzip( filename, tmpDir.path() );
+
+  // check extracted files to retrieve the qgs project filename
+  Q_FOREACH ( QString file, files )
+  {
+    QFileInfo fileInfo( file );
+    if ( "qgs" == fileInfo.suffix().toLower() )
+    {
+      mZip.mQgsFile = file;
+    }
+    else
+    {
+      mZip.mFiles.append( file );
+    }
+  }
+
+  bool readOk( false );
+  if ( ! mZip.mQgsFile.isEmpty() )
+  {
+    readOk = read( mZip.mQgsFile );
+  }
+  else
+  {
+    setError( "Unable to find a .qgs file into the zip archive." );
+  }
+
+  if ( readOk )
+  {
+    mZip.mValid = true;
+    mZip.mZipFile = filename;
+    mZip.mDir = tmpDir.path();
+  }
+  else
+  {
+    clearZip();
+  }
+
+  return readOk;
+}
+
+void QgsProject::clearZip()
+{
+  // remove the previous directory and files
+  QDir unzipDir( mZip.mDir );
+  if ( unzipDir.exists() )
+  {
+    Q_FOREACH ( QFileInfo info, unzipDir.entryInfoList( QDir::Files ) )
+    {
+      QFile::remove( info.absoluteFilePath() );
+    }
+
+    QDir().rmdir( mZip.mDir );
+  }
+
+  mZip.mValid = false;
+  mZip. mZipFile = "";
+  mZip.mDir = "";
+  mZip. mQgsFile = "";
+  mZip.mFiles.clear();
 }
 
 void QgsProject::setFileName( const QString &name )
@@ -1163,6 +1233,50 @@ bool QgsProject::write( const QString &filename )
   mFile.setFileName( filename );
 
   return write();
+}
+
+bool QgsProject::zip( const QString &name )
+{
+  clearError();
+
+  bool zipOk = false;
+  QString originalName = mFile.fileName();
+  QTemporaryDir tmpDir;
+
+  if ( QFile::exists( name ) )
+  {
+    if ( ! QFile::remove( name ) )
+    {
+      setError( tr( "Unable to remove zip file '%1'" ).arg( name ) );
+      return false;
+    }
+  }
+
+  if ( tmpDir.isValid() )
+  {
+    // create qgs file into tmp directory
+    QFile qgsFile( QDir( tmpDir.path() ).filePath( "project.qgs" ) );
+
+    if ( qgsFile.open( QIODevice::WriteOnly ) )
+    {
+      mFile.setFileName( qgsFile.fileName() );
+      if ( write() )
+      {
+        QStringList files;
+        files.append( mFile.fileName() );
+        zipOk = QgsZipUtils::zip( name, files );
+      }
+
+      mFile.setFileName( originalName );
+      qgsFile.close();
+    }
+  }
+  else
+  {
+    setError( "Cannot open temporary file" );
+  }
+
+  return zipOk;
 }
 
 bool QgsProject::write()

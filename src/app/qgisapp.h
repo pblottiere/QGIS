@@ -229,7 +229,7 @@ class APP_EXPORT QgisApp : public QMainWindow, private Ui::MainWindow
     /** Opens a qgis project file
       \returns false if unable to open the project
       */
-    bool addProject( const QString &projectFile );
+    bool addProject( const QString &projectFile, bool zip = false );
 
     /** Convenience function to open either a project or a layer file.
       */

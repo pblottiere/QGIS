@@ -263,6 +263,7 @@ SET(QGIS_CORE_SRCS
   qgsvirtuallayerdefinitionutils.cpp
   qgsmapthemecollection.cpp
   qgsxmlutils.cpp
+  qgsziputils.cpp
   qgssettings.cpp
 
   composer/qgsaddremoveitemcommand.cpp
@@ -1072,6 +1073,7 @@ TARGET_LINK_LIBRARIES(qgis_core
   ${QT_QTSQL_LIBRARY}
   ${QCA_LIBRARY}
 
+  ${LIBZIP_LIBRARY}
   ${PROJ_LIBRARY}
   ${GEOS_LIBRARY}
   ${GDAL_LIBRARY}

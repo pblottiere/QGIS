@@ -86,6 +86,15 @@ class CORE_EXPORT QgsProject : public QObject, public QgsExpressionContextGenera
     Q_PROPERTY( QList<QgsVectorLayer *> avoidIntersectionsLayers READ avoidIntersectionsLayers WRITE setAvoidIntersectionsLayers NOTIFY avoidIntersectionsLayersChanged )
 
   public:
+    struct Zip
+    {
+      bool mValid; // zip is valid
+      QString mZipFile; // zip filename
+      QString mDir; // directory where files are extracted
+      QString mQgsFile; // qgis project found in zip
+      QStringList mFiles;
+    };
+
     //! Returns the QgsProject singleton instance
     static QgsProject *instance();
 
@@ -166,6 +175,12 @@ class CORE_EXPORT QgsProject : public QObject, public QgsExpressionContextGenera
      * \since QGIS 3.0
      */
     void setEllipsoid( const QString &ellipsoid );
+
+    //! \note unzip a project
+    bool unzip( const QString &filename );
+
+    //! \note zip a project
+    bool zip( const QString &filename );
 
     /** Clear the project - removes all settings and resets it back to an empty, default state.
      * \since QGIS 2.4
@@ -965,6 +980,9 @@ class CORE_EXPORT QgsProject : public QObject, public QgsExpressionContextGenera
     //! \note not available in Python bindings
     void loadEmbeddedNodes( QgsLayerTreeGroup *group );
 
+    //! \note remove the directory where unzip has extracted files
+    void clearZip();
+
     QMap<QString, QgsMapLayer *> mMapLayers;
 
     QString mErrorMessage;
@@ -995,6 +1013,7 @@ class CORE_EXPORT QgsProject : public QObject, public QgsExpressionContextGenera
 
     QVariantMap mCustomVariables;
 
+    Zip mZip;
     QFile mFile;                 // current physical project file
     mutable QgsProjectPropertyKey mProperties;  // property hierarchy, TODO: this shouldn't be mutable
     QString mTitle;              // project title
