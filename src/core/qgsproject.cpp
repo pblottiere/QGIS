@@ -445,7 +445,7 @@ void QgsProject::clearZip()
 {
   // remove the previous directory and files
   QDir unzipDir( mZip.mDir );
-  if ( unzipDir.exists() )
+  if ( !mZip.mDir.isEmpty() && unzipDir.exists() )
   {
     Q_FOREACH ( QFileInfo info, unzipDir.entryInfoList( QDir::Files ) )
     {
