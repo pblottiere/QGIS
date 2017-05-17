@@ -101,6 +101,12 @@ class QgsProject : QObject, QgsExpressionContextGenerator
      */
     void setEllipsoid( const QString& ellipsoid );
 
+    //! \note unzip a project
+    bool unzip( const QString &filename );
+
+    //! \note zip a project
+    bool zip( const QString &filename );
+
     /** Clear the project - removes all settings and resets it back to an empty, default state.
      * @note added in 2.4
      */
