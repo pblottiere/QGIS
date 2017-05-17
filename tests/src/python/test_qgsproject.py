@@ -15,6 +15,7 @@ __copyright__ = 'Copyright 2015, The QGIS Project'
 __revision__ = '$Format:%H$'
 
 import os
+import tempfile
 
 import qgis  # NOQA
 
@@ -22,7 +23,10 @@ from qgis.core import (QgsProject,
                        QgsApplication,
                        QgsUnitTypes,
                        QgsCoordinateReferenceSystem,
-                       QgsVectorLayer)
+                       QgsVectorLayer,
+                       QgsFeature,
+                       QgsGeometry,
+                       QgsPoint)
 from qgis.gui import (QgsLayerTreeMapCanvasBridge,
                       QgsMapCanvas)
 from qgis.testing import start_app, unittest
@@ -30,6 +34,21 @@ from utilities import (unitTestDataPath)
 
 app = start_app()
 TEST_DATA_DIR = unitTestDataPath()
+
+
+def createLayerWithTwoPoints():
+    layer = QgsVectorLayer("Point?field=fldtxt:string&field=fldint:integer",
+                           "addfeat", "memory")
+    pr = layer.dataProvider()
+    f = QgsFeature()
+    f.setAttributes(["test", 123])
+    f.setGeometry(QgsGeometry.fromPoint(QgsPoint(100, 200)))
+    f2 = QgsFeature()
+    f2.setAttributes(["test2", 457])
+    f2.setGeometry(QgsGeometry.fromPoint(QgsPoint(100, 200)))
+    assert pr.addFeatures([f, f2])
+    assert layer.pendingFeatureCount() == 2
+    return layer
 
 
 class TestQgsProject(unittest.TestCase):
@@ -180,6 +199,28 @@ class TestQgsProject(unittest.TestCase):
 
         expected = ['polys', 'lines']
         self.assertEqual(sorted(layers_names), sorted(expected))
+
+    def testZipUnzip(self):
+        # create a new project with 1 vector layer
+        prj = QgsProject()
+        vlayer = createLayerWithTwoPoints()
+        prj.addMapLayers([vlayer])
+
+        # generate a random zip filename
+        temp_file_name = ""
+        with tempfile.NamedTemporaryFile(dir='/tmp', delete=False) as tmpfile:
+            temp_file_name = tmpfile.name + ".zip"
+
+        # zip the project
+        self.assertTrue(prj.zip(temp_file_name))
+
+        # unzip the project
+        prj_unzip = QgsProject()
+        self.assertTrue(prj_unzip.unzip(temp_file_name))
+
+        # check that the unzipped project has still the vector layer
+        mapLayers = prj_unzip.mapLayers()
+        self.assertTrue(vlayer.id() in mapLayers)
 
 
 if __name__ == '__main__':
