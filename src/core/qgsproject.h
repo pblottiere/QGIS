@@ -181,6 +181,13 @@ class CORE_EXPORT QgsProject : public QObject, public QgsExpressionContextGenera
 
     //! \note zip a project
     bool zip( const QString &filename );
+    bool zip();
+
+    //! \note returns true if the projects was unzipped
+    bool unzipped() const;
+
+    //! \note returns zip file or empty if not unzipped
+    QString zipFileName() const;
 
     /** Clear the project - removes all settings and resets it back to an empty, default state.
      * \since QGIS 2.4

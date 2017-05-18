@@ -5136,18 +5136,14 @@ void QgisApp::fileOpen()
     QString lastUsedDir = settings.value( QStringLiteral( "UI/lastProjectDir" ), QDir::homePath() ).toString();
     const QString qgs_ext = tr( "QGIS files" ) + " (*.qgs *.QGS)";
     const QString zip_ext = tr( "ZIP files" ) + " (*.zip)";
-    QString filter;
     QString fullPath = QFileDialog::getOpenFileName( this,
                        tr( "Choose a QGIS project file to open" ),
                        lastUsedDir,
-                       qgs_ext + ";;" + zip_ext, &filter );
+                       qgs_ext + ";;" + zip_ext );
     if ( fullPath.isNull() )
     {
       return;
     }
-
-    // zip or not zip?
-    bool zip = ( filter == zip_ext ) ? true : false;
 
     // Fix by Tim - getting the dirPath from the dialog
     // directly truncates the last node in the dir path.
@@ -5158,7 +5154,7 @@ void QgisApp::fileOpen()
     settings.setValue( QStringLiteral( "UI/lastProjectDir" ), myPath );
 
     // open the selected project
-    addProject( fullPath, zip );
+    addProject( fullPath );
   }
 } // QgisApp::fileOpen
 
@@ -5174,8 +5170,9 @@ void QgisApp::enableProjectMacros()
   adds a saved project to qgis, usually called on startup by specifying a
   project file on the command line
   */
-bool QgisApp::addProject( const QString &projectFile, bool zip )
+bool QgisApp::addProject( const QString &projectFile )
 {
+  bool zip = ( QFileInfo( projectFile ).suffix() == "zip" ) ? true : false;
   QFileInfo pfi( projectFile );
   statusBar()->showMessage( tr( "Loading project: %1" ).arg( pfi.fileName() ) );
   qApp->processEvents();
@@ -5383,14 +5380,26 @@ bool QgisApp::fileSave()
     }
   }
 
-  if ( QgsProject::instance()->write() )
+  bool writeOk = false;
+  QString writtenFileName = "";
+  if ( QgsProject::instance()->unzipped() )
+  {
+    writeOk = QgsProject::instance()->zip();
+    writtenFileName = QgsProject::instance()->zipFileName();
+  }
+  else
+  {
+    writeOk = QgsProject::instance()->write();
+    writtenFileName = QgsProject::instance()->fileName();
+  }
+
+  if ( writeOk )
   {
     setTitleBarText_( *this ); // update title bar
-    statusBar()->showMessage( tr( "Saved project to: %1" ).arg( QgsProject::instance()->fileName() ), 5000 );
+    statusBar()->showMessage( tr( "Saved project to: %1" ).arg( writtenFileName ), 5000 );
 
-    saveRecentProjectPath( fullPath.filePath() );
-
-    QFileInfo fi( QgsProject::instance()->fileName() );
+    QFileInfo fi( writtenFileName );
+    saveRecentProjectPath( fi.absoluteFilePath() );
     mProjectLastModified = fi.lastModified();
   }
   else
