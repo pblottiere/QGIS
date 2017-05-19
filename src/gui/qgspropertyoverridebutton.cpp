@@ -66,6 +66,8 @@ QgsPropertyOverrideButton::QgsPropertyOverrideButton( QWidget *parent,
 
   mActionDescription = new QAction( tr( "Description..." ), this );
 
+  mActionAutocreate = new QAction( tr( "Autocreate" ), this );
+
   mActionExpDialog = new QAction( tr( "Edit..." ), this );
   mActionExpression = nullptr;
   mActionPasteExpr = new QAction( tr( "Paste" ), this );
@@ -289,6 +291,10 @@ void QgsPropertyOverrideButton::aboutToShowMenu()
   {
     mDefineMenu->addAction( mActionDescription );
   }
+
+  mDefineMenu->addSeparator();
+
+  mDefineMenu->addAction( mActionAutocreate );
 
   mDefineMenu->addSeparator();
 

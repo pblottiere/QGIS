@@ -82,6 +82,7 @@
 #include "qgsexpressioncontext.h"
 #include "qgsfeedback.h"
 #include "qgsxmlutils.h"
+#include "qgsauxiliarystorage.h"
 
 #include "diagram/qgsdiagram.h"
 
@@ -197,6 +198,25 @@ QgsVectorLayer::~QgsVectorLayer()
 
   delete mRenderer;
   delete mConditionalStyles;
+}
+
+bool QgsVectorLayer::initializeAuxiliaryStorage()
+{
+  bool valid = false;
+  mAuxiliaryStorage = QgsAuxiliaryStorage::create( *this );
+
+  if ( mAuxiliaryStorage )
+  {
+    valid = mAuxiliaryStorage->isValid();
+    // addJoin();
+  }
+
+  return valid;
+}
+
+QgsAuxiliaryStorage *QgsVectorLayer::auxiliaryStorage()
+{
+  return mAuxiliaryStorage;
 }
 
 QString QgsVectorLayer::storageType() const

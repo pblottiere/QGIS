@@ -221,6 +221,7 @@ class GUI_EXPORT QgsPropertyOverrideButton: public QToolButton
     QAction *mActionCopyExpr = nullptr;
     QAction *mActionClearExpr = nullptr;
     QAction *mActionAssistant = nullptr;
+    QAction *mActionAutocreate = nullptr;
 
     QgsPropertyDefinition mDefinition;
 

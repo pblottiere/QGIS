@@ -100,6 +100,7 @@ SET(QGIS_CORE_SRCS
   qgsattributes.cpp
   qgsattributetableconfig.cpp
   qgsattributeeditorelement.cpp
+  qgsauxiliarystorage.cpp
   qgsbearingutils.cpp
   qgsbrowsermodel.cpp
   qgscachedfeatureiterator.cpp
@@ -492,6 +493,7 @@ SET(QGIS_CORE_MOC_HDRS
   qgsapplication.h
   qgsactionscoperegistry.h
   qgsanimatedicon.h
+  qgsauxiliarystorage.h
   qgsbrowsermodel.h
   qgscontexthelp.h
   qgscoordinatereferencesystem.h
