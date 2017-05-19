@@ -27,6 +27,19 @@
 QgsAuxiliaryStorage::QgsAuxiliaryStorage( const QString &filename, const QgsVectorLayer &layer, const QString &table ):
   QgsVectorLayer( QString( "dbname='%1' table='%2' sql=" ).arg( filename, table ), QString( "%1-auxiliary-storage" ).arg( layer.name() ), "spatialite" )
 {
+  // add features
+  const QgsFeatureIds ids = layer.allFeatureIds();
+  QgsFeatureIds::const_iterator it = ids.constBegin();
+
+  startEditing();
+  for ( ; it != ids.constEnd(); ++it )
+  {
+    QgsAttributes attrs( 1 );
+    attrs[0] = QVariant( *it );
+    QgsFeature f( *it );
+    f.setAttributes( attrs );
+  }
+  commitChanges();
 }
 
 QgsAuxiliaryStorage::~QgsAuxiliaryStorage()
@@ -165,7 +178,7 @@ bool QgsAuxiliaryStorage::initializeSpatialMetadata( sqlite3 *sqlite_handle, QSt
 
 bool QgsAuxiliaryStorage::createDataDefinedPropertyTable( const QString &table, sqlite3 *sqlite_handle, QString &err )
 {
-  QString sql = QString( "CREATE TABLE '%1' ('name' TEXT)" ).arg( table );
+  QString sql = QString( "CREATE TABLE '%1' ( 'ID' int64 )" ).arg( table );
   char *errMsg = nullptr;
   int rc = sqlite3_exec( sqlite_handle, sql.toUtf8(), nullptr, nullptr, &errMsg );
   if ( rc != SQLITE_OK )

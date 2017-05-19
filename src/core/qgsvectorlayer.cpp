@@ -208,7 +208,15 @@ bool QgsVectorLayer::initializeAuxiliaryStorage()
   if ( mAuxiliaryStorage )
   {
     valid = mAuxiliaryStorage->isValid();
-    // addJoin();
+
+    if ( valid )
+    {
+      QgsVectorLayerJoinInfo joinInfo;
+      joinInfo.setJoinLayer( mAuxiliaryStorage );
+      joinInfo.setJoinFieldName( "ID" );
+      joinInfo.setTargetFieldName( "ID" );
+      addJoin( joinInfo );
+    }
   }
 
   return valid;

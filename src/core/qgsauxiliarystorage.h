@@ -37,9 +37,9 @@ class CORE_EXPORT QgsAuxiliaryStorage : public QgsVectorLayer
     QgsAuxiliaryStorage( const QString &filename, const QgsVectorLayer &layer, const QString &table );
     virtual ~QgsAuxiliaryStorage();
 
-    //! QgsVectorLayer cannot be copied.
+    //! QgsAuxiliaryStorage cannot be copied.
     QgsAuxiliaryStorage( const QgsAuxiliaryStorage &rhs ) = delete;
-    //! QgsVectorLayer cannot be copied.
+    //! QgsAuxiliaryStorage cannot be copied.
     QgsAuxiliaryStorage &operator=( QgsAuxiliaryStorage const &rhs ) = delete;
 
     static QgsAuxiliaryStorage *create( const QgsVectorLayer &layer );
