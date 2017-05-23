@@ -1999,6 +1999,9 @@ class CORE_EXPORT QgsVectorLayer : public QgsMapLayer, public QgsExpressionConte
 
     QStringList mCommitErrors;
 
+    //! extent read from the project file.
+    QgsRectangle mExtentProject;
+
     //! stores information about uncommitted changes to layer
     QgsVectorLayerEditBuffer *mEditBuffer = nullptr;
     friend class QgsVectorLayerEditBuffer;
