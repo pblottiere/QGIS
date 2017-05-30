@@ -473,6 +473,10 @@ void QgsPropertyOverrideButton::menuActionTriggered( QAction *action )
   {
     showAssistant();
   }
+  else if ( action == mActionAutocreate )
+  {
+    emit autocreated();
+  }
   else if ( mFieldsMenu->actions().contains( action ) )  // a field name clicked
   {
     if ( action->isEnabled() )

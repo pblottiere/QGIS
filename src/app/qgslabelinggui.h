@@ -68,7 +68,7 @@ class APP_EXPORT QgsLabelingGui : public QgsTextFormatWidget, private QgsExpress
   private slots:
 
     void updateProperty();
-
+    void autocreateProperty();
 };
 
 #endif // QGSLABELINGGUI_H

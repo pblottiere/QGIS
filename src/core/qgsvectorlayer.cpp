@@ -147,6 +147,7 @@ QgsVectorLayer::QgsVectorLayer( const QString &vectorLayerPath,
   , mExpressionFieldBuffer( nullptr )
   , mDiagramRenderer( nullptr )
   , mDiagramLayerSettings( nullptr )
+  , mAuxiliaryStorage( nullptr )
   , mValidExtent( false )
   , mLazyExtent( true )
   , mSymbolFeatureCounted( false )
@@ -215,7 +216,7 @@ bool QgsVectorLayer::initializeAuxiliaryStorage()
       joinInfo.setJoinLayer( mAuxiliaryStorage );
       joinInfo.setJoinFieldName( "ID" );
       joinInfo.setTargetFieldName( "ID" );
-      addJoin( joinInfo );
+      valid = addJoin( joinInfo );
     }
   }
 
@@ -224,6 +225,9 @@ bool QgsVectorLayer::initializeAuxiliaryStorage()
 
 QgsAuxiliaryStorage *QgsVectorLayer::auxiliaryStorage()
 {
+  if ( ! mAuxiliaryStorage )
+    initializeAuxiliaryStorage();
+
   return mAuxiliaryStorage;
 }
 

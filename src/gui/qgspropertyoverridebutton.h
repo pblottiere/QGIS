@@ -175,6 +175,8 @@ class GUI_EXPORT QgsPropertyOverrideButton: public QToolButton
     //! Emitted when property definition changes
     void changed();
 
+    void autocreated();
+
     //! Emitted when the activated status of the widget changes
     void activated( bool isActive );
 

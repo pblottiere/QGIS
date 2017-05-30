@@ -21,6 +21,7 @@
 #include "qgsmapcanvas.h"
 #include "qgsvectorlayerlabeling.h"
 #include "qgsproject.h"
+#include "qgsauxiliarystorage.h"
 
 QgsExpressionContext QgsLabelingGui::createExpressionContext() const
 {
@@ -46,6 +47,7 @@ void QgsLabelingGui::registerDataDefinedButton( QgsPropertyOverrideButton *butto
 {
   button->init( key, mDataDefinedProperties, QgsPalLayerSettings::propertyDefinitions(), mLayer );
   connect( button, &QgsPropertyOverrideButton::changed, this, &QgsLabelingGui::updateProperty );
+  connect( button, &QgsPropertyOverrideButton::autocreated, this, &QgsLabelingGui::autocreateProperty );
   button->registerExpressionContextGenerator( this );
 }
 
@@ -54,6 +56,13 @@ void QgsLabelingGui::updateProperty()
   QgsPropertyOverrideButton *button = qobject_cast<QgsPropertyOverrideButton *>( sender() );
   QgsPalLayerSettings::Property key = static_cast< QgsPalLayerSettings::Property >( button->propertyKey() );
   mDataDefinedProperties.setProperty( key, button->toProperty() );
+}
+
+void QgsLabelingGui::autocreateProperty()
+{
+  QgsPropertyOverrideButton *button = qobject_cast<QgsPropertyOverrideButton *>( sender() );
+  QgsPalLayerSettings::Property key = static_cast< QgsPalLayerSettings::Property >( button->propertyKey() );
+  mLayer->auxiliaryStorage()->createProperty( QgsPalLayerSettings::propertyDefinitions()[key] );
 }
 
 QgsLabelingGui::QgsLabelingGui( QgsVectorLayer *layer, QgsMapCanvas *mapCanvas, const QgsPalLayerSettings *layerSettings, QWidget *parent )

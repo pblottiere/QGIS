@@ -20,6 +20,7 @@
 
 #include "qgis_core.h"
 #include "qgsvectorlayer.h"
+#include "qgsproperty.h"
 
 #include <QString>
 
@@ -39,8 +40,11 @@ class CORE_EXPORT QgsAuxiliaryStorage : public QgsVectorLayer
 
     //! QgsAuxiliaryStorage cannot be copied.
     QgsAuxiliaryStorage( const QgsAuxiliaryStorage &rhs ) = delete;
+
     //! QgsAuxiliaryStorage cannot be copied.
     QgsAuxiliaryStorage &operator=( QgsAuxiliaryStorage const &rhs ) = delete;
+
+    bool createProperty( const QgsPropertyDefinition &definition );
 
     static QgsAuxiliaryStorage *create( const QgsVectorLayer &layer );
 

@@ -18,8 +18,10 @@
 #include "qgsauxiliarystorage.h"
 #include "qgslogger.h"
 #include "qgsslconnect.h"
+#include "qgsvectordataprovider.h"
 
 #include <QTemporaryDir>
+#include <QVariant>
 
 #include <sqlite3.h>
 #include <spatialite.h>
@@ -44,6 +46,36 @@ QgsAuxiliaryStorage::QgsAuxiliaryStorage( const QString &filename, const QgsVect
 
 QgsAuxiliaryStorage::~QgsAuxiliaryStorage()
 {
+}
+
+bool QgsAuxiliaryStorage::createProperty( const QgsPropertyDefinition &definition )
+{
+  QVariant::Type type;
+  int len( 0 ), precision( 0 );
+  switch ( definition.dataType() )
+  {
+    case QgsPropertyDefinition::DataTypeString:
+      type = QVariant::String;
+      len = 50;
+      break;
+    case QgsPropertyDefinition::DataTypeNumeric:
+      type = QVariant::Double;
+      len = 10;
+      precision = 10;
+      break;
+    case QgsPropertyDefinition::DataTypeBoolean:
+      type = QVariant::Bool;
+      break;
+    default:
+      break;
+  }
+
+  QgsField field;
+  field.setName( definition.name() );
+  field.setLength( len );
+  field.setPrecision( precision );
+  dataProvider()->addAttributes( QList<QgsField>() << field );
+  updateFields();
 }
 
 QgsAuxiliaryStorage *QgsAuxiliaryStorage::create( const QgsVectorLayer &layer )
