@@ -24,37 +24,47 @@
 
 #include <QString>
 
-class CORE_EXPORT QgsAuxiliaryStorage : public QgsVectorLayer
+class CORE_EXPORT QgsAuxiliaryStorageJoin : public QgsVectorLayer
 {
     Q_OBJECT
 
   public:
-    enum AuxiliaryField
-    {
-      X = 0,
-      Y = 1
-    };
-
-    QgsAuxiliaryStorage( const QString &filename, const QgsVectorLayer &layer, const QString &table );
-    virtual ~QgsAuxiliaryStorage();
+    QgsAuxiliaryStorageJoin( const QString &filename, const QString &table, const QgsVectorLayer &layer );
+    virtual ~QgsAuxiliaryStorageJoin();
 
     //! QgsAuxiliaryStorage cannot be copied.
-    QgsAuxiliaryStorage( const QgsAuxiliaryStorage &rhs ) = delete;
+    QgsAuxiliaryStorageJoin( const QgsAuxiliaryStorageJoin &rhs ) = delete;
 
     //! QgsAuxiliaryStorage cannot be copied.
-    QgsAuxiliaryStorage &operator=( QgsAuxiliaryStorage const &rhs ) = delete;
+    QgsAuxiliaryStorageJoin &operator=( QgsAuxiliaryStorageJoin const &rhs ) = delete;
 
     bool createProperty( const QgsPropertyDefinition &definition );
 
-    static QgsAuxiliaryStorage *create( const QgsVectorLayer &layer );
+    bool propertyExists( const QgsPropertyDefinition &definition ) const;
+
+    QString propertyFieldName( const QgsPropertyDefinition &definition ) const;
+};
+
+class CORE_EXPORT QgsAuxiliaryStorage
+{
+  public:
+    QgsAuxiliaryStorage( const QString &filename );
+    virtual ~QgsAuxiliaryStorage();
+
+    bool isValid() const;
+    QString fileName() const;
+    QgsAuxiliaryStorageJoin *createJoin( const QgsVectorLayer &layer );
 
   private:
-    static bool createDB( const QString &filename, const QString &table );
-    static bool initializeSpatialMetadata( sqlite3 *sqlite_handle, QString &err );
-    static bool createDataDefinedPropertyTable( const QString &table, sqlite3 *sqlite_handle, QString &err );
+    bool createDB();
+    bool openDB();
+    bool initializeSpatialMetadata( QString &err );
 
-    //QString mFileName;
-    //sqlite3 *mSqliteHandler;
+    bool createTableIfNotExists( const QString &table );
+
+    bool mValid;
+    QString mFileName;
+    sqlite3 *mSqliteHandler;
 };
 
 #endif

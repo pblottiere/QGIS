@@ -62,7 +62,19 @@ void QgsLabelingGui::autocreateProperty()
 {
   QgsPropertyOverrideButton *button = qobject_cast<QgsPropertyOverrideButton *>( sender() );
   QgsPalLayerSettings::Property key = static_cast< QgsPalLayerSettings::Property >( button->propertyKey() );
-  mLayer->auxiliaryStorage()->createProperty( QgsPalLayerSettings::propertyDefinitions()[key] );
+  QgsPropertyDefinition def = QgsPalLayerSettings::propertyDefinitions()[key];
+
+  // create property in auxiliary storage
+  mLayer->auxiliaryStorageJoin()->createProperty( def );
+
+  // update property with join field name from auxiliary storage
+  const QgsVectorLayer *vl = button->vectorLayer();
+  QgsProperty property = button->toProperty();
+  property.setField( vl->auxiliaryStorageJoin()->propertyFieldName( def ) );
+  property.setActive( true );
+  button->updateFieldLists();
+  button->setToProperty( property );
+  mDataDefinedProperties.setProperty( key, button->toProperty() );
 }
 
 QgsLabelingGui::QgsLabelingGui( QgsVectorLayer *layer, QgsMapCanvas *mapCanvas, const QgsPalLayerSettings *layerSettings, QWidget *parent )

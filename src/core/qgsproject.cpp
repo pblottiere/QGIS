@@ -711,6 +711,13 @@ bool QgsProject::addLayer( const QDomElement &layerElem, QList<QDomNode> &broken
   // have the layer restore state that is stored in Dom node
   if ( mapLayer->readLayerXml( layerElem, pathResolver() ) && mapLayer->isValid() )
   {
+    // add auxiliary storage join after reading XML representation
+    if ( QgsVectorLayer *vl = qobject_cast<QgsVectorLayer *>( mapLayer ) )
+    {
+      QgsAuxiliaryStorageJoin *join = mAuxiliaryStorage->createJoin( *vl );
+      vl->setAuxiliaryStorageJoin( join );
+    }
+
     emit readMapLayer( mapLayer, layerElem );
 
     QList<QgsMapLayer *> myLayers;
@@ -860,6 +867,20 @@ bool QgsProject::read()
   }
 
   mLayerTreeRegistryBridge->setEnabled( false );
+
+  // init auxiliary storage before creating layers
+  QString auxiliaryStorageFileName;
+  if ( mZip.mValid && !mZip.mAuxiliaryStorage.isEmpty() )
+  {
+    auxiliaryStorageFileName = mZip.mAuxiliaryStorage;
+  }
+  else
+  {
+    QDir d = fileInfo().absoluteDir();
+    QString file = fileInfo().fileName().split( ".", QString::SkipEmptyParts ).at( 0 );
+    auxiliaryStorageFileName = d.absoluteFilePath( QString( "%1.as" ).arg( file ) );
+  }
+  mAuxiliaryStorage.reset( new QgsAuxiliaryStorage( auxiliaryStorageFileName ) );
 
   // get the map layers
   QList<QDomNode> brokenNodes;
@@ -1192,6 +1213,10 @@ bool QgsProject::zip( const QString &name )
         QString tmpZipFilename = QDir( tmpDir.path() ).filePath( "archive.zip" );
         QStringList files;
         files.append( mFile.fileName() );
+
+        if ( mAuxiliaryStorage->isValid() )
+          files.append( mAuxiliaryStorage->fileName() );
+
         zipOk = QgsZipUtils::zip( tmpZipFilename, files );
 
         // if zip is ok, then the previous zip file is replaced
@@ -1245,13 +1270,17 @@ bool QgsProject::unzip( const QString &filename )
   tmpDir.setAutoRemove( false );
   QStringList files = QgsZipUtils::unzip( filename, tmpDir.path() );
 
-  // check extracted files to retrieve the qgs project filename
+  // check extracted files
   Q_FOREACH ( QString file, files )
   {
     QFileInfo fileInfo( file );
     if ( "qgs" == fileInfo.suffix().toLower() )
     {
       mZip.mQgsFile = file;
+    }
+    else if ( "as" == fileInfo.suffix().toLower() )
+    {
+      mZip.mAuxiliaryStorage = file;
     }
     else
     {

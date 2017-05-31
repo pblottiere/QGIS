@@ -26,8 +26,8 @@
 #include <sqlite3.h>
 #include <spatialite.h>
 
-QgsAuxiliaryStorage::QgsAuxiliaryStorage( const QString &filename, const QgsVectorLayer &layer, const QString &table ):
-  QgsVectorLayer( QString( "dbname='%1' table='%2' sql=" ).arg( filename, table ), QString( "%1-auxiliary-storage" ).arg( layer.name() ), "spatialite" )
+QgsAuxiliaryStorageJoin::QgsAuxiliaryStorageJoin( const QString &filename, const QString &table, const QgsVectorLayer &layer ):
+  QgsVectorLayer( QString( "dbname='%1' table='%2' sql=" ).arg( filename, table ), QString( "%1-auxiliary-storage" ).arg( table ), "spatialite" )
 {
   // add features
   const QgsFeatureIds ids = layer.allFeatureIds();
@@ -44,11 +44,11 @@ QgsAuxiliaryStorage::QgsAuxiliaryStorage( const QString &filename, const QgsVect
   commitChanges();
 }
 
-QgsAuxiliaryStorage::~QgsAuxiliaryStorage()
+QgsAuxiliaryStorageJoin::~QgsAuxiliaryStorageJoin()
 {
 }
 
-bool QgsAuxiliaryStorage::createProperty( const QgsPropertyDefinition &definition )
+bool QgsAuxiliaryStorageJoin::createProperty( const QgsPropertyDefinition &definition )
 {
   QVariant::Type type;
   int len( 0 ), precision( 0 );
@@ -78,91 +78,146 @@ bool QgsAuxiliaryStorage::createProperty( const QgsPropertyDefinition &definitio
   updateFields();
 }
 
-QgsAuxiliaryStorage *QgsAuxiliaryStorage::create( const QgsVectorLayer &layer )
+bool QgsAuxiliaryStorageJoin::propertyExists( const QgsPropertyDefinition &definition ) const
 {
-  QgsAuxiliaryStorage *storage = nullptr;
-  QTemporaryDir tmpDir;
-  tmpDir.setAutoRemove( false );
+  return ( fields().indexOf( definition.name() ) >= 0 );
+}
 
-  QString dbFileName = QString( "%1.as" ).arg( layer.name() );
-  QString dbPath = QDir( tmpDir.path() ).absoluteFilePath( dbFileName );
-  QString table( "data_defined_property" );
-  QFile dbFile( dbPath );
+QString QgsAuxiliaryStorageJoin::propertyFieldName( const QgsPropertyDefinition &definition ) const
+{
+  // joined field name
+  return QString( "%1_%2" ).arg( name(), definition.name() );
+}
 
-  if ( dbFile.open( QIODevice::ReadWrite ) )
+QgsAuxiliaryStorage::QgsAuxiliaryStorage( const QString &filename )
+  : mValid( false )
+  , mFileName( filename )
+  , mSqliteHandler( nullptr )
+{
+  QFile f( filename );
+  if ( f.exists() )
   {
-    dbFile.close();
-
-    if ( createDB( dbPath, table ) )
+    mValid = openDB();
+  }
+  else
+  {
+    if ( f.open( QIODevice::ReadWrite ) )
     {
-      storage = new QgsAuxiliaryStorage( dbPath, layer, table );
+      f.close();
+      mValid = createDB();
+    }
+  }
+}
+
+QgsAuxiliaryStorage::~QgsAuxiliaryStorage()
+{
+  if ( mSqliteHandler )
+    QgsSLConnect::sqlite3_close( mSqliteHandler );
+
+  QFile f( mFileName );
+  if ( f.exists() )
+    f.remove();
+}
+
+QgsAuxiliaryStorageJoin *QgsAuxiliaryStorage::createJoin( const QgsVectorLayer &layer )
+{
+  QgsAuxiliaryStorageJoin *join( nullptr );
+
+  if ( mValid )
+  {
+    QString tableName( layer.id() );
+    if ( createTableIfNotExists( tableName ) )
+    {
+      join = new QgsAuxiliaryStorageJoin( mFileName, tableName, layer );
     }
   }
 
-  return storage;
+  return join;
 }
 
-bool QgsAuxiliaryStorage::createDB( const QString &filename, const QString &table )
+bool QgsAuxiliaryStorage::isValid() const
+{
+  return mValid;
+}
+
+QString QgsAuxiliaryStorage::fileName() const
+{
+  return mFileName;
+}
+
+
+bool QgsAuxiliaryStorage::createTableIfNotExists( const QString &table )
+{
+  QString sql = QString( "CREATE TABLE IF NOT EXISTS '%1' ( 'ID' int64 )" ).arg( table );
+  int rc = sqlite3_exec( mSqliteHandler, sql.toUtf8(), nullptr, nullptr, nullptr );
+  if ( rc != SQLITE_OK )
+  {
+    QString err = QObject::tr( "Unable to create table:\n" );
+    err += QString::fromUtf8( sqlite3_errmsg( mSqliteHandler ) );
+    QgsDebugMsg( err );
+    return false;
+  }
+
+  return true;
+}
+
+bool QgsAuxiliaryStorage::openDB()
+{
+  return !QgsSLConnect::sqlite3_open_v2( mFileName.toUtf8().constData(), &mSqliteHandler, SQLITE_OPEN_READWRITE, nullptr );
+}
+
+bool QgsAuxiliaryStorage::createDB()
 {
   QString errMsg;
-  char *msg = nullptr;
-  sqlite3 *sqlite_handle = nullptr;
   int rc;
 
-  // create database
-  rc = QgsSLConnect::sqlite3_open_v2( filename.toUtf8().constData(), &sqlite_handle, SQLITE_OPEN_READWRITE | SQLITE_OPEN_CREATE, nullptr );
+  // open/create database
+  rc = QgsSLConnect::sqlite3_open_v2( mFileName.toUtf8().constData(), &mSqliteHandler, SQLITE_OPEN_READWRITE | SQLITE_OPEN_CREATE, nullptr );
   if ( rc )
   {
-    errMsg = tr( "Could not create a new database\n" );
-    errMsg += QString::fromUtf8( sqlite3_errmsg( sqlite_handle ) );
+    errMsg = QObject::tr( "Could not create a new database\n" );
+    errMsg += QString::fromUtf8( sqlite3_errmsg( mSqliteHandler ) );
     goto err;
   }
 
   // activating Foreign Key constraints
-  rc = sqlite3_exec( sqlite_handle, "PRAGMA foreign_keys = 1", nullptr, nullptr, &msg );
+  rc = sqlite3_exec( mSqliteHandler, "PRAGMA foreign_keys = 1", nullptr, nullptr, nullptr );
   if ( rc != SQLITE_OK )
   {
-    errMsg = tr( "Unable to activate FOREIGN_KEY constraints [%1]" ).arg( msg );
-    sqlite3_free( msg );
+    errMsg = QObject::tr( "Unable to activate FOREIGN_KEY constraints:\n" );
+    errMsg += QString::fromUtf8( sqlite3_errmsg( mSqliteHandler ) );
     goto err;
   }
 
   // init spatial metadata
-  rc = initializeSpatialMetadata( sqlite_handle, errMsg );
+  rc = initializeSpatialMetadata( errMsg );
   if ( !rc )
   {
     goto err;
   }
 
-  rc = createDataDefinedPropertyTable( table, sqlite_handle, errMsg );
-  if ( !rc )
-  {
-    goto err;
-  }
-
-  QgsSLConnect::sqlite3_close( sqlite_handle );
   return true;
 
 err:
-  QgsSLConnect::sqlite3_close( sqlite_handle );
+  QgsSLConnect::sqlite3_close( mSqliteHandler );
   QgsDebugMsg( errMsg );
   return false;
 }
 
-bool QgsAuxiliaryStorage::initializeSpatialMetadata( sqlite3 *sqlite_handle, QString &err )
+bool QgsAuxiliaryStorage::initializeSpatialMetadata( QString &err )
 {
   char **results = nullptr;
   int rows, columns;
-  char *errMsg = nullptr;
   bool above41 = false;
   int rc;
   int count = 0;
 
   QString sql = "select count(*) from sqlite_master";
-  rc = sqlite3_get_table( sqlite_handle, sql.toStdString().c_str(), &results, &rows, &columns, nullptr );
+  rc = sqlite3_get_table( mSqliteHandler, sql.toStdString().c_str(), &results, &rows, &columns, nullptr );
   if ( rc != SQLITE_OK )
   {
-    err = tr( "Unable to execute '%1'" ).arg( sql );
+    err = QObject::tr( "Unable to execute '%1':\n" ).arg( sql );
+    err += QString::fromUtf8( sqlite3_errmsg( mSqliteHandler ) );
     return false;
   }
 
@@ -176,11 +231,12 @@ bool QgsAuxiliaryStorage::initializeSpatialMetadata( sqlite3 *sqlite_handle, QSt
 
   if ( count > 0 )
   {
-    err = tr( "Invalid count" );
+    err = QObject::tr( "Invalid count" );
     return false;
   }
 
-  rc = sqlite3_get_table( sqlite_handle, "select spatialite_version()", &results, &rows, &columns, nullptr );
+  sql = "select spatialite_version()";
+  rc = sqlite3_get_table( mSqliteHandler, sql.toStdString().c_str(), &results, &rows, &columns, nullptr );
   if ( rc == SQLITE_OK && rows == 1 && columns == 1 )
   {
     QString version = QString::fromUtf8( results[1] );
@@ -191,35 +247,24 @@ bool QgsAuxiliaryStorage::initializeSpatialMetadata( sqlite3 *sqlite_handle, QSt
       above41 = verparts.size() >= 2 && ( verparts[0].toInt() > 4 || ( verparts[0].toInt() == 4 && verparts[1].toInt() >= 1 ) );
     }
   }
+  else
+  {
+    err = QObject::tr( "Unable to execute '%1':\n" ).arg( sql );
+    err += QString::fromUtf8( sqlite3_errmsg( mSqliteHandler ) );
+    return false;
+  }
 
   sqlite3_free_table( results );
 
-  rc = sqlite3_exec( sqlite_handle, above41 ? "SELECT InitSpatialMetadata(1)" : "SELECT InitSpatialMetadata()", nullptr, nullptr, &errMsg );
+  rc = sqlite3_exec( mSqliteHandler, above41 ? "SELECT InitSpatialMetadata(1)" : "SELECT InitSpatialMetadata()", nullptr, nullptr, nullptr );
   if ( rc != SQLITE_OK )
   {
-    err = tr( "Unable to initialize SpatialMetadata:\n" );
-    err += QString::fromUtf8( errMsg );
-    sqlite3_free( errMsg );
+    err = QObject::tr( "Unable to initialize SpatialMetadata:\n" );
+    err += QString::fromUtf8( sqlite3_errmsg( mSqliteHandler ) );
     return false;
   }
 
-  spatial_ref_sys_init( sqlite_handle, 0 );
-
-  return true;
-}
-
-bool QgsAuxiliaryStorage::createDataDefinedPropertyTable( const QString &table, sqlite3 *sqlite_handle, QString &err )
-{
-  QString sql = QString( "CREATE TABLE '%1' ( 'ID' int64 )" ).arg( table );
-  char *errMsg = nullptr;
-  int rc = sqlite3_exec( sqlite_handle, sql.toUtf8(), nullptr, nullptr, &errMsg );
-  if ( rc != SQLITE_OK )
-  {
-    err = tr( "Unable to create data defined property table:\n" );
-    err += QString::fromUtf8( errMsg );
-    sqlite3_free( errMsg );
-    return false;
-  }
+  spatial_ref_sys_init( mSqliteHandler, 0 );
 
   return true;
 }

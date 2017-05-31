@@ -22,6 +22,7 @@
 #include "qgsvectorlayer.h"
 #include "qgspanelwidget.h"
 #include "qgspropertyassistantwidget.h"
+#include "qgsauxiliarystorage.h"
 
 #include <QClipboard>
 #include <QMenu>
@@ -294,7 +295,12 @@ void QgsPropertyOverrideButton::aboutToShowMenu()
 
   mDefineMenu->addSeparator();
 
+  // deactivate autocreate button if the property yet exist in auxiliary storage join
   mDefineMenu->addAction( mActionAutocreate );
+  if ( mVectorLayer->auxiliaryStorageJoin()->propertyExists( mDefinition ) )
+  {
+    mActionAutocreate->setEnabled( false );
+  }
 
   mDefineMenu->addSeparator();
 

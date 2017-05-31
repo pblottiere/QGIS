@@ -163,6 +163,8 @@ class GUI_EXPORT QgsPropertyOverrideButton: public QToolButton
      */
     void setSymbol( std::shared_ptr< QgsSymbol > symbol ) { mSymbol = symbol; }
 
+    void updateFieldLists();
+
   public slots:
 
     /**
@@ -184,9 +186,6 @@ class GUI_EXPORT QgsPropertyOverrideButton: public QToolButton
     void mouseReleaseEvent( QMouseEvent *event ) override;
 
   private:
-
-    void updateFieldLists();
-
     void showDescriptionDialog();
     void showExpressionDialog();
     void showAssistant();

@@ -70,7 +70,7 @@ class QgsVectorLayerJoinBuffer;
 class QgsAbstractVectorLayerLabeling;
 class QgsPointV2;
 class QgsFeedback;
-class QgsAuxiliaryStorage;
+class QgsAuxiliaryStorageJoin;
 
 typedef QList<int> QgsAttributeList;
 typedef QSet<int> QgsAttributeIds;
@@ -404,11 +404,10 @@ class CORE_EXPORT QgsVectorLayer : public QgsMapLayer, public QgsExpressionConte
     //! QgsVectorLayer cannot be copied.
     QgsVectorLayer &operator=( QgsVectorLayer const &rhs ) = delete;
 
-    //! create auxiliary storage for this layer
-    bool initializeAuxiliaryStorage();
-
-    //! direct access to the auxiliary storage container
-    QgsAuxiliaryStorage *auxiliaryStorage();
+    //!
+    void setAuxiliaryStorageJoin( QgsAuxiliaryStorageJoin *j SIP_TRANSFER );
+    QgsAuxiliaryStorageJoin *auxiliaryStorageJoin();
+    const QgsAuxiliaryStorageJoin *auxiliaryStorageJoin() const;
 
     //! Returns the permanent storage type for this layer as a friendly name.
     QString storageType() const;
@@ -2053,7 +2052,7 @@ class CORE_EXPORT QgsVectorLayer : public QgsMapLayer, public QgsExpressionConte
     //stores infos about diagram placement (placement type, priority, position distance)
     QgsDiagramLayerSettings *mDiagramLayerSettings = nullptr;
 
-    QgsAuxiliaryStorage *mAuxiliaryStorage;
+    std::unique_ptr<QgsAuxiliaryStorageJoin> mAuxiliaryStorageJoin;
 
     mutable bool mValidExtent;
     mutable bool mLazyExtent;

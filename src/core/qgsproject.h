@@ -39,6 +39,7 @@
 #include "qgscoordinatereferencesystem.h"
 #include "qgsprojectproperty.h"
 #include "qgsmaplayer.h"
+#include "qgsauxiliarystorage.h"
 
 class QFileInfo;
 class QDomDocument;
@@ -92,6 +93,7 @@ class CORE_EXPORT QgsProject : public QObject, public QgsExpressionContextGenera
       QString mZipFile; // zip filename
       QString mDir; // directory where files are extracted
       QString mQgsFile; // qgis project found in zip
+      QString mAuxiliaryStorage; // spatialite database file
       QStringList mFiles;
     };
 
@@ -989,6 +991,8 @@ class CORE_EXPORT QgsProject : public QObject, public QgsExpressionContextGenera
 
     //! \note remove the directory where unzip has extracted files
     void clearZip();
+
+    std::unique_ptr<QgsAuxiliaryStorage> mAuxiliaryStorage;
 
     QMap<QString, QgsMapLayer *> mMapLayers;
 
