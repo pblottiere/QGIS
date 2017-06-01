@@ -2231,7 +2231,26 @@ bool QgsVectorLayer::changeAttributeValue( QgsFeatureId fid, int field, const QV
   if ( !mEditBuffer || !mDataProvider )
     return false;
 
-  return mEditBuffer->changeAttributeValue( fid, field, newValue, oldValue );
+  if ( fields().fieldOrigin( field ) == QgsFields::OriginJoin )
+  {
+    int srcFieldIndex;
+    const QgsVectorLayerJoinInfo *info = mJoinBuffer->joinForFieldIndex( field, fields(), srcFieldIndex );
+    if ( info )
+    {
+      QgsVectorLayer *vl = info->joinLayer();
+      vl->startEditing();
+      vl->changeAttributeValue( fid, srcFieldIndex, newValue, oldValue );
+      return vl->commitChanges();
+    }
+    else
+    {
+      return false;
+    }
+  }
+  else
+  {
+    return mEditBuffer->changeAttributeValue( fid, field, newValue, oldValue );
+  }
 }
 
 bool QgsVectorLayer::addAttribute( const QgsField &field )

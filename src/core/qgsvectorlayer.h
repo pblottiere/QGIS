@@ -407,7 +407,7 @@ class CORE_EXPORT QgsVectorLayer : public QgsMapLayer, public QgsExpressionConte
     //!
     void setAuxiliaryStorageJoin( QgsAuxiliaryStorageJoin *j SIP_TRANSFER );
     QgsAuxiliaryStorageJoin *auxiliaryStorageJoin();
-    const QgsAuxiliaryStorageJoin *auxiliaryStorageJoin() const;
+    const QgsAuxiliaryStorageJoin *auxiliaryStorageJoin() const SIP_SKIP;
 
     //! Returns the permanent storage type for this layer as a friendly name.
     QString storageType() const;

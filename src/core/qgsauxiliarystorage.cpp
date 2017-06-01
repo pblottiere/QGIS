@@ -27,7 +27,7 @@
 #include <spatialite.h>
 
 QgsAuxiliaryStorageJoin::QgsAuxiliaryStorageJoin( const QString &filename, const QString &table, const QgsVectorLayer &layer ):
-  QgsVectorLayer( QString( "dbname='%1' table='%2' sql=" ).arg( filename, table ), QString( "%1-auxiliary-storage" ).arg( table ), "spatialite" )
+  QgsVectorLayer( QString( "dbname='%1' table='%2' key='ID'" ).arg( filename, table ), QString( "%1-auxiliary-storage" ).arg( table ), "spatialite" )
 {
   // add features
   const QgsFeatureIds ids = layer.allFeatureIds();
@@ -40,6 +40,7 @@ QgsAuxiliaryStorageJoin::QgsAuxiliaryStorageJoin( const QString &filename, const
     attrs[0] = QVariant( *it );
     QgsFeature f( *it );
     f.setAttributes( attrs );
+    addFeature( f );
   }
   commitChanges();
 }
@@ -60,8 +61,8 @@ bool QgsAuxiliaryStorageJoin::createProperty( const QgsPropertyDefinition &defin
       break;
     case QgsPropertyDefinition::DataTypeNumeric:
       type = QVariant::Double;
-      len = 10;
-      precision = 10;
+      len = 0;
+      precision = 0;
       break;
     case QgsPropertyDefinition::DataTypeBoolean:
       type = QVariant::Bool;
@@ -71,11 +72,14 @@ bool QgsAuxiliaryStorageJoin::createProperty( const QgsPropertyDefinition &defin
   }
 
   QgsField field;
+  field.setType( type );
   field.setName( definition.name() );
   field.setLength( len );
   field.setPrecision( precision );
   dataProvider()->addAttributes( QList<QgsField>() << field );
   updateFields();
+
+  return true;
 }
 
 bool QgsAuxiliaryStorageJoin::propertyExists( const QgsPropertyDefinition &definition ) const
@@ -148,8 +152,8 @@ QString QgsAuxiliaryStorage::fileName() const
 
 bool QgsAuxiliaryStorage::createTableIfNotExists( const QString &table )
 {
-  QString sql = QString( "CREATE TABLE IF NOT EXISTS '%1' ( 'ID' int64 )" ).arg( table );
-  int rc = sqlite3_exec( mSqliteHandler, sql.toUtf8(), nullptr, nullptr, nullptr );
+  QString sql = QString( "CREATE TABLE IF NOT EXISTS '%1' ( 'ID' int64 PRIMARY KEY)" ).arg( table );
+  int rc = sqlite3_exec( mSqliteHandler, sql.toStdString().c_str(), nullptr, nullptr, nullptr );
   if ( rc != SQLITE_OK )
   {
     QString err = QObject::tr( "Unable to create table:\n" );
