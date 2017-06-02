@@ -164,6 +164,7 @@ void QgsPropertyOverrideButton::updateFieldLists()
           fieldType = tr( "string" );
           break;
         case QVariant::Int:
+        case QVariant::LongLong: // integers loaded from spatialite are longlong
           fieldType = tr( "integer" );
           break;
         case QVariant::Double:

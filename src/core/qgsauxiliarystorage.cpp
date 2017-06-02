@@ -65,7 +65,7 @@ bool QgsAuxiliaryStorageJoin::createProperty( const QgsPropertyDefinition &defin
       precision = 0;
       break;
     case QgsPropertyDefinition::DataTypeBoolean:
-      type = QVariant::Bool;
+      type = QVariant::Int; // sqlite does not have a bool type
       break;
     default:
       break;
