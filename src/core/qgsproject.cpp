@@ -354,6 +354,7 @@ QgsProject::~QgsProject()
   delete mRootGroup;
 
   removeAllMapLayers();
+  clearZip();
 }
 
 
@@ -471,8 +472,6 @@ void QgsProject::clear()
   emit mapThemeCollectionChanged();
 
   mRootGroup->clear();
-
-  clearZip();
 
   // reset some default project properties
   // XXX THESE SHOULD BE MOVED TO STATUSBAR RELATED SOURCE
@@ -870,7 +869,7 @@ bool QgsProject::read()
 
   // init auxiliary storage before creating layers
   QString auxiliaryStorageFileName;
-  if ( mZip.mValid && !mZip.mAuxiliaryStorage.isEmpty() )
+  if ( !mZip.mAuxiliaryStorage.isEmpty() )
   {
     auxiliaryStorageFileName = mZip.mAuxiliaryStorage;
   }
@@ -878,7 +877,7 @@ bool QgsProject::read()
   {
     QDir d = fileInfo().absoluteDir();
     QString file = fileInfo().fileName().split( ".", QString::SkipEmptyParts ).at( 0 );
-    auxiliaryStorageFileName = d.absoluteFilePath( QString( "%1.as" ).arg( file ) );
+    auxiliaryStorageFileName = d.absoluteFilePath( QString( "%1.db" ).arg( file ) );
   }
   mAuxiliaryStorage.reset( new QgsAuxiliaryStorage( auxiliaryStorageFileName ) );
 
@@ -1194,6 +1193,9 @@ bool QgsProject::zip( const QString &name )
   clearError();
 
   QString originalName = mFile.fileName();
+  QString baseName = QFileInfo( name ).baseName();
+  QString qgsFileName = QString( "%1.qgs" ).arg( baseName );
+  QString dbFileName = QString( "%1.db" ).arg( baseName );
 
   bool zipOk = false;
   QTemporaryDir tmpDir;
@@ -1201,23 +1203,28 @@ bool QgsProject::zip( const QString &name )
   if ( tmpDir.isValid() )
   {
     // create qgs file into tmp directory
-    QFile qgsFile( QDir( tmpDir.path() ).filePath( "project.qgs" ) );
+    QFile qgsFile( QDir( tmpDir.path() ).filePath( qgsFileName ) );
 
     if ( qgsFile.open( QIODevice::WriteOnly ) )
     {
-      // write the project in the project.qgs file
+      // write the project in the qgs file
       mFile.setFileName( qgsFile.fileName() );
       if ( write() )
       {
         // zip the tmp directory in a tmp zip file
-        QString tmpZipFilename = QDir( tmpDir.path() ).filePath( "archive.zip" );
+        QString tmpZipFileName = QDir( tmpDir.path() ).filePath( "archive.zip" );
+        QString tmpDbFileName = QDir( tmpDir.path() ).filePath( dbFileName );
+
         QStringList files;
         files.append( mFile.fileName() );
 
         if ( mAuxiliaryStorage->isValid() )
-          files.append( mAuxiliaryStorage->fileName() );
+        {
+          QFile::copy( mAuxiliaryStorage->fileName(), tmpDbFileName );
+          files.append( tmpDbFileName );
+        }
 
-        zipOk = QgsZipUtils::zip( tmpZipFilename, files );
+        zipOk = QgsZipUtils::zip( tmpZipFileName, files );
 
         // if zip is ok, then the previous zip file is replaced
         if ( zipOk )
@@ -1231,7 +1238,7 @@ bool QgsProject::zip( const QString &name )
             }
           }
 
-          QFile::copy( tmpZipFilename, name );
+          QFile::copy( tmpZipFileName, name );
         }
       }
 
@@ -1278,7 +1285,7 @@ bool QgsProject::unzip( const QString &filename )
     {
       mZip.mQgsFile = file;
     }
-    else if ( "as" == fileInfo.suffix().toLower() )
+    else if ( "db" == fileInfo.suffix().toLower() )
     {
       mZip.mAuxiliaryStorage = file;
     }
@@ -1291,6 +1298,9 @@ bool QgsProject::unzip( const QString &filename )
   bool readOk( false );
   if ( ! mZip.mQgsFile.isEmpty() )
   {
+    mZip.mZipFile = filename;
+    mZip.mDir = tmpDir.path();
+
     readOk = read( mZip.mQgsFile );
   }
   else
@@ -1301,8 +1311,6 @@ bool QgsProject::unzip( const QString &filename )
   if ( readOk )
   {
     mZip.mValid = true;
-    mZip.mZipFile = filename;
-    mZip.mDir = tmpDir.path();
   }
   else
   {

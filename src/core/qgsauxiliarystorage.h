@@ -29,7 +29,7 @@ class CORE_EXPORT QgsAuxiliaryStorageJoin : public QgsVectorLayer
     Q_OBJECT
 
   public:
-    QgsAuxiliaryStorageJoin( const QString &filename, const QString &table, const QgsVectorLayer &layer );
+    QgsAuxiliaryStorageJoin( const QString &filename, const QString &table, const QgsVectorLayer &layer, bool yetFilled = false );
     virtual ~QgsAuxiliaryStorageJoin();
 
     //! QgsAuxiliaryStorage cannot be copied.
@@ -43,6 +43,7 @@ class CORE_EXPORT QgsAuxiliaryStorageJoin : public QgsVectorLayer
     bool propertyExists( const QgsPropertyDefinition &definition ) const;
 
     QString propertyFieldName( const QgsPropertyDefinition &definition ) const;
+
 };
 
 class CORE_EXPORT QgsAuxiliaryStorage
@@ -61,6 +62,7 @@ class CORE_EXPORT QgsAuxiliaryStorage
     bool initializeSpatialMetadata( QString &err );
 
     bool createTableIfNotExists( const QString &table );
+    bool tableExists( const QString &table ) const;
 
     bool mValid;
     QString mFileName;

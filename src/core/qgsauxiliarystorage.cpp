@@ -26,23 +26,26 @@
 #include <sqlite3.h>
 #include <spatialite.h>
 
-QgsAuxiliaryStorageJoin::QgsAuxiliaryStorageJoin( const QString &filename, const QString &table, const QgsVectorLayer &layer ):
+QgsAuxiliaryStorageJoin::QgsAuxiliaryStorageJoin( const QString &filename, const QString &table, const QgsVectorLayer &layer, bool yetFilled ):
   QgsVectorLayer( QString( "dbname='%1' table='%2' key='ID'" ).arg( filename, table ), QString( "%1-auxiliary-storage" ).arg( table ), "spatialite" )
 {
-  // add features
-  const QgsFeatureIds ids = layer.allFeatureIds();
-  QgsFeatureIds::const_iterator it = ids.constBegin();
-
-  startEditing();
-  for ( ; it != ids.constEnd(); ++it )
+  if ( ! yetFilled )
   {
-    QgsAttributes attrs( 1 );
-    attrs[0] = QVariant( *it );
-    QgsFeature f( *it );
-    f.setAttributes( attrs );
-    addFeature( f );
+    // add features
+    const QgsFeatureIds ids = layer.allFeatureIds();
+    QgsFeatureIds::const_iterator it = ids.constBegin();
+
+    startEditing();
+    for ( ; it != ids.constEnd(); ++it )
+    {
+      QgsAttributes attrs( 1 );
+      attrs[0] = QVariant( *it );
+      QgsFeature f( *it );
+      f.setAttributes( attrs );
+      addFeature( f );
+    }
+    commitChanges();
   }
-  commitChanges();
 }
 
 QgsAuxiliaryStorageJoin::~QgsAuxiliaryStorageJoin()
@@ -51,6 +54,9 @@ QgsAuxiliaryStorageJoin::~QgsAuxiliaryStorageJoin()
 
 bool QgsAuxiliaryStorageJoin::createProperty( const QgsPropertyDefinition &definition )
 {
+  if ( propertyExists( definition ) )
+    return false;
+
   QVariant::Type type;
   int len( 0 ), precision( 0 );
   switch ( definition.dataType() )
@@ -130,9 +136,10 @@ QgsAuxiliaryStorageJoin *QgsAuxiliaryStorage::createJoin( const QgsVectorLayer &
   if ( mValid )
   {
     QString tableName( layer.id() );
+    bool tableYetFilled = tableExists( tableName );
     if ( createTableIfNotExists( tableName ) )
     {
-      join = new QgsAuxiliaryStorageJoin( mFileName, tableName, layer );
+      join = new QgsAuxiliaryStorageJoin( mFileName, tableName, layer, tableYetFilled );
     }
   }
 
@@ -152,7 +159,7 @@ QString QgsAuxiliaryStorage::fileName() const
 
 bool QgsAuxiliaryStorage::createTableIfNotExists( const QString &table )
 {
-  QString sql = QString( "CREATE TABLE IF NOT EXISTS '%1' ( 'ID' int64 PRIMARY KEY)" ).arg( table );
+  QString sql = QString( "CREATE TABLE IF NOT EXISTS '%1' ( 'ID' int64 PRIMARY KEY )" ).arg( table );
   int rc = sqlite3_exec( mSqliteHandler, sql.toStdString().c_str(), nullptr, nullptr, nullptr );
   if ( rc != SQLITE_OK )
   {
@@ -163,6 +170,28 @@ bool QgsAuxiliaryStorage::createTableIfNotExists( const QString &table )
   }
 
   return true;
+}
+
+bool QgsAuxiliaryStorage::tableExists( const QString &table ) const
+{
+  QString sql = QString( "SELECT 1 FROM sqlite_master WHERE type='table' AND name='%1'" ).arg( table );
+  int rows = 0;
+  int columns = 0;
+  char **results = nullptr;
+  int rc = sqlite3_get_table( mSqliteHandler, sql.toStdString().c_str(), &results, &rows, &columns, nullptr );
+  if ( rc != SQLITE_OK )
+  {
+    QString err = QObject::tr( "Unable to create table:\n" );
+    err += QString::fromUtf8( sqlite3_errmsg( mSqliteHandler ) );
+    QgsDebugMsg( err );
+    return false;
+  }
+
+  sqlite3_free_table( results );
+  if ( rows >= 1 )
+    return true;
+
+  return false;
 }
 
 bool QgsAuxiliaryStorage::openDB()
