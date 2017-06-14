@@ -190,6 +190,7 @@ class CORE_EXPORT QgsProject : public QObject, public QgsExpressionContextGenera
 
     //! \note returns zip file or empty if not unzipped
     QString zipFileName() const;
+    void setZipFileName( const QString &name );
 
     /** Clear the project - removes all settings and resets it back to an empty, default state.
      * \since QGIS 2.4

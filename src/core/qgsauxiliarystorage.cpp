@@ -104,7 +104,14 @@ QgsAuxiliaryStorage::QgsAuxiliaryStorage( const QString &filename )
   , mFileName( filename )
   , mSqliteHandler( nullptr )
 {
-  QFile f( filename );
+  if ( mFileName.isEmpty() )
+  {
+    QTemporaryFile tmpFile;
+    tmpFile.open();
+    mFileName = tmpFile.fileName();
+  }
+
+  QFile f( mFileName );
   if ( f.exists() )
   {
     mValid = openDB();

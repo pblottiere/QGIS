@@ -336,6 +336,8 @@ QgsProject::QgsProject( QObject *parent )
   mProperties.setName( QStringLiteral( "properties" ) );
   clear();
 
+  mAuxiliaryStorage.reset( new QgsAuxiliaryStorage() );
+
   // bind the layer tree to the map layer registry.
   // whenever layers are added to or removed from the registry,
   // layer tree will be updated
@@ -710,13 +712,6 @@ bool QgsProject::addLayer( const QDomElement &layerElem, QList<QDomNode> &broken
   // have the layer restore state that is stored in Dom node
   if ( mapLayer->readLayerXml( layerElem, pathResolver() ) && mapLayer->isValid() )
   {
-    // add auxiliary storage join after reading XML representation
-    if ( QgsVectorLayer *vl = qobject_cast<QgsVectorLayer *>( mapLayer ) )
-    {
-      QgsAuxiliaryStorageJoin *join = mAuxiliaryStorage->createJoin( *vl );
-      vl->setAuxiliaryStorageJoin( join );
-    }
-
     emit readMapLayer( mapLayer, layerElem );
 
     QList<QgsMapLayer *> myLayers;
@@ -1349,6 +1344,11 @@ bool QgsProject::unzipped() const
 QString QgsProject::zipFileName() const
 {
   return mZip.mZipFile;
+}
+
+void QgsProject::setZipFileName( const QString &name )
+{
+  mZip.mZipFile = name;
 }
 
 bool QgsProject::write()
@@ -2279,6 +2279,14 @@ QList<QgsMapLayer *> QgsProject::addMapLayers(
       {
         myLayer->setParent( this );
       }
+
+      // add auxiliary storage join after reading XML representation
+      if ( QgsVectorLayer *vl = qobject_cast<QgsVectorLayer *>( myLayer ) )
+      {
+        QgsAuxiliaryStorageJoin *join = mAuxiliaryStorage->createJoin( *vl );
+        vl->setAuxiliaryStorageJoin( join );
+      }
+
       connect( myLayer, &QObject::destroyed, this, &QgsProject::onMapLayerDeleted );
       emit layerWasAdded( myLayer );
     }

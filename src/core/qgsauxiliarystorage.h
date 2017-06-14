@@ -49,7 +49,7 @@ class CORE_EXPORT QgsAuxiliaryStorageJoin : public QgsVectorLayer
 class CORE_EXPORT QgsAuxiliaryStorage
 {
   public:
-    QgsAuxiliaryStorage( const QString &filename );
+    QgsAuxiliaryStorage( const QString &filename = QString() );
     virtual ~QgsAuxiliaryStorage();
 
     bool isValid() const;

@@ -5329,7 +5329,7 @@ bool QgisApp::fileSave()
   // that the project file name is reset to null in fileNew()
   QFileInfo fullPath;
 
-  if ( QgsProject::instance()->fileName().isNull() )
+  if ( QgsProject::instance()->zipFileName().isEmpty() )
   {
     // Retrieve last used project dir from persistent settings
     QgsSettings settings;
@@ -5337,26 +5337,26 @@ bool QgisApp::fileSave()
 
     QString path = QFileDialog::getSaveFileName(
                      this,
-                     tr( "Choose a QGIS project file" ),
+                     tr( "Choose a ZIP project file" ),
                      lastUsedDir + '/' + QgsProject::instance()->title(),
-                     tr( "QGIS files" ) + " (*.qgs *.QGS)" );
+                     tr( "ZIP files" ) + " (*.zip)" );
     if ( path.isEmpty() )
       return false;
 
     fullPath.setFile( path );
 
     // make sure we have the .qgs extension in the file name
-    if ( "qgs" != fullPath.suffix().toLower() )
+    if ( "zip" != fullPath.suffix().toLower() )
     {
-      fullPath.setFile( fullPath.filePath() + ".qgs" );
+      fullPath.setFile( fullPath.filePath() + ".zip" );
     }
 
 
-    QgsProject::instance()->setFileName( fullPath.filePath() );
+    QgsProject::instance()->setZipFileName( fullPath.filePath() );
   }
   else
   {
-    QFileInfo fi( QgsProject::instance()->fileName() );
+    QFileInfo fi( QgsProject::instance()->zipFileName() );
     fullPath = fi.absoluteFilePath();
     if ( fi.exists() && !mProjectLastModified.isNull() && mProjectLastModified != fi.lastModified() )
     {
@@ -5382,16 +5382,8 @@ bool QgisApp::fileSave()
 
   bool writeOk = false;
   QString writtenFileName = "";
-  if ( QgsProject::instance()->unzipped() )
-  {
-    writeOk = QgsProject::instance()->zip();
-    writtenFileName = QgsProject::instance()->zipFileName();
-  }
-  else
-  {
-    writeOk = QgsProject::instance()->write();
-    writtenFileName = QgsProject::instance()->fileName();
-  }
+  writeOk = QgsProject::instance()->zip();
+  writtenFileName = QgsProject::instance()->zipFileName();
 
   if ( writeOk )
   {
@@ -5405,7 +5397,7 @@ bool QgisApp::fileSave()
   else
   {
     QMessageBox::critical( this,
-                           tr( "Unable to save project %1" ).arg( QgsProject::instance()->fileName() ),
+                           tr( "Unable to save project %1" ).arg( QgsProject::instance()->zipFileName() ),
                            QgsProject::instance()->error() );
     return false;
   }
