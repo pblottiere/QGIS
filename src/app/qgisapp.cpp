@@ -5139,7 +5139,7 @@ void QgisApp::fileOpen()
     QString fullPath = QFileDialog::getOpenFileName( this,
                        tr( "Choose a QGIS project file to open" ),
                        lastUsedDir,
-                       qgs_ext + ";;" + zip_ext );
+                       zip_ext + ";;" + qgs_ext );
     if ( fullPath.isNull() )
     {
       return;
