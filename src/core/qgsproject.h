@@ -197,6 +197,9 @@ class CORE_EXPORT QgsProject : public QObject, public QgsExpressionContextGenera
      */
     void clear();
 
+    //! \note remove the directory where unzip has extracted files
+    void clearZip();
+
     /** Reads given project file from the given file.
      * \param filename name of project file to read
      * \returns true if project file has been read successfully
@@ -989,9 +992,6 @@ class CORE_EXPORT QgsProject : public QObject, public QgsExpressionContextGenera
 
     //! \note not available in Python bindings
     void loadEmbeddedNodes( QgsLayerTreeGroup *group );
-
-    //! \note remove the directory where unzip has extracted files
-    void clearZip();
 
     std::unique_ptr<QgsAuxiliaryStorage> mAuxiliaryStorage;
 

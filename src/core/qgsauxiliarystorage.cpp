@@ -99,41 +99,65 @@ QString QgsAuxiliaryStorageJoin::propertyFieldName( const QgsPropertyDefinition 
   return QString( "%1_%2" ).arg( name(), definition.name() );
 }
 
-QgsAuxiliaryStorage::QgsAuxiliaryStorage( const QString &filename )
+QgsAuxiliaryStorage::QgsAuxiliaryStorage()
   : mValid( false )
-  , mFileName( filename )
+  , mFileName( "" )
   , mSqliteHandler( nullptr )
 {
-  if ( mFileName.isEmpty() )
+}
+
+QgsAuxiliaryStorage::~QgsAuxiliaryStorage()
+{
+  close();
+}
+
+bool QgsAuxiliaryStorage::open( const QString &filename )
+{
+  QString dbFilename = filename;
+
+  if ( dbFilename.isEmpty() )
   {
     QTemporaryFile tmpFile;
     tmpFile.open();
-    mFileName = tmpFile.fileName();
+    dbFilename = tmpFile.fileName();
   }
 
-  QFile f( mFileName );
+  QFile f( dbFilename );
   if ( f.exists() )
   {
-    mValid = openDB();
+    mValid = openDB( dbFilename );
   }
   else
   {
     if ( f.open( QIODevice::ReadWrite ) )
     {
       f.close();
-      mValid = createDB();
+      mValid = createDB( dbFilename );
     }
   }
+
+  if ( mValid )
+    mFileName = dbFilename;
+
+  return mValid;
 }
 
-QgsAuxiliaryStorage::~QgsAuxiliaryStorage()
+void QgsAuxiliaryStorage::close()
 {
   if ( mSqliteHandler )
-    QgsSLConnect::sqlite3_close( mSqliteHandler );
+  {
+    QgsSLConnect::sqlite3_close_v2( mSqliteHandler );
+    mSqliteHandler = nullptr;
+  }
 
   QFile f( mFileName );
-  if ( f.exists() )
+  if ( !mFileName.isEmpty() && f.exists() )
+  {
     f.remove();
+    mFileName = QString();
+  }
+
+  mValid = false;
 }
 
 QgsAuxiliaryStorageJoin *QgsAuxiliaryStorage::createJoin( const QgsVectorLayer &layer )
@@ -201,18 +225,18 @@ bool QgsAuxiliaryStorage::tableExists( const QString &table ) const
   return false;
 }
 
-bool QgsAuxiliaryStorage::openDB()
+bool QgsAuxiliaryStorage::openDB( const QString &filename )
 {
-  return !QgsSLConnect::sqlite3_open_v2( mFileName.toUtf8().constData(), &mSqliteHandler, SQLITE_OPEN_READWRITE, nullptr );
+  return !QgsSLConnect::sqlite3_open_v2( filename.toUtf8().constData(), &mSqliteHandler, SQLITE_OPEN_READWRITE, nullptr );
 }
 
-bool QgsAuxiliaryStorage::createDB()
+bool QgsAuxiliaryStorage::createDB( const QString &filename )
 {
   QString errMsg;
   int rc;
 
   // open/create database
-  rc = QgsSLConnect::sqlite3_open_v2( mFileName.toUtf8().constData(), &mSqliteHandler, SQLITE_OPEN_READWRITE | SQLITE_OPEN_CREATE, nullptr );
+  rc = QgsSLConnect::sqlite3_open_v2( filename.toUtf8().constData(), &mSqliteHandler, SQLITE_OPEN_READWRITE | SQLITE_OPEN_CREATE, nullptr );
   if ( rc )
   {
     errMsg = QObject::tr( "Could not create a new database\n" );
@@ -239,7 +263,7 @@ bool QgsAuxiliaryStorage::createDB()
   return true;
 
 err:
-  QgsSLConnect::sqlite3_close( mSqliteHandler );
+  QgsSLConnect::sqlite3_close_v2( mSqliteHandler );
   QgsDebugMsg( errMsg );
   return false;
 }

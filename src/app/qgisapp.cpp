@@ -5192,6 +5192,7 @@ bool QgisApp::addProject( const QString &projectFile )
   }
   else
   {
+    QgsProject::instance()->clearZip();
     readOk = QgsProject::instance()->read( projectFile );
   }
 
@@ -5380,10 +5381,8 @@ bool QgisApp::fileSave()
     }
   }
 
-  bool writeOk = false;
-  QString writtenFileName = "";
-  writeOk = QgsProject::instance()->zip();
-  writtenFileName = QgsProject::instance()->zipFileName();
+  bool writeOk = QgsProject::instance()->zip();
+  QString writtenFileName = QgsProject::instance()->zipFileName();
 
   if ( writeOk )
   {

@@ -49,16 +49,18 @@ class CORE_EXPORT QgsAuxiliaryStorageJoin : public QgsVectorLayer
 class CORE_EXPORT QgsAuxiliaryStorage
 {
   public:
-    QgsAuxiliaryStorage( const QString &filename = QString() );
+    QgsAuxiliaryStorage();
     virtual ~QgsAuxiliaryStorage();
 
     bool isValid() const;
     QString fileName() const;
     QgsAuxiliaryStorageJoin *createJoin( const QgsVectorLayer &layer );
+    bool open( const QString &filename = QString() );
+    void close();
 
   private:
-    bool createDB();
-    bool openDB();
+    bool createDB( const QString &filename );
+    bool openDB( const QString &filename );
     bool initializeSpatialMetadata( QString &err );
 
     bool createTableIfNotExists( const QString &table );

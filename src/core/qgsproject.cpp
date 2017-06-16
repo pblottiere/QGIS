@@ -323,6 +323,7 @@ void removeKey_( const QString &scope,
 
 QgsProject::QgsProject( QObject *parent )
   : QObject( parent )
+  , mAuxiliaryStorage( new QgsAuxiliaryStorage() )
   , mBadLayerHandler( new QgsProjectBadLayerHandler() )
   , mSnappingConfig( this )
   , mRelationManager( new QgsRelationManager( this ) )
@@ -335,8 +336,7 @@ QgsProject::QgsProject( QObject *parent )
 {
   mProperties.setName( QStringLiteral( "properties" ) );
   clear();
-
-  mAuxiliaryStorage.reset( new QgsAuxiliaryStorage() );
+  clearZip();
 
   // bind the layer tree to the map layer registry.
   // whenever layers are added to or removed from the registry,
@@ -356,6 +356,7 @@ QgsProject::~QgsProject()
   delete mRootGroup;
 
   removeAllMapLayers();
+
   clearZip();
 }
 
@@ -874,7 +875,8 @@ bool QgsProject::read()
     QString file = fileInfo().fileName().split( ".", QString::SkipEmptyParts ).at( 0 );
     auxiliaryStorageFileName = d.absoluteFilePath( QString( "%1.db" ).arg( file ) );
   }
-  mAuxiliaryStorage.reset( new QgsAuxiliaryStorage( auxiliaryStorageFileName ) );
+  mAuxiliaryStorage->close();
+  mAuxiliaryStorage->open( auxiliaryStorageFileName );
 
   // get the map layers
   QList<QDomNode> brokenNodes;
@@ -1317,6 +1319,8 @@ bool QgsProject::unzip( const QString &filename )
 
 void QgsProject::clearZip()
 {
+  mAuxiliaryStorage->close();
+
   // remove the previous directory and files
   QDir unzipDir( mZip.mDir );
   if ( !mZip.mDir.isEmpty() && unzipDir.exists() )
@@ -1333,6 +1337,7 @@ void QgsProject::clearZip()
   mZip. mZipFile = "";
   mZip.mDir = "";
   mZip. mQgsFile = "";
+  mZip.mAuxiliaryStorage = "";
   mZip.mFiles.clear();
 }
 
