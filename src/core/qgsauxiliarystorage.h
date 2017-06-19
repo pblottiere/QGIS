@@ -55,10 +55,16 @@ class CORE_EXPORT QgsAuxiliaryStorage
     bool isValid() const;
     QString fileName() const;
     QgsAuxiliaryStorageJoin *createJoin( const QgsVectorLayer &layer );
-    bool open( const QString &filename = QString() );
+    bool openCopy( const QString &filename );
+    bool open( const QString &filename );
+    bool create();
     void close();
+    void remove();
+    void copy( const QString &copy );
 
   private:
+    QString tmpFileName() const;
+
     bool createDB( const QString &filename );
     bool openDB( const QString &filename );
     bool initializeSpatialMetadata( QString &err );

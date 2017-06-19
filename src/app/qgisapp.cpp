@@ -5445,6 +5445,9 @@ void QgisApp::fileSaveAs()
 
     QgsProject::instance()->setFileName( fullPath.filePath() );
     writeOk = QgsProject::instance()->write();
+
+    QString dbName = fullPath.path() + QDir::separator() + fullPath.baseName() + ".db";
+    QgsProject::instance()->auxiliaryStorage()->copy( dbName );
   }
 
   if ( writeOk )

@@ -22,6 +22,7 @@
 
 #include <QTemporaryDir>
 #include <QVariant>
+#include <QFile>
 
 #include <sqlite3.h>
 #include <spatialite.h>
@@ -109,35 +110,55 @@ QgsAuxiliaryStorage::QgsAuxiliaryStorage()
 QgsAuxiliaryStorage::~QgsAuxiliaryStorage()
 {
   close();
+  remove();
+}
+
+QString QgsAuxiliaryStorage::tmpFileName() const
+{
+  QTemporaryFile tmpFile;
+  tmpFile.setAutoRemove( false );
+  tmpFile.open();
+  tmpFile.close();
+
+  return tmpFile.fileName();
+}
+
+bool QgsAuxiliaryStorage::create()
+{
+  QString tmpFile = tmpFileName();
+  mValid = createDB( tmpFile );
+
+  if ( mValid )
+    mFileName = tmpFile;
+
+  return mValid;
 }
 
 bool QgsAuxiliaryStorage::open( const QString &filename )
 {
-  QString dbFilename = filename;
-
-  if ( dbFilename.isEmpty() )
+  if ( QFile::exists( filename ) )
   {
-    QTemporaryFile tmpFile;
-    tmpFile.open();
-    dbFilename = tmpFile.fileName();
+    mValid = openDB( filename );
+
+    if ( mValid )
+      mFileName = filename;
   }
 
-  QFile f( dbFilename );
-  if ( f.exists() )
-  {
-    mValid = openDB( dbFilename );
-  }
-  else
-  {
-    if ( f.open( QIODevice::ReadWrite ) )
-    {
-      f.close();
-      mValid = createDB( dbFilename );
-    }
-  }
+  return mValid;
+}
 
-  if ( mValid )
-    mFileName = dbFilename;
+bool QgsAuxiliaryStorage::openCopy( const QString &filename )
+{
+  if ( QFile::exists( filename ) )
+  {
+    QString dbFileName = tmpFileName();
+    QFile::copy( filename, dbFileName );
+
+    mValid = openDB( dbFileName );
+
+    if ( mValid )
+      mFileName = dbFileName;
+  }
 
   return mValid;
 }
@@ -150,14 +171,24 @@ void QgsAuxiliaryStorage::close()
     mSqliteHandler = nullptr;
   }
 
+  mValid = false;
+}
+
+void QgsAuxiliaryStorage::remove()
+{
   QFile f( mFileName );
   if ( !mFileName.isEmpty() && f.exists() )
   {
     f.remove();
     mFileName = QString();
   }
+}
 
-  mValid = false;
+void QgsAuxiliaryStorage::copy( const QString &copy )
+{
+  close();
+  QFile::copy( mFileName, copy );
+  open( mFileName );
 }
 
 QgsAuxiliaryStorageJoin *QgsAuxiliaryStorage::createJoin( const QgsVectorLayer &layer )

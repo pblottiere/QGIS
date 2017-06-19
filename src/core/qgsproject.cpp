@@ -358,6 +358,7 @@ QgsProject::~QgsProject()
   removeAllMapLayers();
 
   clearZip();
+  mAuxiliaryStorage->remove();
 }
 
 
@@ -863,20 +864,27 @@ bool QgsProject::read()
 
   mLayerTreeRegistryBridge->setEnabled( false );
 
-  // init auxiliary storage before creating layers
-  QString auxiliaryStorageFileName;
+  // init auxiliary storage before creating layers. 3 cases:
+  // 1 - a zip is opened and a .db file may be read
+  // 2 - a qgs is opened and a .db exists in the same path and may be read
+  // 3 - a qgs file is opened and there's no .db file
+  mAuxiliaryStorage->close();
+  mAuxiliaryStorage->remove();
+
   if ( !mZip.mAuxiliaryStorage.isEmpty() )
   {
-    auxiliaryStorageFileName = mZip.mAuxiliaryStorage;
+    mAuxiliaryStorage->open( mZip.mAuxiliaryStorage );
   }
   else
   {
-    QDir d = fileInfo().absoluteDir();
-    QString file = fileInfo().fileName().split( ".", QString::SkipEmptyParts ).at( 0 );
-    auxiliaryStorageFileName = d.absoluteFilePath( QString( "%1.db" ).arg( file ) );
+    QFileInfo info = fileInfo();
+    QString dbName = info.path() + QDir::separator() + info.baseName() + ".db";
+
+    if ( QFile::exists( dbName ) )
+      mAuxiliaryStorage->openCopy( dbName );
+    else
+      mAuxiliaryStorage->create();
   }
-  mAuxiliaryStorage->close();
-  mAuxiliaryStorage->open( auxiliaryStorageFileName );
 
   // get the map layers
   QList<QDomNode> brokenNodes;
@@ -1217,7 +1225,7 @@ bool QgsProject::zip( const QString &name )
 
         if ( mAuxiliaryStorage->isValid() )
         {
-          QFile::copy( mAuxiliaryStorage->fileName(), tmpDbFileName );
+          mAuxiliaryStorage->copy( tmpDbFileName );
           files.append( tmpDbFileName );
         }
 
@@ -1339,6 +1347,11 @@ void QgsProject::clearZip()
   mZip. mQgsFile = "";
   mZip.mAuxiliaryStorage = "";
   mZip.mFiles.clear();
+}
+
+QgsAuxiliaryStorage *QgsProject::auxiliaryStorage()
+{
+  return mAuxiliaryStorage.get();
 }
 
 bool QgsProject::unzipped() const
