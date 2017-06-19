@@ -28,7 +28,7 @@
 #include <spatialite.h>
 
 QgsAuxiliaryStorageJoin::QgsAuxiliaryStorageJoin( const QString &filename, const QString &table, const QgsVectorLayer &layer, bool yetFilled ):
-  QgsVectorLayer( QString( "dbname='%1' table='%2' key='ID'" ).arg( filename, table ), QString( "%1-auxiliary-storage" ).arg( table ), "spatialite" )
+  QgsVectorLayer( QString( "dbname='%1' table='%2' key='ROWID'" ).arg( filename, table ), QString( "%1-auxiliary-storage" ).arg( table ), "spatialite" )
 {
   if ( ! yetFilled )
   {
@@ -221,7 +221,7 @@ QString QgsAuxiliaryStorage::fileName() const
 
 bool QgsAuxiliaryStorage::createTableIfNotExists( const QString &table )
 {
-  QString sql = QString( "CREATE TABLE IF NOT EXISTS '%1' ( 'ID' int64 PRIMARY KEY )" ).arg( table );
+  QString sql = QString( "CREATE TABLE IF NOT EXISTS '%1' ( 'ROWID' int64 PRIMARY KEY )" ).arg( table );
   int rc = sqlite3_exec( mSqliteHandler, sql.toStdString().c_str(), nullptr, nullptr, nullptr );
   if ( rc != SQLITE_OK )
   {
