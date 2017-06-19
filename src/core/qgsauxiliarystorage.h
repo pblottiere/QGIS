@@ -43,6 +43,7 @@ class CORE_EXPORT QgsAuxiliaryStorageJoin : public QgsVectorLayer
     bool propertyExists( const QgsPropertyDefinition &definition ) const;
 
     QString propertyFieldName( const QgsPropertyDefinition &definition ) const;
+    QString propertyName( const QgsPropertyDefinition &definition ) const;
 
 };
 

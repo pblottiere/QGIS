@@ -25,12 +25,14 @@
 
 QgsPropertyDefinition::QgsPropertyDefinition()
   : mTypes( DataTypeString )
+  , mTarget( Target::Pal )
 {}
 
-QgsPropertyDefinition::QgsPropertyDefinition( const QString &name, const QString &description, QgsPropertyDefinition::StandardPropertyTemplate type )
+QgsPropertyDefinition::QgsPropertyDefinition( const QString &name, const QString &description, QgsPropertyDefinition::StandardPropertyTemplate type, Target target )
   : mName( name )
   , mDescription( description )
   , mStandardType( type )
+  , mTarget( target )
 {
   switch ( mStandardType )
   {
@@ -175,11 +177,12 @@ QgsPropertyDefinition::QgsPropertyDefinition( const QString &name, const QString
   }
 }
 
-QgsPropertyDefinition::QgsPropertyDefinition( const QString &name, DataType dataTypes, const QString &description, const QString &helpText )
+QgsPropertyDefinition::QgsPropertyDefinition( const QString &name, DataType dataTypes, const QString &description, const QString &helpText, Target target )
   : mName( name )
   , mDescription( description )
   , mTypes( dataTypes )
   , mHelpText( helpText )
+  , mTarget( target )
 {}
 
 bool QgsPropertyDefinition::supportsAssistant() const

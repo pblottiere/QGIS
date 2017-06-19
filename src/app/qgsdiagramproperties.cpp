@@ -433,6 +433,7 @@ void QgsDiagramProperties::registerDataDefinedButton( QgsPropertyOverrideButton 
 {
   button->init( key, mDataDefinedProperties, QgsDiagramLayerSettings::propertyDefinitions(), mLayer );
   connect( button, &QgsPropertyOverrideButton::changed, this, &QgsDiagramProperties::updateProperty );
+  connect( button, &QgsPropertyOverrideButton::autocreated, this, &QgsDiagramProperties::autocreateProperty );
   button->registerExpressionContextGenerator( this );
 }
 
@@ -440,6 +441,25 @@ void QgsDiagramProperties::updateProperty()
 {
   QgsPropertyOverrideButton *button = qobject_cast<QgsPropertyOverrideButton *>( sender() );
   QgsDiagramLayerSettings::Property key = static_cast<  QgsDiagramLayerSettings::Property >( button->propertyKey() );
+  mDataDefinedProperties.setProperty( key, button->toProperty() );
+}
+
+void QgsDiagramProperties::autocreateProperty()
+{
+  QgsPropertyOverrideButton *button = qobject_cast<QgsPropertyOverrideButton *>( sender() );
+  QgsDiagramLayerSettings::Property key = static_cast< QgsDiagramLayerSettings::Property >( button->propertyKey() );
+  QgsPropertyDefinition def = QgsDiagramLayerSettings::propertyDefinitions()[key];
+
+  // create property in auxiliary storage
+  mLayer->auxiliaryStorageJoin()->createProperty( def );
+
+  // update property with join field name from auxiliary storage
+  const QgsVectorLayer *vl = button->vectorLayer();
+  QgsProperty property = button->toProperty();
+  property.setField( vl->auxiliaryStorageJoin()->propertyFieldName( def ) );
+  property.setActive( true );
+  button->updateFieldLists();
+  button->setToProperty( property );
   mDataDefinedProperties.setProperty( key, button->toProperty() );
 }
 

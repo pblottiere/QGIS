@@ -28,7 +28,7 @@
 #include <spatialite.h>
 
 QgsAuxiliaryStorageJoin::QgsAuxiliaryStorageJoin( const QString &filename, const QString &table, const QgsVectorLayer &layer, bool yetFilled ):
-  QgsVectorLayer( QString( "dbname='%1' table='%2' key='ROWID'" ).arg( filename, table ), QString( "%1-auxiliary-storage" ).arg( table ), "spatialite" )
+  QgsVectorLayer( QString( "dbname='%1' table='%2' key='ROWID'" ).arg( filename, table ), QString( "%1-db" ).arg( table ), "spatialite" )
 {
   if ( ! yetFilled )
   {
@@ -80,7 +80,7 @@ bool QgsAuxiliaryStorageJoin::createProperty( const QgsPropertyDefinition &defin
 
   QgsField field;
   field.setType( type );
-  field.setName( definition.name() );
+  field.setName( propertyName( definition ) );
   field.setLength( len );
   field.setPrecision( precision );
   dataProvider()->addAttributes( QList<QgsField>() << field );
@@ -91,13 +91,32 @@ bool QgsAuxiliaryStorageJoin::createProperty( const QgsPropertyDefinition &defin
 
 bool QgsAuxiliaryStorageJoin::propertyExists( const QgsPropertyDefinition &definition ) const
 {
-  return ( fields().indexOf( definition.name() ) >= 0 );
+  return ( fields().indexOf( propertyName( definition ) ) >= 0 );
 }
 
 QString QgsAuxiliaryStorageJoin::propertyFieldName( const QgsPropertyDefinition &definition ) const
 {
   // joined field name
-  return QString( "%1_%2" ).arg( name(), definition.name() );
+  return QString( "%1_%2" ).arg( name(), propertyName( definition ) );
+}
+
+QString QgsAuxiliaryStorageJoin::propertyName( const QgsPropertyDefinition &definition ) const
+{
+  // joined field name
+  QString target;
+  switch ( definition.target() )
+  {
+    case QgsPropertyDefinition::Pal:
+      target = "pal";
+      break;
+    case QgsPropertyDefinition::Diagram:
+      target = "diagram";
+      break;
+    default:
+      break;
+  }
+
+  return QString( "%1-%2" ).arg( target, definition.name() );
 }
 
 QgsAuxiliaryStorage::QgsAuxiliaryStorage()
