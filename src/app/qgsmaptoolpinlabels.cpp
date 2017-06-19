@@ -209,10 +209,6 @@ void QgsMapToolPinLabels::highlightPinnedLabels()
         QgsDebugMsg( QString( "Failed to cast to vector layer" ) );
         continue;
       }
-      if ( vlayer->isEditable() )
-      {
-        lblcolor = QColor( 54, 129, 0, 63 );
-      }
 
       highlightLabel( pos, labelStringID, lblcolor );
     }
@@ -261,11 +257,6 @@ void QgsMapToolPinLabels::pinUnpinLabels( const QgsRectangle &ext, QMouseEvent *
     }
 
     QgsVectorLayer *vlayer = mCurrentLabel.layer;
-    if ( !vlayer->isEditable() )
-    {
-      QgsDebugMsg( QString( "Vector layer not editable, skipping label" ) );
-      continue;
-    }
 
     // unpin label
     if ( isPinned() && ( doUnpin  || toggleUnpinOrPin ) )

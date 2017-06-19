@@ -41,7 +41,7 @@ void QgsMapToolChangeLabelProperties::canvasPressEvent( QgsMapMouseEvent *e )
   }
 
   mCurrentLabel = LabelDetails( labelPos );
-  if ( !mCurrentLabel.valid || !mCurrentLabel.layer || !mCurrentLabel.layer->isEditable() )
+  if ( !mCurrentLabel.valid || !mCurrentLabel.layer )
   {
     return;
   }

@@ -2228,9 +2228,6 @@ bool QgsVectorLayer::changeGeometry( QgsFeatureId fid, const QgsGeometry &geom )
 
 bool QgsVectorLayer::changeAttributeValue( QgsFeatureId fid, int field, const QVariant &newValue, const QVariant &oldValue )
 {
-  if ( !mEditBuffer || !mDataProvider )
-    return false;
-
   if ( fields().fieldOrigin( field ) == QgsFields::OriginJoin )
   {
     int srcFieldIndex;
@@ -2249,7 +2246,10 @@ bool QgsVectorLayer::changeAttributeValue( QgsFeatureId fid, int field, const QV
   }
   else
   {
-    return mEditBuffer->changeAttributeValue( fid, field, newValue, oldValue );
+    if ( !mEditBuffer || !mDataProvider )
+      return false;
+    else
+      return mEditBuffer->changeAttributeValue( fid, field, newValue, oldValue );
   }
 }
 

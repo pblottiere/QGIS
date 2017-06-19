@@ -114,16 +114,10 @@ void QgsMapToolShowHideLabels::showHideLabels( QMouseEvent *e )
     QgsDebugMsg( "Failed to cast label layer to vector layer" );
     return;
   }
-  if ( !vlayer->isEditable() )
-  {
-    QgsDebugMsg( "Vector layer not editable, skipping label" );
-    return;
-  }
 
   bool doHide = e->modifiers() & Qt::ShiftModifier;
   bool labelChanged = false;
   QString editTxt = doHide ? tr( "Hid labels" ) : tr( "Showed labels" );
-  vlayer->beginEditCommand( editTxt );
 
   if ( !doHide )
   {
@@ -132,7 +126,6 @@ void QgsMapToolShowHideLabels::showHideLabels( QMouseEvent *e )
     QgsFeatureIds selectedFeatIds;
     if ( !selectedFeatures( vlayer, selectedFeatIds ) )
     {
-      vlayer->destroyEditCommand();
       return;
     }
 
@@ -140,7 +133,6 @@ void QgsMapToolShowHideLabels::showHideLabels( QMouseEvent *e )
 
     if ( selectedFeatIds.isEmpty() )
     {
-      vlayer->destroyEditCommand();
       return;
     }
 
@@ -180,12 +172,7 @@ void QgsMapToolShowHideLabels::showHideLabels( QMouseEvent *e )
 
   if ( labelChanged )
   {
-    vlayer->endEditCommand();
     vlayer->triggerRepaint();
-  }
-  else
-  {
-    vlayer->destroyEditCommand();
   }
 }
 

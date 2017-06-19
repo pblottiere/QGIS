@@ -10879,7 +10879,7 @@ void QgisApp::updateLabelToolButtons()
   for ( QMap<QString, QgsMapLayer *>::iterator it = layers.begin(); it != layers.end(); ++it )
   {
     QgsVectorLayer *vlayer = qobject_cast<QgsVectorLayer *>( it.value() );
-    if ( !vlayer || !vlayer->isEditable() ||
+    if ( !vlayer ||
          ( !vlayer->diagramsEnabled() && !vlayer->labelsEnabled() ) )
       continue;
 

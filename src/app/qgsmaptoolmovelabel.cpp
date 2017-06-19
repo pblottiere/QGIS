@@ -47,7 +47,7 @@ void QgsMapToolMoveLabel::canvasPressEvent( QgsMapMouseEvent *e )
   mCurrentLabel = LabelDetails( labelPos );
 
   QgsVectorLayer *vlayer = mCurrentLabel.layer;
-  if ( !vlayer || !vlayer->isEditable() )
+  if ( !vlayer )
   {
     return;
   }
@@ -95,7 +95,7 @@ void QgsMapToolMoveLabel::canvasReleaseEvent( QgsMapMouseEvent *e )
   deleteRubberBands();
 
   QgsVectorLayer *vlayer = mCurrentLabel.layer;
-  if ( !vlayer || !vlayer->isEditable() )
+  if ( !vlayer )
   {
     return;
   }
@@ -140,7 +140,6 @@ void QgsMapToolMoveLabel::canvasReleaseEvent( QgsMapMouseEvent *e )
     yPosNew = transformedPoint.y();
   }
 
-  vlayer->beginEditCommand( tr( "Moved label" ) + QStringLiteral( " '%1'" ).arg( currentLabelText( 24 ) ) );
   vlayer->changeAttributeValue( mCurrentLabel.pos.featureId, xCol, xPosNew );
   vlayer->changeAttributeValue( mCurrentLabel.pos.featureId, yCol, yPosNew );
 
@@ -160,10 +159,6 @@ void QgsMapToolMoveLabel::canvasReleaseEvent( QgsMapMouseEvent *e )
       vlayer->changeAttributeValue( mCurrentLabel.pos.featureId, rCol, labelRot );
     }
   }
-  vlayer->endEditCommand();
 
   vlayer->triggerRepaint();
 }
-
-
-
