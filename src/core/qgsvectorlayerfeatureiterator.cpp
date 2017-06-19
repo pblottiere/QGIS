@@ -688,6 +688,9 @@ void QgsVectorLayerFeatureIterator::addJoinedAttributes( QgsFeature &f )
   for ( ; joinIt != mOrderedJoinInfoList.constEnd(); ++joinIt )
   {
     QVariant targetFieldValue = f.attribute( joinIt->targetField );
+    if ( joinIt->joinInfo->useTargetFeatureId() )
+      targetFieldValue = f.id();
+
     if ( !targetFieldValue.isValid() )
       continue;
 

@@ -188,6 +188,8 @@ class CORE_EXPORT QgsProject : public QObject, public QgsExpressionContextGenera
     //! \note returns true if the projects was unzipped
     bool unzipped() const;
 
+    QgsAuxiliaryStorage *auxiliaryStorage();
+
     //! \note returns zip file or empty if not unzipped
     QString zipFileName() const;
     void setZipFileName( const QString &name );

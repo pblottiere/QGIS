@@ -209,7 +209,7 @@ void QgsVectorLayer::setAuxiliaryStorageJoin( QgsAuxiliaryStorageJoin *join )
   QgsVectorLayerJoinInfo joinInfo;
   joinInfo.setJoinLayer( mAuxiliaryStorageJoin.get() );
   joinInfo.setJoinFieldName( "ID" );
-  joinInfo.setTargetFieldName( "ID" );
+  joinInfo.setUseTargetFeatureId( true );
   addJoin( joinInfo );
 }
 
