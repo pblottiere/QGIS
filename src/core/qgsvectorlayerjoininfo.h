@@ -22,6 +22,7 @@ class CORE_EXPORT QgsVectorLayerJoinInfo
     QgsVectorLayerJoinInfo()
       : mMemoryCache( false )
       , cacheDirty( true )
+      , mEditable( false )
     {}
 
     //! Sets weak reference to the joined layer
@@ -53,6 +54,18 @@ class CORE_EXPORT QgsVectorLayerJoinInfo
     void setUsingMemoryCache( bool enabled ) { mMemoryCache = enabled; }
     //! Returns whether values from the joined layer should be cached in memory to speed up lookups
     bool isUsingMemoryCache() const { return mMemoryCache; }
+
+    /** Sets whether values from the joined layer may be editing from the
+     *  target layer.
+     * \since QGIS 3.0
+     */
+    void setEditable( bool editable ) { mEditable = editable; }
+
+    /** Returns whether values from the joined layer may be editing from the
+     *  target layer.
+     * \since QGIS 3.0
+     */
+    bool isEditable() const { return mEditable; }
 
     bool operator==( const QgsVectorLayerJoinInfo &other ) const
     {
@@ -98,6 +111,8 @@ class CORE_EXPORT QgsVectorLayerJoinInfo
 
     //! True if the cached join attributes need to be updated
     bool cacheDirty;
+
+    bool mEditable;
 
     //! Cache for joined attributes to provide fast lookup (size is 0 if no memory caching)
     QHash< QString, QgsAttributes> cachedAttributes;

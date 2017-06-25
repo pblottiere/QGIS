@@ -275,6 +275,7 @@ void QgsVectorLayerJoinBuffer::writeXml( QDomNode &layer_node, QDomDocument &doc
     joinElem.setAttribute( QStringLiteral( "joinFieldName" ), joinIt->joinFieldName() );
 
     joinElem.setAttribute( QStringLiteral( "memoryCache" ), joinIt->isUsingMemoryCache() );
+    joinElem.setAttribute( QStringLiteral( "editable" ), joinIt->isEditable() );
 
     if ( joinIt->joinFieldNamesSubset() )
     {
@@ -315,6 +316,7 @@ void QgsVectorLayerJoinBuffer::readXml( const QDomNode &layer_node )
       info.setJoinLayerId( infoElem.attribute( QStringLiteral( "joinLayerId" ) ) );
       info.setTargetFieldName( infoElem.attribute( QStringLiteral( "targetFieldName" ) ) );
       info.setUsingMemoryCache( infoElem.attribute( QStringLiteral( "memoryCache" ) ).toInt() );
+      info.setEditable( infoElem.attribute( QStringLiteral( "editable" ) ).toInt() );
 
       QDomElement subsetElem = infoElem.firstChildElement( QStringLiteral( "joinFieldsSubset" ) );
       if ( !subsetElem.isNull() )

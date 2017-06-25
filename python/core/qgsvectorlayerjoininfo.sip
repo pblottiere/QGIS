@@ -84,6 +84,21 @@ Returns whether values from the joined layer should be cached in memory to speed
  :rtype: bool
 %End
 
+    void setEditable( bool editable );
+%Docstring
+ Sets whether values from the joined layer may be editing from the
+  target layer.
+.. versionadded:: 3.0
+%End
+
+    bool isEditable() const;
+%Docstring
+ Returns whether values from the joined layer may be editing from the
+  target layer.
+.. versionadded:: 3.0
+ :rtype: bool
+%End
+
     bool operator==( const QgsVectorLayerJoinInfo &other ) const;
 
     void setJoinFieldNamesSubset( QStringList *fieldNamesSubset /Transfer/ );
@@ -100,6 +115,7 @@ Returns whether values from the joined layer should be cached in memory to speed
 %End
 
   protected:
+
 
 
 

@@ -73,6 +73,7 @@ void QgsJoinDialog::setJoinInfo( const QgsVectorLayerJoinInfo &joinInfo )
   mJoinFieldComboBox->setField( joinInfo.joinFieldName() );
   mTargetFieldComboBox->setField( joinInfo.targetFieldName() );
   mCacheInMemoryCheckBox->setChecked( joinInfo.isUsingMemoryCache() );
+  mJoinLayerEditableCheckBox->setChecked( joinInfo.isEditable() );
   if ( joinInfo.prefix().isNull() )
   {
     mUseCustomPrefix->setChecked( false );
@@ -110,6 +111,7 @@ QgsVectorLayerJoinInfo QgsJoinDialog::joinInfo() const
   info.setJoinFieldName( mJoinFieldComboBox->currentField() );
   info.setTargetFieldName( mTargetFieldComboBox->currentField() );
   info.setUsingMemoryCache( mCacheInMemoryCheckBox->isChecked() );
+  info.setEditable( mJoinLayerEditableCheckBox->isChecked() );
 
   if ( mUseCustomPrefix->isChecked() )
     info.setPrefix( mCustomPrefix->text() );
