@@ -236,6 +236,30 @@ void QgsVectorLayerCache::onAttributeValueChanged( QgsFeatureId fid, int field, 
   emit attributeValueChanged( fid, field, value );
 }
 
+void QgsVectorLayerCache::onJoinAttributeValueChanged( QgsFeatureId joinFid, int joinField, const QVariant &value )
+{
+  QgsVectorLayer *joinLayer = qobject_cast<QgsVectorLayer *>( sender() );
+
+  QgsVectorJoinList::const_iterator it = mLayer->vectorJoins().begin();
+  for ( ; it != mLayer->vectorJoins().end(); ++it )
+  {
+    if ( joinLayer == it->joinLayer() )
+    {
+      QgsFeature myFeature;
+      mLayer->joinBuffer()->feature( *it, joinFid, myFeature );
+
+      QString fieldName = it->prefixedNameField( joinLayer->fields().field( joinField ) );
+      int fieldIndex = mLayer->fields().indexFromName( fieldName );
+
+      if ( myFeature.isValid() && fieldIndex != -1 )
+      {
+        onAttributeValueChanged( myFeature.id(), fieldIndex, value );
+        return;
+      }
+    }
+  }
+}
+
 void QgsVectorLayerCache::featureDeleted( QgsFeatureId fid )
 {
   mCache.remove( fid );
@@ -437,6 +461,6 @@ void QgsVectorLayerCache::connectJoinedLayers() const
   {
     const QgsVectorLayer *vl = it->joinLayer();
     if ( vl )
-      connect( vl, &QgsVectorLayer::attributeValueChanged, this, &QgsVectorLayerCache::onAttributeValueChanged );
+      connect( vl, &QgsVectorLayer::attributeValueChanged, this, &QgsVectorLayerCache::onJoinAttributeValueChanged );
   }
 }

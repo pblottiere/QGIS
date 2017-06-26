@@ -2253,7 +2253,13 @@ bool QgsVectorLayer::changeAttributeValue( QgsFeatureId fid, int field, const QV
     int srcFieldIndex;
     const QgsVectorLayerJoinInfo *info = mJoinBuffer->joinForFieldIndex( field, fields(), srcFieldIndex );
     if ( info && info->isEditable() )
-      return info->joinLayer()->changeAttributeValue( fid, srcFieldIndex, newValue, oldValue );
+    {
+      QgsFeature joinFeature;
+      if ( mJoinBuffer->joinFeature( *info, fid, joinFeature ) )
+        return info->joinLayer()->changeAttributeValue( joinFeature.id(), srcFieldIndex, newValue, oldValue );
+      else
+        return false;
+    }
     else
       return false;
   }

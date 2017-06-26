@@ -89,6 +89,7 @@ Returns whether values from the joined layer should be cached in memory to speed
  Returns the prefixed name of the field as known by the target layer.
  \param the field
  :return: the prefixed name of the field
+.. versionadded:: 3.0
  :rtype: str
 %End
 

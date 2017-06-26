@@ -99,6 +99,29 @@ Quick way to test if there is any join at all
  :rtype: list of int
 %End
 
+    bool joinFeature( const QgsVectorLayerJoinInfo &info, QgsFeatureId fid, QgsFeature &joinFeature ) const;
+%Docstring
+ Gets the joined feature corresponding to the feature id given in
+  parameter.
+ \param info the join information
+ \param fid the feature id
+ \param joinFeature the joined feature
+ :return: true if a valid feature is found in the joined layer, false otherwise
+.. versionadded:: 3.0
+ :rtype: bool
+%End
+
+    bool feature( const QgsVectorLayerJoinInfo &info, QgsFeatureId joinFid, QgsFeature &feature ) const;
+%Docstring
+ Gets feature corresponding to the joined feature id given in parameter.
+ \param info the join information
+ \param fid the joined feature id
+ \param feature the feature
+ :return: true if a valid feature is found, false otherwise
+.. versionadded:: 3.0
+ :rtype: bool
+%End
+
     QgsVectorLayerJoinBuffer *clone() const /Factory/;
 %Docstring
 .. versionadded:: 2.6
