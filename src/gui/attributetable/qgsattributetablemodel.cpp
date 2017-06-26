@@ -35,6 +35,7 @@
 #include "qgsfieldformatterregistry.h"
 #include "qgsgui.h"
 #include "qgsexpressionnodeimpl.h"
+#include "qgsvectorlayerjoinbuffer.h"
 
 #include <QVariant>
 
@@ -303,7 +304,8 @@ void QgsAttributeTableModel::attributeValueChanged( QgsFeatureId fid, int idx, c
   // No filter request: skip all possibly heavy checks
   if ( mFeatureRequest.filterType() == QgsFeatureRequest::FilterNone )
   {
-    setData( index( idToRow( fid ), fieldCol( idx ) ), value, Qt::EditRole );
+    if ( loadFeatureAtId( fid ) )
+      setData( index( idToRow( fid ), fieldCol( idx ) ), value, Qt::EditRole );
   }
   else
   {
@@ -739,14 +741,34 @@ Qt::ItemFlags QgsAttributeTableModel::flags( const QModelIndex &index ) const
 
   Qt::ItemFlags flags = QAbstractItemModel::flags( index );
 
-  if ( layer()->isEditable() &&
-       !layer()->editFormConfig().readOnly( mAttributes[index.column()] ) &&
-       ( ( layer()->dataProvider() && layer()->dataProvider()->capabilities() & QgsVectorDataProvider::ChangeAttributeValues ) ||
-         FID_IS_NEW( rowToId( index.row() ) ) ) )
+  bool editable = false;
+  const int fieldIndex = mAttributes[index.column()];
+  const int fieldOrigin = layer()->fields().fieldOrigin( fieldIndex );
+  const QgsFeatureId fid = rowToId( index.row() );
+  if ( fieldOrigin == QgsFields::OriginJoin )
+  {
+    int srcFieldIndex;
+    const QgsVectorLayerJoinInfo *info = layer()->joinBuffer()->joinForFieldIndex( fieldIndex, layer()->fields(), srcFieldIndex );
+
+    if ( info && info->isEditable() )
+      editable = fieldIsEditable( *info->joinLayer(), srcFieldIndex, fid );
+  }
+  else
+    editable = fieldIsEditable( *layer(), fieldIndex, fid );
+
+  if ( editable )
     flags |= Qt::ItemIsEditable;
 
   return flags;
 }
+
+bool QgsAttributeTableModel::fieldIsEditable( const QgsVectorLayer &layer, int fieldIndex, QgsFeatureId fid ) const
+{
+  return ( layer.isEditable() &&
+           !layer.editFormConfig().readOnly( fieldIndex ) &&
+           ( ( layer.dataProvider() && layer.dataProvider()->capabilities() & QgsVectorDataProvider::ChangeAttributeValues ) || FID_IS_NEW( fid ) ) );
+}
+
 
 void QgsAttributeTableModel::reload( const QModelIndex &index1, const QModelIndex &index2 )
 {

@@ -380,6 +380,8 @@ class CORE_EXPORT QgsVectorLayerCache : public QObject
       mCache.insert( feat.id(), cachedFeature );
     }
 
+    void connectJoinedLayers() const;
+
     QgsVectorLayer *mLayer = nullptr;
     QCache< QgsFeatureId, QgsCachedFeature > mCache;
 

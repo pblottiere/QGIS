@@ -110,6 +110,16 @@ class GUI_EXPORT QgsAttributeTableModel: public QAbstractTableModel
     Qt::ItemFlags flags( const QModelIndex &index ) const override;
 
     /**
+     * Returns editable status for the feature's field of the given layer
+     * /param layer the vector layer
+     * /param fieldIndex the index of the field
+     * /param fid the feature id
+     * /returns true if the feature's field of the layer is editable, false otherwise
+     * /since QGIS 3.0
+     */
+    bool fieldIsEditable( const QgsVectorLayer &layer, int fieldIndex, QgsFeatureId fid ) const;
+
+    /**
      * Reloads the model data between indices
      * \param index1 start index
      * \param index2 end index

@@ -94,6 +94,17 @@ class QgsAttributeTableModel: QAbstractTableModel
  :rtype: Qt.ItemFlags
 %End
 
+    bool fieldIsEditable( const QgsVectorLayer &layer, int fieldIndex, QgsFeatureId fid ) const;
+%Docstring
+ Returns editable status for the feature's field of the given layer
+ /param layer the vector layer
+ /param fieldIndex the index of the field
+ /param fid the feature id
+ /returns true if the feature's field of the layer is editable, false otherwise
+ /since QGIS 3.0
+ :rtype: bool
+%End
+
     void reload( const QModelIndex &index1, const QModelIndex &index2 );
 %Docstring
  Reloads the model data between indices

@@ -18,6 +18,7 @@
 #include "qgsvectorlayercache.h"
 #include "qgscacheindex.h"
 #include "qgscachedfeatureiterator.h"
+#include "qgsvectorlayerjoinbuffer.h"
 
 QgsVectorLayerCache::QgsVectorLayerCache( QgsVectorLayer *layer, int cacheSize, QObject *parent )
   : QObject( parent )
@@ -38,6 +39,8 @@ QgsVectorLayerCache::QgsVectorLayerCache( QgsVectorLayer *layer, int cacheSize, 
   connect( mLayer, &QgsVectorLayer::updatedFields, this, &QgsVectorLayerCache::invalidate );
   connect( mLayer, &QgsVectorLayer::dataChanged, this, &QgsVectorLayerCache::invalidate );
   connect( mLayer, &QgsVectorLayer::attributeValueChanged, this, &QgsVectorLayerCache::onAttributeValueChanged );
+
+  connectJoinedLayers();
 }
 
 QgsVectorLayerCache::~QgsVectorLayerCache()
@@ -425,4 +428,15 @@ bool QgsVectorLayerCache::checkInformationCovered( const QgsFeatureRequest &feat
   }
 
   return true;
+}
+
+void QgsVectorLayerCache::connectJoinedLayers() const
+{
+  QgsVectorJoinList::const_iterator it = mLayer->vectorJoins().begin();
+  for ( ; it != mLayer->vectorJoins().end(); ++it )
+  {
+    const QgsVectorLayer *vl = it->joinLayer();
+    if ( vl )
+      connect( vl, &QgsVectorLayer::attributeValueChanged, this, &QgsVectorLayerCache::onAttributeValueChanged );
+  }
 }
