@@ -84,6 +84,14 @@ Returns whether values from the joined layer should be cached in memory to speed
  :rtype: bool
 %End
 
+    QString prefixedNameField( const QgsField &f ) const;
+%Docstring
+ Returns the prefixed name of the field as known by the target layer.
+ \param the field
+ :return: the prefixed name of the field
+ :rtype: str
+%End
+
     void setEditable( bool editable );
 %Docstring
  Sets whether values from the joined layer may be editing from the

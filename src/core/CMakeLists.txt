@@ -285,6 +285,7 @@ SET(QGIS_CORE_SRCS
   qgsvectorlayereditutils.cpp
   qgsvectorlayerfeatureiterator.cpp
   qgsvectorlayerexporter.cpp
+  qgsvectorlayerjoininfo.cpp
   qgsvectorlayerjoinbuffer.cpp
   qgsvectorlayerlabeling.cpp
   qgsvectorlayerlabelprovider.cpp

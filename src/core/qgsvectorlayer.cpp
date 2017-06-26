@@ -948,7 +948,11 @@ bool QgsVectorLayer::addFeature( QgsFeature &feature, Flags )
   bool success = mEditBuffer->addFeature( feature );
 
   if ( success )
+  {
     updateExtents();
+
+    success = addFeaturesToJoinedLayers( QgsFeatureList() << feature );
+  }
 
   return success;
 }
@@ -2605,11 +2609,51 @@ bool QgsVectorLayer::addFeatures( QgsFeatureList &features, Flags )
     return false;
 
   bool res = mEditBuffer->addFeatures( features );
+
+  if ( res )
+    addFeaturesToJoinedLayers( features );
+
   updateExtents();
 
   return res;
 }
 
+bool QgsVectorLayer::addFeaturesToJoinedLayers( QgsFeatureList &features, Flags )
+{
+  Q_FOREACH ( const QgsVectorLayerJoinInfo &info, vectorJoins() )
+  {
+    QgsVectorLayer *joinLayer = info.joinLayer();
+
+    if ( joinLayer && joinLayer->isEditable() && info.isEditable() )
+    {
+      QgsFeatureList joinFeatures;
+
+      Q_FOREACH ( const QgsFeature &feature, features )
+      {
+        QgsFeature joinFeature;
+        joinFeature.initAttributes( joinLayer->fields().count() );
+        joinFeature.setId( feature.id() );  // kepp the same id for joining step
+        joinFeature.setFields( joinLayer->fields() );
+        joinFeature.setAttribute( info.joinFieldName(), feature.attribute( info.targetFieldName() ) );
+
+        for ( int  i = 0; i < joinFeature.fields().count(); i++ )
+        {
+          QgsField f = joinFeature.fields().field( i );
+          QString prefixedName = info.prefixedNameField( f );
+
+          if ( feature.fieldNameIndex( prefixedName ) != -1 )
+            joinFeature.setAttribute( f.name(), feature.attribute( prefixedName ) );
+        }
+
+        joinFeatures << joinFeature;
+      }
+
+      joinLayer->addFeatures( joinFeatures );
+    }
+  }
+
+  return true;
+}
 
 void QgsVectorLayer::setCoordinateSystem()
 {

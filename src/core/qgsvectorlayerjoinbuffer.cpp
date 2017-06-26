@@ -199,8 +199,6 @@ QVector<int> QgsVectorLayerJoinBuffer::joinSubsetIndices( QgsVectorLayer *joinLa
 
 void QgsVectorLayerJoinBuffer::updateFields( QgsFields &fields )
 {
-  QString prefix;
-
   QList< QgsVectorLayerJoinInfo>::const_iterator joinIt = mVectorJoins.constBegin();
   for ( int joinIdx = 0 ; joinIt != mVectorJoins.constEnd(); ++joinIt, ++joinIdx )
   {
@@ -221,15 +219,6 @@ void QgsVectorLayerJoinBuffer::updateFields( QgsFields &fields )
       subset = QSet<QString>::fromList( *joinIt->joinFieldNamesSubset() );
     }
 
-    if ( joinIt->prefix().isNull() )
-    {
-      prefix = joinLayer->name() + '_';
-    }
-    else
-    {
-      prefix = joinIt->prefix();
-    }
-
     for ( int idx = 0; idx < joinFields.count(); ++idx )
     {
       // if using just a subset of fields, filter some of them out
@@ -241,7 +230,7 @@ void QgsVectorLayerJoinBuffer::updateFields( QgsFields &fields )
       if ( hasSubset || joinFields.at( idx ).name() != joinFieldName )
       {
         QgsField f = joinFields.at( idx );
-        f.setName( prefix + f.name() );
+        f.setName( joinIt->prefixedNameField( f ) );
         fields.append( f, QgsFields::OriginJoin, idx + ( joinIdx * 1000 ) );
       }
     }
