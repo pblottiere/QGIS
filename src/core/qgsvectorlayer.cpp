@@ -2632,7 +2632,6 @@ bool QgsVectorLayer::addFeaturesToJoinedLayers( QgsFeatureList &features, Flags 
       {
         QgsFeature joinFeature;
         joinFeature.initAttributes( joinLayer->fields().count() );
-        joinFeature.setId( feature.id() );  // kepp the same id for joining step
         joinFeature.setFields( joinLayer->fields() );
         joinFeature.setAttribute( info.joinFieldName(), feature.attribute( info.targetFieldName() ) );
 
