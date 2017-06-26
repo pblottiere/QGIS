@@ -2417,6 +2417,9 @@ bool QgsVectorLayer::deleteFeature( QgsFeatureId fid )
   if ( !mEditBuffer )
     return false;
 
+  if ( mJoinBuffer->containsJoins() )
+    deleteFeaturesFromJoinedLayers( QgsFeatureIds() << fid );
+
   bool res = mEditBuffer->deleteFeature( fid );
   if ( res )
   {
@@ -2435,12 +2438,32 @@ bool QgsVectorLayer::deleteFeatures( const QgsFeatureIds &fids )
     return false;
   }
 
+  if ( mJoinBuffer->containsJoins() )
+    deleteFeaturesFromJoinedLayers( fids );
+
   bool res = mEditBuffer->deleteFeatures( fids );
 
   if ( res )
   {
     mSelectedFeatureIds.subtract( fids ); // remove it from selection
     updateExtents();
+  }
+
+  return res;
+}
+
+bool QgsVectorLayer::deleteFeaturesFromJoinedLayers( QgsFeatureIds fids )
+{
+  bool res = true;
+
+  Q_FOREACH ( QgsFeatureId fid, fids )
+  {
+    Q_FOREACH ( const QgsVectorLayerJoinInfo &info, vectorJoins() )
+    {
+      QgsFeature joinFeature;
+      if ( mJoinBuffer->joinFeature( info, fid, joinFeature ) )
+        info.joinLayer()->deleteFeature( joinFeature.id() );
+    }
   }
 
   return res;
