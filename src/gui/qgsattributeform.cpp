@@ -297,22 +297,9 @@ bool QgsAttributeForm::saveEdits()
         bool changed = ( dstVar != srcVar && !dstVar.isNull() && !srcVar.isNull() )
                        || ( dstVar.isNull() != srcVar.isNull() );
 
-        bool readOnly = true;
         const int fieldIndex = eww->fieldIdx();
-        const int fieldOrigin = mLayer->fields().fieldOrigin( fieldIndex );
-        if ( fieldOrigin == QgsFields::OriginJoin )
-        {
-          int srcFieldIndex;
-          const QgsVectorLayerJoinInfo *info = mLayer->joinBuffer()->joinForFieldIndex( fieldIndex, mLayer->fields(), srcFieldIndex );
 
-          if ( info && info->joinLayer() )
-            readOnly = info->joinLayer()->editFormConfig().readOnly( srcFieldIndex );
-        }
-        else
-          readOnly = mLayer->editFormConfig().readOnly( fieldIndex );
-
-
-        if ( changed && srcVar.isValid() && !readOnly )
+        if ( changed && srcVar.isValid() && fieldIsEditable( fieldIndex ) )
         {
           dst[eww->fieldIdx()] = srcVar;
 
@@ -357,7 +344,7 @@ bool QgsAttributeForm::saveEdits()
         {
           if ( ( dst.at( i ) == src.at( i ) && dst.at( i ).isNull() == src.at( i ).isNull() ) // If field is not changed...
                || !dst.at( i ).isValid()                                     // or the widget returns invalid (== do not change)
-               || mLayer->editFormConfig().readOnly( i ) )                           // or the field cannot be edited ...
+               || !fieldIsEditable( i ) )                           // or the field cannot be edited ...
           {
             continue;
           }
@@ -1007,24 +994,9 @@ void QgsAttributeForm::synchronizeEnabledState()
 
     if ( eww )
     {
-      bool fieldEditable = true;
       const int fieldIndex = eww->fieldIdx();
-      const int fieldOrigin = mLayer->fields().fieldOrigin( fieldIndex );
 
-      if ( fieldOrigin == QgsFields::OriginJoin )
-      {
-        int srcFieldIndex;
-        const QgsVectorLayerJoinInfo *info = mLayer->joinBuffer()->joinForFieldIndex( fieldIndex, mLayer->fields(), srcFieldIndex );
-
-        if ( info && info->isEditable() && info->joinLayer()->isEditable() )
-          fieldEditable = fieldIsEditable( *( info->joinLayer() ), srcFieldIndex, mFeature.id() );
-        else
-          fieldEditable = false;
-      }
-      else
-        fieldEditable = fieldIsEditable( *mLayer, fieldIndex, mFeature.id() );
-
-      ww->setEnabled( isEditable && fieldEditable );
+      ww->setEnabled( isEditable && fieldIsEditable( fieldIndex ) );
     }
   }
 
@@ -1548,6 +1520,25 @@ void QgsAttributeForm::initPython()
       msgBox.exec();
     }
   }
+}
+
+bool QgsAttributeForm::fieldIsEditable( int fieldIndex ) const
+{
+  bool editable = false;
+  const int fieldOrigin = mLayer->fields().fieldOrigin( fieldIndex );
+
+  if ( fieldOrigin == QgsFields::OriginJoin )
+  {
+    int srcFieldIndex;
+    const QgsVectorLayerJoinInfo *info = mLayer->joinBuffer()->joinForFieldIndex( fieldIndex, mLayer->fields(), srcFieldIndex );
+
+    if ( info && info->isEditable() && info->joinLayer()->isEditable() )
+      editable = fieldIsEditable( *( info->joinLayer() ), srcFieldIndex, mFeature.id() );
+  }
+  else
+    editable = fieldIsEditable( *mLayer, fieldIndex, mFeature.id() );
+
+  return editable;
 }
 
 bool QgsAttributeForm::fieldIsEditable( const QgsVectorLayer &layer, int fieldIndex, QgsFeatureId fid ) const
