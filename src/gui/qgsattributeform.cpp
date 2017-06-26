@@ -33,6 +33,7 @@
 #include "qgssettings.h"
 #include "qgsscrollarea.h"
 #include "qgsgui.h"
+#include "qgsvectorlayerjoinbuffer.h"
 
 #include <QDir>
 #include <QTextStream>
@@ -295,8 +296,23 @@ bool QgsAttributeForm::saveEdits()
         // be careful- sometimes two null qvariants will be reported as not equal!! (e.g., different types)
         bool changed = ( dstVar != srcVar && !dstVar.isNull() && !srcVar.isNull() )
                        || ( dstVar.isNull() != srcVar.isNull() );
-        if ( changed && srcVar.isValid()
-             && !mLayer->editFormConfig().readOnly( eww->fieldIdx() ) )
+
+        bool readOnly = true;
+        const int fieldIndex = eww->fieldIdx();
+        const int fieldOrigin = mLayer->fields().fieldOrigin( fieldIndex );
+        if ( fieldOrigin == QgsFields::OriginJoin )
+        {
+          int srcFieldIndex;
+          const QgsVectorLayerJoinInfo *info = mLayer->joinBuffer()->joinForFieldIndex( fieldIndex, mLayer->fields(), srcFieldIndex );
+
+          if ( info && info->joinLayer() )
+            readOnly = info->joinLayer()->editFormConfig().readOnly( srcFieldIndex );
+        }
+        else
+          readOnly = mLayer->editFormConfig().readOnly( fieldIndex );
+
+
+        if ( changed && srcVar.isValid() && !readOnly )
         {
           dst[eww->fieldIdx()] = srcVar;
 
@@ -987,15 +1003,29 @@ void QgsAttributeForm::synchronizeEnabledState()
 
   Q_FOREACH ( QgsWidgetWrapper *ww, mWidgets )
   {
-    bool fieldEditable = true;
     QgsEditorWidgetWrapper *eww = qobject_cast<QgsEditorWidgetWrapper *>( ww );
+
     if ( eww )
     {
-      fieldEditable = !mLayer->editFormConfig().readOnly( eww->fieldIdx() ) &&
-                      ( ( mLayer->dataProvider() && layer()->dataProvider()->capabilities() & QgsVectorDataProvider::ChangeAttributeValues ) ||
-                        FID_IS_NEW( mFeature.id() ) );
+      bool fieldEditable = true;
+      const int fieldIndex = eww->fieldIdx();
+      const int fieldOrigin = mLayer->fields().fieldOrigin( fieldIndex );
+
+      if ( fieldOrigin == QgsFields::OriginJoin )
+      {
+        int srcFieldIndex;
+        const QgsVectorLayerJoinInfo *info = mLayer->joinBuffer()->joinForFieldIndex( fieldIndex, mLayer->fields(), srcFieldIndex );
+
+        if ( info && info->isEditable() && info->joinLayer()->isEditable() )
+          fieldEditable = fieldIsEditable( *( info->joinLayer() ), srcFieldIndex, mFeature.id() );
+        else
+          fieldEditable = false;
+      }
+      else
+        fieldEditable = fieldIsEditable( *mLayer, fieldIndex, mFeature.id() );
+
+      ww->setEnabled( isEditable && fieldEditable );
     }
-    ww->setEnabled( isEditable && fieldEditable );
   }
 
   // push a message and disable the OK button if constraints are invalid
@@ -1518,6 +1548,12 @@ void QgsAttributeForm::initPython()
       msgBox.exec();
     }
   }
+}
+
+bool QgsAttributeForm::fieldIsEditable( const QgsVectorLayer &layer, int fieldIndex, QgsFeatureId fid ) const
+{
+  return !layer.editFormConfig().readOnly( fieldIndex ) &&
+         ( ( layer.dataProvider() && layer.dataProvider()->capabilities() & QgsVectorDataProvider::ChangeAttributeValues ) || FID_IS_NEW( fid ) );
 }
 
 QgsAttributeForm::WidgetInfo QgsAttributeForm::createWidgetFromDef( const QgsAttributeEditorElement *widgetDef, QWidget *parent, QgsVectorLayer *vl, QgsAttributeEditorContext &context )

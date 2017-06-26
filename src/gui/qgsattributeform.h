@@ -273,6 +273,8 @@ class GUI_EXPORT QgsAttributeForm : public QWidget
 
     void initPython();
 
+    bool fieldIsEditable( const QgsVectorLayer &layer, int fieldIndex, QgsFeatureId fid ) const ;
+
     struct WidgetInfo
     {
       WidgetInfo()
