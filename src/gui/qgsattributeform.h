@@ -276,6 +276,8 @@ class GUI_EXPORT QgsAttributeForm : public QWidget
     bool fieldIsEditable( int fieldIndex ) const;
     bool fieldIsEditable( const QgsVectorLayer &layer, int fieldIndex, QgsFeatureId fid ) const ;
 
+    void searchJoinedFeatures();
+
     struct WidgetInfo
     {
       WidgetInfo()
@@ -318,6 +320,7 @@ class GUI_EXPORT QgsAttributeForm : public QWidget
     //! constraints management
     void updateAllConstraints();
     void updateConstraints( QgsEditorWidgetWrapper *w );
+    void updateConstraint( QgsEditorWidgetWrapper *w, const QgsFeature &feature, QgsFieldConstraints::ConstraintOrigin );
     bool currentFormFeature( QgsFeature &feature );
     bool currentFormValidConstraints( QStringList &invalidFields, QStringList &descriptions );
     QList<QgsEditorWidgetWrapper *> constraintDependencies( QgsEditorWidgetWrapper *w );
@@ -338,6 +341,7 @@ class GUI_EXPORT QgsAttributeForm : public QWidget
     QDialogButtonBox *mButtonBox = nullptr;
     QWidget *mSearchButtonBox = nullptr;
     QList<QgsAttributeFormInterface *> mInterfaces;
+    QMap<const QgsVectorLayerJoinInfo *, QgsFeature> mJoinedFeatures;
     QMap< int, QgsAttributeFormEditorWidget * > mFormEditorWidgets;
     QgsExpressionContext mExpressionContext;
 

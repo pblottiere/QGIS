@@ -144,28 +144,6 @@ bool QgsVectorLayerUtils::validateAttribute( const QgsVectorLayer *layer, const 
   if ( attributeIndex < 0 || attributeIndex >= layer->fields().count() )
     return false;
 
-  // if the field is joined, we have to resolve the constraint with the joined
-  // layer and its corresponding feature (with the new field value)
-  if ( layer->fields().fieldOrigin( attributeIndex ) == QgsFields::OriginJoin )
-  {
-    bool valid = false;
-
-    int srcFieldIndex;
-    const QgsVectorLayerJoinInfo *info = layer->joinBuffer()->joinForFieldIndex( attributeIndex, layer->fields(), srcFieldIndex );
-
-    if ( info && info->joinLayer() )
-    {
-      QgsFeature joinFeature;
-      if ( layer->joinBuffer()->joinFeature( *info, feature.id(), joinFeature ) )
-      {
-        joinFeature.setAttribute( srcFieldIndex, feature.attribute( attributeIndex ) );
-        valid = validateAttribute( info->joinLayer(), joinFeature, srcFieldIndex, errors, strength, origin );
-      }
-    }
-
-    return valid;
-  }
-
   QgsFields fields = layer->fields();
   QgsField field = fields.at( attributeIndex );
   QVariant value = feature.attribute( attributeIndex );

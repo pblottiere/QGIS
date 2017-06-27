@@ -62,6 +62,13 @@ class CORE_EXPORT QgsVectorLayerJoinInfo
      */
     QString prefixedNameField( const QgsField &field ) const;
 
+    /** Returns the prefixed name of the field name as known by the target layer.
+     * \param fieldName the name of a field
+     * \returns the prefixed name of the field
+     * \since QGIS 3.0
+     */
+    QString prefixedNameField( const QString &fieldName ) const;
+
     /** Sets whether values from the joined layer may be editing from the
      *  target layer.
      * \since QGIS 3.0

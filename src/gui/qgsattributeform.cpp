@@ -34,6 +34,7 @@
 #include "qgsscrollarea.h"
 #include "qgsgui.h"
 #include "qgsvectorlayerjoinbuffer.h"
+#include "qgsvectorlayerutils.h"
 
 #include <QDir>
 #include <QTextStream>
@@ -244,6 +245,8 @@ void QgsAttributeForm::setFeature( const QgsFeature &feature )
     case SingleEditMode:
     case AddFeatureMode:
     {
+      searchJoinedFeatures();
+
       resetValues();
 
       synchronizeEnabledState();
@@ -718,14 +721,13 @@ void QgsAttributeForm::updateConstraints( QgsEditorWidgetWrapper *eww )
     QgsFieldConstraints::ConstraintOrigin constraintOrigin = mLayer->isEditable() ? QgsFieldConstraints::ConstraintOriginNotSet
         : QgsFieldConstraints::ConstraintOriginLayer;
 
-    // update eww constraint
-    eww->updateConstraint( ft, constraintOrigin );
+    updateConstraint( eww, ft, constraintOrigin );
 
     // update eww dependencies constraint
     QList<QgsEditorWidgetWrapper *> deps = constraintDependencies( eww );
 
     Q_FOREACH ( QgsEditorWidgetWrapper *depsEww, deps )
-      depsEww->updateConstraint( ft, constraintOrigin );
+      updateConstraint( depsEww, ft, constraintOrigin );
 
     // sync ok button status
     synchronizeEnabledState();
@@ -738,6 +740,41 @@ void QgsAttributeForm::updateConstraints( QgsEditorWidgetWrapper *eww )
       info->apply( &mExpressionContext );
     }
   }
+}
+
+void QgsAttributeForm::updateConstraint( QgsEditorWidgetWrapper *w, const QgsFeature &feature, QgsFieldConstraints::ConstraintOrigin constraintOrigin )
+{
+  QgsFeature featureContext( feature );
+  bool join = false;
+
+  // if the widget is for a join field, we have to build a
+  // specific feature for the joined layer context to properly
+  // resolve constraints
+  if ( mLayer->fields().fieldOrigin( w->fieldIdx() ) == QgsFields::OriginJoin )
+  {
+    int srcIdx;
+    const QgsVectorLayerJoinInfo *info = mLayer->joinBuffer()->joinForFieldIndex( w->fieldIdx(), mLayer->fields(), srcIdx );
+
+    if ( !info || !mJoinedFeatures.contains( info ) )
+      return;
+
+    featureContext = mJoinedFeatures[info];
+    join = true;
+
+    QVariant id = feature.attribute( info->targetFieldName() );
+    featureContext.setAttribute( info->joinFieldName(), id );
+
+    for ( int  i = 0; i < featureContext.fields().count(); i++ )
+    {
+      QgsField f = featureContext.fields().field( i );
+      int idx = mLayer->fields().indexOf( info->prefixedNameField( f.name() ) );
+
+      if ( idx >= 0 )
+        featureContext.setAttribute( i, feature.attribute( idx ) );
+    }
+  }
+
+  w->updateConstraint( featureContext, constraintOrigin, join );
 }
 
 bool QgsAttributeForm::currentFormFeature( QgsFeature &feature )
@@ -943,11 +980,20 @@ QList<QgsEditorWidgetWrapper *> QgsAttributeForm::constraintDependencies( QgsEdi
       QString ewwName = eww->field().name();
       if ( name != ewwName )
       {
-        // get expression and referencedColumns
-        QgsExpression expr = eww->layer()->fields().at( eww->fieldIdx() ).constraints().constraintExpression();
+        // get info in case of a joined field
+        int srcIdx;
+        const QgsVectorLayerJoinInfo *info = eww->layer()->joinBuffer()->joinForFieldIndex( eww->fieldIdx(), eww->layer()->fields(), srcIdx );
 
-        Q_FOREACH ( const QString &colName, expr.referencedColumns() )
+        // get expression and referencedColumns
+        QgsField ewwField = eww->layer()->fields().field( eww->fieldIdx() );
+        QgsExpression expr = ewwField.constraints().constraintExpression();
+
+        Q_FOREACH ( const QString &refCol, expr.referencedColumns() )
         {
+          QString colName = refCol;
+          if ( info ) // valid join so the name is prefixed
+            colName = info->prefixedNameField( refCol );
+
           if ( name == colName )
           {
             wDeps.append( eww );
@@ -1950,5 +1996,30 @@ void QgsAttributeForm::ContainerInformation::apply( QgsExpressionContext *expres
     }
 
     isVisible = newVisibility;
+  }
+}
+
+void QgsAttributeForm::searchJoinedFeatures()
+{
+  mJoinedFeatures.clear();
+
+  for ( int  i = 0; i < mFeature.fields().count(); i++ )
+  {
+    if ( mFeature.fields().fieldOrigin( i ) == QgsFields::OriginJoin )
+    {
+      int srcFieldIndex;
+      const QgsVectorLayerJoinInfo *info = mLayer->joinBuffer()->joinForFieldIndex( i, mLayer->fields(), srcFieldIndex );
+
+      if ( info &&
+           ! mJoinedFeatures.contains( info ) &&
+           info->joinLayer()->fields().field( srcFieldIndex ).constraints().constraints() )
+      {
+        QgsFeature joinFeature;
+        if ( !mLayer->joinBuffer()->joinFeature( *info, mFeature.id(), joinFeature ) )
+          joinFeature = QgsVectorLayerUtils::createFeature( info->joinLayer(), QgsGeometry(), QgsAttributeMap() );
+
+        mJoinedFeatures[info] = joinFeature;
+      }
+    }
   }
 }

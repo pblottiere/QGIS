@@ -136,7 +136,7 @@ class GUI_EXPORT QgsEditorWidgetWrapper : public QgsWidgetWrapper
      * to only provider or layer based constraints.
      * \since QGIS 2.16
      */
-    void updateConstraint( const QgsFeature &featureContext, QgsFieldConstraints::ConstraintOrigin constraintOrigin = QgsFieldConstraints::ConstraintOriginNotSet );
+    void updateConstraint( const QgsFeature &featureContext, QgsFieldConstraints::ConstraintOrigin constraintOrigin = QgsFieldConstraints::ConstraintOriginNotSet, bool joinedFeature = false );
 
     /**
      * Get the current constraint status.
@@ -281,6 +281,8 @@ class GUI_EXPORT QgsEditorWidgetWrapper : public QgsWidgetWrapper
     virtual void updateConstraintWidgetStatus( ConstraintResult status );
 
   private:
+
+    void updateConstraint( const QgsVectorLayer *layer, int fieldIndex, const QgsFeature &featureContext, QgsFieldConstraints::ConstraintOrigin constraintOrigin = QgsFieldConstraints::ConstraintOriginNotSet );
 
     /**
      * Boolean storing the current validity of the constraint for this widget.

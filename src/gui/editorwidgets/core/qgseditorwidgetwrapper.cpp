@@ -18,6 +18,8 @@
 #include "qgsvectordataprovider.h"
 #include "qgsfields.h"
 #include "qgsvectorlayerutils.h"
+#include "qgsvectorlayerjoininfo.h"
+#include "qgsvectorlayerjoinbuffer.h"
 
 #include <QTableView>
 
@@ -117,10 +119,24 @@ void QgsEditorWidgetWrapper::updateConstraintWidgetStatus( ConstraintResult cons
   }
 }
 
-void QgsEditorWidgetWrapper::updateConstraint( const QgsFeature &ft, QgsFieldConstraints::ConstraintOrigin constraintOrigin )
+void QgsEditorWidgetWrapper::updateConstraint( const QgsFeature &ft, QgsFieldConstraints::ConstraintOrigin constraintOrigin, bool joinedFeature )
+{
+  if ( joinedFeature )
+  {
+    int srcFieldIndex;
+    const QgsVectorLayerJoinInfo *info = layer()->joinBuffer()->joinForFieldIndex( mFieldIdx, layer()->fields(), srcFieldIndex );
+
+    if ( info && info->joinLayer() )
+      updateConstraint( info->joinLayer(), srcFieldIndex, ft, constraintOrigin );
+  }
+  else
+    updateConstraint( layer(), mFieldIdx, ft, constraintOrigin );
+}
+
+void QgsEditorWidgetWrapper::updateConstraint( const QgsVectorLayer *layer, int fieldIndex, const QgsFeature &ft, QgsFieldConstraints::ConstraintOrigin constraintOrigin )
 {
   bool toEmit( false );
-  QgsField field = layer()->fields().at( mFieldIdx );
+  QgsField field = layer->fields().at( fieldIndex );
 
   QString expression = field.constraints().constraintExpression();
   QStringList expressions, descriptions;
@@ -161,10 +177,10 @@ void QgsEditorWidgetWrapper::updateConstraint( const QgsFeature &ft, QgsFieldCon
   }
 
   QStringList errors;
-  bool hardConstraintsOk = QgsVectorLayerUtils::validateAttribute( layer(), ft, mFieldIdx, errors, QgsFieldConstraints::ConstraintStrengthHard, constraintOrigin );
+  bool hardConstraintsOk = QgsVectorLayerUtils::validateAttribute( layer, ft, fieldIndex, errors, QgsFieldConstraints::ConstraintStrengthHard, constraintOrigin );
 
   QStringList softErrors;
-  bool softConstraintsOk = QgsVectorLayerUtils::validateAttribute( layer(), ft, mFieldIdx, softErrors, QgsFieldConstraints::ConstraintStrengthSoft, constraintOrigin );
+  bool softConstraintsOk = QgsVectorLayerUtils::validateAttribute( layer, ft, fieldIndex, softErrors, QgsFieldConstraints::ConstraintStrengthSoft, constraintOrigin );
   errors << softErrors;
 
   mValidConstraint = hardConstraintsOk && softConstraintsOk;

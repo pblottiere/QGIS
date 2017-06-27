@@ -118,7 +118,7 @@ class QgsEditorWidgetWrapper : QgsWidgetWrapper
 .. versionadded:: 2.16
 %End
 
-    void updateConstraint( const QgsFeature &featureContext, QgsFieldConstraints::ConstraintOrigin constraintOrigin = QgsFieldConstraints::ConstraintOriginNotSet );
+    void updateConstraint( const QgsFeature &featureContext, QgsFieldConstraints::ConstraintOrigin constraintOrigin = QgsFieldConstraints::ConstraintOriginNotSet, bool joinedFeature = false );
 %Docstring
  Update constraint.
  \param featureContext the feature to use to evaluate the constraint

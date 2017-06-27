@@ -19,6 +19,11 @@
 
 QString QgsVectorLayerJoinInfo::prefixedNameField( const QgsField &f ) const
 {
+  return prefixedNameField( f.name() );
+}
+
+QString QgsVectorLayerJoinInfo::prefixedNameField( const QString &fieldName ) const
+{
   QString name;
 
   if ( joinLayer() )
@@ -28,7 +33,7 @@ QString QgsVectorLayerJoinInfo::prefixedNameField( const QgsField &f ) const
     else
       name = prefix();
 
-    name += f.name();
+    name += fieldName;
   }
 
   return name;
