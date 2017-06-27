@@ -115,7 +115,7 @@ Quick way to test if there is any join at all
 %Docstring
  Gets feature corresponding to the joined feature id given in parameter.
  \param info the join information
- \param fid the joined feature id
+ \param joinFid the joined feature id
  \param feature the feature
  :return: true if a valid feature is found, false otherwise
 .. versionadded:: 3.0

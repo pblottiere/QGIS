@@ -84,10 +84,10 @@ Returns whether values from the joined layer should be cached in memory to speed
  :rtype: bool
 %End
 
-    QString prefixedNameField( const QgsField &f ) const;
+    QString prefixedNameField( const QgsField &field ) const;
 %Docstring
  Returns the prefixed name of the field as known by the target layer.
- \param the field
+ \param field the field
  :return: the prefixed name of the field
 .. versionadded:: 3.0
  :rtype: str

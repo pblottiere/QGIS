@@ -56,11 +56,11 @@ class CORE_EXPORT QgsVectorLayerJoinInfo
     bool isUsingMemoryCache() const { return mMemoryCache; }
 
     /** Returns the prefixed name of the field as known by the target layer.
-     * \param the field
+     * \param field the field
      * \returns the prefixed name of the field
      * \since QGIS 3.0
      */
-    QString prefixedNameField( const QgsField &f ) const;
+    QString prefixedNameField( const QgsField &field ) const;
 
     /** Sets whether values from the joined layer may be editing from the
      *  target layer.

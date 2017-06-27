@@ -96,7 +96,7 @@ class CORE_EXPORT QgsVectorLayerJoinBuffer : public QObject
 
     /** Gets feature corresponding to the joined feature id given in parameter.
      * \param info the join information
-     * \param fid the joined feature id
+     * \param joinFid the joined feature id
      * \param feature the feature
      * \returns true if a valid feature is found, false otherwise
      * \since QGIS 3.0

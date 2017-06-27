@@ -427,6 +427,8 @@ Setup the coordinate system transformation for the layer
 .. versionadded:: 2.14.7
  :rtype: QgsVectorLayerJoinBuffer
 %End
+
+
     const QList<QgsVectorLayerJoinInfo> vectorJoins() const;
 %Docstring
  :rtype: list of QgsVectorLayerJoinInfo
