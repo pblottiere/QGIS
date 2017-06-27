@@ -274,6 +274,7 @@ class GUI_EXPORT QgsAttributeForm : public QWidget
     void initPython();
 
     bool fieldIsEditable( int fieldIndex ) const;
+    bool fieldIsEditable( int fieldIndex, bool &join ) const;
     bool fieldIsEditable( const QgsVectorLayer &layer, int fieldIndex, QgsFeatureId fid ) const ;
 
     void searchJoinedFeatures();

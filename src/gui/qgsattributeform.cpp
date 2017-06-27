@@ -1038,7 +1038,14 @@ void QgsAttributeForm::synchronizeEnabledState()
 
     if ( eww )
     {
-      ww->setEnabled( isEditable && fieldIsEditable( eww->fieldIdx() ) );
+      bool join;
+      bool enabled = isEditable && fieldIsEditable( eww->fieldIdx(), join );
+      ww->setEnabled( enabled );
+
+      if ( enabled )
+        ww->widget()->setToolTip( "" );
+      else if ( join )
+        ww->widget()->setToolTip( tr( "The field from the joined layer is not editable" ) );
     }
   }
 
@@ -1566,10 +1573,18 @@ void QgsAttributeForm::initPython()
 
 bool QgsAttributeForm::fieldIsEditable( int fieldIndex ) const
 {
+  bool join;
+  return fieldIsEditable( fieldIndex, join );
+}
+
+bool QgsAttributeForm::fieldIsEditable( int fieldIndex, bool &join ) const
+{
   bool editable = false;
+  join = false;
 
   if ( mLayer->fields().fieldOrigin( fieldIndex ) == QgsFields::OriginJoin )
   {
+    join = true;
     int srcFieldIndex;
     const QgsVectorLayerJoinInfo *info = mLayer->joinBuffer()->joinForFieldIndex( fieldIndex, mLayer->fields(), srcFieldIndex );
 
