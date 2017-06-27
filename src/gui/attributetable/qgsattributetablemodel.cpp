@@ -743,9 +743,8 @@ Qt::ItemFlags QgsAttributeTableModel::flags( const QModelIndex &index ) const
 
   bool editable = false;
   const int fieldIndex = mAttributes[index.column()];
-  const int fieldOrigin = layer()->fields().fieldOrigin( fieldIndex );
   const QgsFeatureId fid = rowToId( index.row() );
-  if ( fieldOrigin == QgsFields::OriginJoin )
+  if ( layer()->fields().fieldOrigin( fieldIndex ) == QgsFields::OriginJoin )
   {
     int srcFieldIndex;
     const QgsVectorLayerJoinInfo *info = layer()->joinBuffer()->joinForFieldIndex( fieldIndex, layer()->fields(), srcFieldIndex );

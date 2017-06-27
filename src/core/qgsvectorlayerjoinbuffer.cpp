@@ -392,13 +392,13 @@ QgsVectorLayerJoinBuffer *QgsVectorLayerJoinBuffer::clone() const
 
 bool QgsVectorLayerJoinBuffer::joinFeature( const QgsVectorLayerJoinInfo &info, QgsFeatureId fid, QgsFeature &joinFeature ) const
 {
-  QgsFeature feature;
-  feature = mLayer->getFeature( fid );
+  joinFeature.setValid( false );
+  const QgsFeature feature = mLayer->getFeature( fid );
 
   if ( info.joinLayer() && feature.isValid() )
   {
-    QVariant targetFieldValue = feature.attribute( info.targetFieldName() );
-    QString filter = QString( "\"%1\" = %2" ).arg( info.joinFieldName(), targetFieldValue.toString() );
+    const QVariant targetFieldValue = feature.attribute( info.targetFieldName() );
+    const QString filter = QString( "\"%1\" = %2" ).arg( info.joinFieldName(), targetFieldValue.toString() );
 
     QgsFeatureRequest request;
     request.setFilterExpression( filter );
@@ -413,14 +413,16 @@ bool QgsVectorLayerJoinBuffer::joinFeature( const QgsVectorLayerJoinInfo &info, 
 
 bool QgsVectorLayerJoinBuffer::feature( const QgsVectorLayerJoinInfo &info, QgsFeatureId joinFid, QgsFeature &feature ) const
 {
+  feature.setValid( false );
+
   if ( info.joinLayer() )
   {
-    QgsFeature joinFeature = info.joinLayer()->getFeature( joinFid );
+    const QgsFeature joinFeature = info.joinLayer()->getFeature( joinFid );
 
     if ( joinFeature.isValid() )
     {
-      QVariant joinFieldIdValue = joinFeature.attribute( info.joinFieldName() );
-      QString filter = QString( "\"%1\" = %2" ).arg( info.targetFieldName(), joinFieldIdValue.toString() );
+      const QVariant joinFieldIdValue = joinFeature.attribute( info.joinFieldName() );
+      const QString filter = QString( "\"%1\" = %2" ).arg( info.targetFieldName(), joinFieldIdValue.toString() );
 
       QgsFeatureRequest request;
       request.setFilterExpression( filter );

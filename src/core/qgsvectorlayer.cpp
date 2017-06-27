@@ -2456,7 +2456,7 @@ bool QgsVectorLayer::deleteFeaturesFromJoinedLayers( QgsFeatureIds fids )
 {
   bool res = true;
 
-  Q_FOREACH ( QgsFeatureId fid, fids )
+  Q_FOREACH ( const QgsFeatureId &fid, fids )
   {
     Q_FOREACH ( const QgsVectorLayerJoinInfo &info, vectorJoins() )
     {
@@ -2666,8 +2666,8 @@ bool QgsVectorLayer::addFeaturesToJoinedLayers( QgsFeatureList &features, Flags 
 
         for ( int  i = 0; i < joinFeature.fields().count(); i++ )
         {
-          QgsField f = joinFeature.fields().field( i );
-          QString prefixedName = info.prefixedNameField( f );
+          const QgsField f = joinFeature.fields().field( i );
+          const QString prefixedName = info.prefixedNameField( f );
 
           if ( feature.fieldNameIndex( prefixedName ) != -1 )
             joinFeature.setAttribute( f.name(), feature.attribute( prefixedName ) );

@@ -238,18 +238,17 @@ void QgsVectorLayerCache::onAttributeValueChanged( QgsFeatureId fid, int field, 
 
 void QgsVectorLayerCache::onJoinAttributeValueChanged( QgsFeatureId joinFid, int joinField, const QVariant &value )
 {
-  QgsVectorLayer *joinLayer = qobject_cast<QgsVectorLayer *>( sender() );
+  const QgsVectorLayer *joinLayer = qobject_cast<const QgsVectorLayer *>( sender() );
 
-  QgsVectorJoinList::const_iterator it = mLayer->vectorJoins().begin();
-  for ( ; it != mLayer->vectorJoins().end(); ++it )
+  Q_FOREACH ( const QgsVectorLayerJoinInfo &info, mLayer->vectorJoins() )
   {
-    if ( joinLayer == it->joinLayer() )
+    if ( joinLayer == info.joinLayer() )
     {
       QgsFeature myFeature;
-      mLayer->joinBuffer()->feature( *it, joinFid, myFeature );
+      mLayer->joinBuffer()->feature( info, joinFid, myFeature );
 
-      QString fieldName = it->prefixedNameField( joinLayer->fields().field( joinField ) );
-      int fieldIndex = mLayer->fields().indexFromName( fieldName );
+      const QString fieldName = info.prefixedNameField( joinLayer->fields().field( joinField ) );
+      const int fieldIndex = mLayer->fields().indexFromName( fieldName );
 
       if ( myFeature.isValid() && fieldIndex != -1 )
       {
@@ -456,10 +455,9 @@ bool QgsVectorLayerCache::checkInformationCovered( const QgsFeatureRequest &feat
 
 void QgsVectorLayerCache::connectJoinedLayers() const
 {
-  QgsVectorJoinList::const_iterator it = mLayer->vectorJoins().begin();
-  for ( ; it != mLayer->vectorJoins().end(); ++it )
+  Q_FOREACH ( const QgsVectorLayerJoinInfo &info, mLayer->vectorJoins() )
   {
-    const QgsVectorLayer *vl = it->joinLayer();
+    const QgsVectorLayer *vl = info.joinLayer();
     if ( vl )
       connect( vl, &QgsVectorLayer::attributeValueChanged, this, &QgsVectorLayerCache::onJoinAttributeValueChanged );
   }

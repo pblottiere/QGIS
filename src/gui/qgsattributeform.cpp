@@ -297,9 +297,7 @@ bool QgsAttributeForm::saveEdits()
         bool changed = ( dstVar != srcVar && !dstVar.isNull() && !srcVar.isNull() )
                        || ( dstVar.isNull() != srcVar.isNull() );
 
-        const int fieldIndex = eww->fieldIdx();
-
-        if ( changed && srcVar.isValid() && fieldIsEditable( fieldIndex ) )
+        if ( changed && srcVar.isValid() && fieldIsEditable( eww->fieldIdx() ) )
         {
           dst[eww->fieldIdx()] = srcVar;
 
@@ -994,9 +992,7 @@ void QgsAttributeForm::synchronizeEnabledState()
 
     if ( eww )
     {
-      const int fieldIndex = eww->fieldIdx();
-
-      ww->setEnabled( isEditable && fieldIsEditable( fieldIndex ) );
+      ww->setEnabled( isEditable && fieldIsEditable( eww->fieldIdx() ) );
     }
   }
 
@@ -1525,9 +1521,8 @@ void QgsAttributeForm::initPython()
 bool QgsAttributeForm::fieldIsEditable( int fieldIndex ) const
 {
   bool editable = false;
-  const int fieldOrigin = mLayer->fields().fieldOrigin( fieldIndex );
 
-  if ( fieldOrigin == QgsFields::OriginJoin )
+  if ( mLayer->fields().fieldOrigin( fieldIndex ) == QgsFields::OriginJoin )
   {
     int srcFieldIndex;
     const QgsVectorLayerJoinInfo *info = mLayer->joinBuffer()->joinForFieldIndex( fieldIndex, mLayer->fields(), srcFieldIndex );
