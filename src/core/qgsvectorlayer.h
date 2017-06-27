@@ -468,6 +468,7 @@ class CORE_EXPORT QgsVectorLayer : public QgsMapLayer, public QgsExpressionConte
      * \since QGIS 2.14.7
      */
     QgsVectorLayerJoinBuffer *joinBuffer() { return mJoinBuffer; }
+    const QgsVectorLayerJoinBuffer *joinBuffer() const SIP_SKIP { return mJoinBuffer; }
     const QList<QgsVectorLayerJoinInfo> vectorJoins() const;
 
     /**

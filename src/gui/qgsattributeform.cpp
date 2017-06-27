@@ -762,7 +762,7 @@ bool QgsAttributeForm::currentFormFeature( QgsFeature &feature )
       QVariant srcVar = eww->value();
       // need to check dstVar.isNull() != srcVar.isNull()
       // otherwise if dstVar=NULL and scrVar=0, then dstVar = srcVar
-      if ( ( dstVar != srcVar || dstVar.isNull() != srcVar.isNull() ) && srcVar.isValid() && !mLayer->editFormConfig().readOnly( eww->fieldIdx() ) )
+      if ( ( dstVar != srcVar || dstVar.isNull() != srcVar.isNull() ) && srcVar.isValid() && fieldIsEditable( eww->fieldIdx() ) )
         dst[eww->fieldIdx()] = srcVar;
     }
     else
