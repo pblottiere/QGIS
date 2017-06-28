@@ -2460,9 +2460,12 @@ bool QgsVectorLayer::deleteFeaturesFromJoinedLayers( QgsFeatureIds fids )
   {
     Q_FOREACH ( const QgsVectorLayerJoinInfo &info, vectorJoins() )
     {
-      QgsFeature joinFeature;
-      if ( mJoinBuffer->joinFeature( info, fid, joinFeature ) )
-        info.joinLayer()->deleteFeature( joinFeature.id() );
+      if ( info.isEditable() && info.isDeleteCascade() )
+      {
+        QgsFeature joinFeature;
+        if ( mJoinBuffer->joinFeature( info, fid, joinFeature ) )
+          info.joinLayer()->deleteFeature( joinFeature.id() );
+      }
     }
   }
 
@@ -2653,7 +2656,7 @@ bool QgsVectorLayer::addFeaturesToJoinedLayers( QgsFeatureList &features, Flags 
   {
     QgsVectorLayer *joinLayer = info.joinLayer();
 
-    if ( joinLayer && joinLayer->isEditable() && info.isEditable() )
+    if ( joinLayer && joinLayer->isEditable() && info.isEditable() && info.isUpsertOnEdit() )
     {
       QgsFeatureList joinFeatures;
 
