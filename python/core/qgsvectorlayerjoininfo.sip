@@ -117,6 +117,38 @@ Returns whether values from the joined layer should be cached in memory to speed
  :rtype: bool
 %End
 
+    void setUpsertOnEdit( bool enabled );
+%Docstring
+ Sets whether feature creation has to be synchronized between target
+  layer and join layers.
+  target layer.
+.. versionadded:: 3.0
+%End
+
+    bool isUpsertOnEdit() const;
+%Docstring
+ Returns whether feature creation has to be synchronized between target
+  layer and join layers.
+.. versionadded:: 3.0
+ :rtype: bool
+%End
+
+    void setDeleteCascade( bool enabled );
+%Docstring
+ Sets whether feature deletion has to be synchronized between target
+  layer and join layers.
+  target layer.
+.. versionadded:: 3.0
+%End
+
+    bool isDeleteCascade() const;
+%Docstring
+ Returns whether feature deletion has to be synchronized between target
+  layer and join layers.
+.. versionadded:: 3.0
+ :rtype: bool
+%End
+
     bool operator==( const QgsVectorLayerJoinInfo &other ) const;
 
     void setJoinFieldNamesSubset( QStringList *fieldNamesSubset /Transfer/ );
@@ -133,6 +165,8 @@ Returns whether values from the joined layer should be cached in memory to speed
 %End
 
   protected:
+
+
 
 
 

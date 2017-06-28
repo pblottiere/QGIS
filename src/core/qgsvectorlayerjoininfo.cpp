@@ -17,6 +17,17 @@
 
 #include "qgsvectorlayerjoininfo.h"
 
+void QgsVectorLayerJoinInfo::setEditable( bool editable )
+{
+  mEditable = editable;
+
+  if ( !mEditable )
+  {
+    mUpsertOnEdit = false;
+    mDeleteCascade = false;
+  }
+}
+
 QString QgsVectorLayerJoinInfo::prefixedNameField( const QgsField &f ) const
 {
   return prefixedNameField( f.name() );

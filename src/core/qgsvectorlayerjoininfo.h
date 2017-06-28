@@ -23,6 +23,8 @@ class CORE_EXPORT QgsVectorLayerJoinInfo
       : mMemoryCache( false )
       , cacheDirty( true )
       , mEditable( false )
+      , mUpsertOnEdit( false )
+      , mDeleteCascade( false )
     {}
 
     //! Sets weak reference to the joined layer
@@ -73,13 +75,39 @@ class CORE_EXPORT QgsVectorLayerJoinInfo
      *  target layer.
      * \since QGIS 3.0
      */
-    void setEditable( bool editable ) { mEditable = editable; }
+    void setEditable( bool editable );
 
     /** Returns whether values from the joined layer may be editing from the
      *  target layer.
      * \since QGIS 3.0
      */
     bool isEditable() const { return mEditable; }
+
+    /** Sets whether feature creation has to be synchronized between target
+     *  layer and join layers.
+     *  target layer.
+     * \since QGIS 3.0
+     */
+    void setUpsertOnEdit( bool enabled ) { mUpsertOnEdit = enabled; }
+
+    /** Returns whether feature creation has to be synchronized between target
+     *  layer and join layers.
+     * \since QGIS 3.0
+     */
+    bool isUpsertOnEdit() const { return mUpsertOnEdit; }
+
+    /** Sets whether feature deletion has to be synchronized between target
+     *  layer and join layers.
+     *  target layer.
+     * \since QGIS 3.0
+     */
+    void setDeleteCascade( bool enabled ) { mDeleteCascade = enabled; }
+
+    /** Returns whether feature deletion has to be synchronized between target
+     *  layer and join layers.
+     * \since QGIS 3.0
+     */
+    bool isDeleteCascade() const { return mDeleteCascade; }
 
     bool operator==( const QgsVectorLayerJoinInfo &other ) const
     {
@@ -127,6 +155,10 @@ class CORE_EXPORT QgsVectorLayerJoinInfo
     bool cacheDirty;
 
     bool mEditable;
+
+    bool mUpsertOnEdit;
+
+    bool mDeleteCascade;
 
     //! Cache for joined attributes to provide fast lookup (size is 0 if no memory caching)
     QHash< QString, QgsAttributes> cachedAttributes;

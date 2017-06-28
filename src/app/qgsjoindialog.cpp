@@ -73,7 +73,7 @@ void QgsJoinDialog::setJoinInfo( const QgsVectorLayerJoinInfo &joinInfo )
   mJoinFieldComboBox->setField( joinInfo.joinFieldName() );
   mTargetFieldComboBox->setField( joinInfo.targetFieldName() );
   mCacheInMemoryCheckBox->setChecked( joinInfo.isUsingMemoryCache() );
-  mJoinLayerEditableCheckBox->setChecked( joinInfo.isEditable() );
+
   if ( joinInfo.prefix().isNull() )
   {
     mUseCustomPrefix->setChecked( false );
@@ -102,6 +102,10 @@ void QgsJoinDialog::setJoinInfo( const QgsVectorLayerJoinInfo &joinInfo )
       }
     }
   }
+
+  mEditableJoinLayer->setChecked( joinInfo.isEditable() );
+  mUpsertOnEditCheckBox->setChecked( joinInfo.isUpsertOnEdit() );
+  mDeleteCascadeCheckBox->setChecked( joinInfo.isDeleteCascade() );
 }
 
 QgsVectorLayerJoinInfo QgsJoinDialog::joinInfo() const
@@ -111,7 +115,6 @@ QgsVectorLayerJoinInfo QgsJoinDialog::joinInfo() const
   info.setJoinFieldName( mJoinFieldComboBox->currentField() );
   info.setTargetFieldName( mTargetFieldComboBox->currentField() );
   info.setUsingMemoryCache( mCacheInMemoryCheckBox->isChecked() );
-  info.setEditable( mJoinLayerEditableCheckBox->isChecked() );
 
   if ( mUseCustomPrefix->isChecked() )
     info.setPrefix( mCustomPrefix->text() );
@@ -132,6 +135,13 @@ QgsVectorLayerJoinInfo QgsJoinDialog::joinInfo() const
       }
     }
     info.setJoinFieldNamesSubset( new QStringList( lst ) );
+  }
+
+  info.setEditable( mEditableJoinLayer->isChecked() );
+  if ( info.isEditable() )
+  {
+    info.setUpsertOnEdit( mUpsertOnEditCheckBox->isChecked() );
+    info.setDeleteCascade( mDeleteCascadeCheckBox->isChecked() );
   }
 
   return info;

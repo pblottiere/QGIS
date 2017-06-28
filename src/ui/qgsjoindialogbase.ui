@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>505</width>
-    <height>395</height>
+    <height>511</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -127,10 +127,35 @@
     </widget>
    </item>
    <item row="5" column="0">
-    <widget class="QCheckBox" name="mJoinLayerEditableCheckBox">
-     <property name="text">
-      <string>Join layer editable</string>
+    <widget class="QgsCollapsibleGroupBox" name="mEditableJoinLayer">
+     <property name="title">
+      <string>Edi&amp;table join layer</string>
      </property>
+     <property name="checkable">
+      <bool>true</bool>
+     </property>
+     <property name="checked">
+      <bool>false</bool>
+     </property>
+     <property name="collapsed" stdset="0">
+      <bool>true</bool>
+     </property>
+     <layout class="QGridLayout" name="gridLayout_2">
+      <item row="0" column="0">
+       <widget class="QCheckBox" name="mUpsertOnEditCheckBox">
+        <property name="text">
+         <string>Upsert on edit</string>
+        </property>
+       </widget>
+      </item>
+      <item row="1" column="0">
+       <widget class="QCheckBox" name="mDeleteCascadeCheckBox">
+        <property name="text">
+         <string>Delete cascade</string>
+        </property>
+       </widget>
+      </item>
+     </layout>
     </widget>
    </item>
   </layout>

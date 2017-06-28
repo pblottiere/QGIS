@@ -1240,16 +1240,26 @@ void QgsVectorLayerProperties::addJoinToTreeWidget( const QgsVectorLayerJoinInfo
     joinItem->setText( 4, QChar( 0x2714 ) );
   }
 
-  joinItem->setText( 5, join.prefix() );
+  if ( join.isUpsertOnEdit() )
+  {
+    joinItem->setText( 5, QChar( 0x2714 ) );
+  }
+
+  if ( join.isDeleteCascade() )
+  {
+    joinItem->setText( 6, QChar( 0x2714 ) );
+  }
+
+  joinItem->setText( 7, join.prefix() );
 
   const QStringList *list = join.joinFieldNamesSubset();
   if ( list )
   {
-    joinItem->setText( 6, QStringLiteral( "%1" ).arg( list->count() ) );
+    joinItem->setText( 8, QStringLiteral( "%1" ).arg( list->count() ) );
   }
   else
   {
-    joinItem->setText( 6, tr( "all" ) );
+    joinItem->setText( 8, tr( "all" ) );
   }
 
   if ( insertIndex >= 0 )
@@ -1260,7 +1270,7 @@ void QgsVectorLayerProperties::addJoinToTreeWidget( const QgsVectorLayerJoinInfo
   {
     mJoinTreeWidget->addTopLevelItem( joinItem );
   }
-  for ( int c = 0; c < 6; c++ )
+  for ( int c = 0; c < 8; c++ )
   {
     mJoinTreeWidget->resizeColumnToContents( c );
   }
