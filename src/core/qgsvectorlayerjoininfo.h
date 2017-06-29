@@ -23,6 +23,7 @@ class CORE_EXPORT QgsVectorLayerJoinInfo
       : mMemoryCache( false )
       , cacheDirty( true )
       , mEditable( false )
+      , mUsingPK( false )
     {}
 
     //! Sets weak reference to the joined layer
@@ -54,6 +55,16 @@ class CORE_EXPORT QgsVectorLayerJoinInfo
     void setUsingMemoryCache( bool enabled ) { mMemoryCache = enabled; }
     //! Returns whether values from the joined layer should be cached in memory to speed up lookups
     bool isUsingMemoryCache() const { return mMemoryCache; }
+
+    /** Sets whether primary key has to be used for joining
+     * \since QGIS 3.0
+     */
+    void setUsingPK( bool enabled ) { mUsingPK = enabled; }
+
+    /** Returns whether the joining has to be used for joining
+     * \since QGIS 3.0
+     */
+    bool isUsingPK() const { return mUsingPK; }
 
     /** Returns the prefixed name of the field as known by the target layer.
      * \param field the field
@@ -127,6 +138,8 @@ class CORE_EXPORT QgsVectorLayerJoinInfo
     bool cacheDirty;
 
     bool mEditable;
+
+    bool mUsingPK;
 
     //! Cache for joined attributes to provide fast lookup (size is 0 if no memory caching)
     QHash< QString, QgsAttributes> cachedAttributes;

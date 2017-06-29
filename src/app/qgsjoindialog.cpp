@@ -59,6 +59,7 @@ QgsJoinDialog::QgsJoinDialog( QgsVectorLayer *layer, QList<QgsMapLayer *> alread
   connect( mJoinLayerComboBox, &QgsMapLayerComboBox::layerChanged, this, &QgsJoinDialog::checkDefinitionValid );
   connect( mJoinFieldComboBox, &QgsFieldComboBox::fieldChanged, this, &QgsJoinDialog::checkDefinitionValid );
   connect( mTargetFieldComboBox, &QgsFieldComboBox::fieldChanged, this, &QgsJoinDialog::checkDefinitionValid );
+  connect( mJoinLayerUsePKCheckBox, &QCheckBox::stateChanged, this, &QgsJoinDialog::onUsePrimaryKeyChanged );
 
   checkDefinitionValid();
 }
@@ -74,6 +75,7 @@ void QgsJoinDialog::setJoinInfo( const QgsVectorLayerJoinInfo &joinInfo )
   mTargetFieldComboBox->setField( joinInfo.targetFieldName() );
   mCacheInMemoryCheckBox->setChecked( joinInfo.isUsingMemoryCache() );
   mJoinLayerEditableCheckBox->setChecked( joinInfo.isEditable() );
+  mJoinLayerUsePKCheckBox->setChecked( joinInfo.isUsingPK() );
   if ( joinInfo.prefix().isNull() )
   {
     mUseCustomPrefix->setChecked( false );
@@ -112,6 +114,7 @@ QgsVectorLayerJoinInfo QgsJoinDialog::joinInfo() const
   info.setTargetFieldName( mTargetFieldComboBox->currentField() );
   info.setUsingMemoryCache( mCacheInMemoryCheckBox->isChecked() );
   info.setEditable( mJoinLayerEditableCheckBox->isChecked() );
+  info.setUsingPK( mJoinLayerUsePKCheckBox->isChecked() );
 
   if ( mUseCustomPrefix->isChecked() )
     info.setPrefix( mCustomPrefix->text() );
@@ -179,6 +182,15 @@ void QgsJoinDialog::joinedLayerChanged( QgsMapLayer *layer )
   {
     mCustomPrefix->setText( layer->name() + '_' );
   }
+
+  if ( !mLayer->dataProvider()->pkAttributeIndexes().isEmpty()
+      && !vLayer->dataProvider()->pkAttributeIndexes().isEmpty() )
+    mJoinLayerUsePKCheckBox->setEnabled( true );
+  else
+  {
+    mJoinLayerUsePKCheckBox->setChecked( false );
+    mJoinLayerUsePKCheckBox->setEnabled( false );
+  }
 }
 
 void QgsJoinDialog::checkDefinitionValid()
@@ -186,4 +198,15 @@ void QgsJoinDialog::checkDefinitionValid()
   buttonBox->button( QDialogButtonBox::Ok )->setEnabled( mJoinLayerComboBox->currentIndex() != -1
       && mJoinFieldComboBox->currentIndex() != -1
       && mTargetFieldComboBox->currentIndex() != -1 );
+}
+
+void QgsJoinDialog::onUsePrimaryKeyChanged( int state )
+{
+  bool enabled = true;
+
+  if ( state == Qt::Checked )
+    enabled = false;
+
+  mJoinFieldComboBox->setEnabled( enabled );
+  mTargetFieldComboBox->setEnabled( enabled );
 }

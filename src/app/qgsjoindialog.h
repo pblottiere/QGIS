@@ -45,6 +45,8 @@ class APP_EXPORT QgsJoinDialog: public QDialog, private Ui::QgsJoinDialogBase
 
     void checkDefinitionValid();
 
+    void onUsePrimaryKeyChanged( int state );
+
   private:
     //! Target layer
     QgsVectorLayer *mLayer = nullptr;
