@@ -130,6 +130,7 @@ class CORE_EXPORT QgsVectorLayerFeatureIterator : public QgsAbstractFeatureItera
 
       void addJoinedAttributesCached( QgsFeature &f, const QVariant &joinValue ) const;
       void addJoinedAttributesDirect( QgsFeature &f, const QVariant &joinValue ) const;
+      bool getFeature( const QgsFeatureRequest &request, QgsFeature &f ) const;
     };
 
 
@@ -172,7 +173,8 @@ class CORE_EXPORT QgsVectorLayerFeatureIterator : public QgsAbstractFeatureItera
     //! \note not available in Python bindings
     bool nextFeatureFid( QgsFeature &f ) SIP_SKIP;
     //! \note not available in Python bindings
-    void addJoinedAttributes( QgsFeature &f ) SIP_SKIP;
+    void addJoinedAttributesByValue( QgsFeature &f ) SIP_SKIP;
+    void addJoinedAttributesByFeatureId( QgsFeature &f ) SIP_SKIP;
 
     /**
      * Adds attributes that don't source from the provider but are added inside QGIS

@@ -794,7 +794,17 @@ void QgsVectorLayerFeatureIterator::prepareField( int fieldIdx )
   }
 }
 
-void QgsVectorLayerFeatureIterator::addJoinedAttributes( QgsFeature &f )
+void QgsVectorLayerFeatureIterator::addJoinedAttributesByFeatureId( QgsFeature &f )
+{
+  QList< FetchJoinInfo >::const_iterator joinIt = mOrderedJoinInfoList.constBegin();
+  for ( ; joinIt != mOrderedJoinInfoList.constEnd(); ++joinIt )
+  {
+    QgsFeatureRequest request = QgsFeatureRequest( f.id() );
+    joinIt->getFeature( request, f );
+  }
+}
+
+void QgsVectorLayerFeatureIterator::addJoinedAttributesByValue( QgsFeature &f )
 {
   QList< FetchJoinInfo >::const_iterator joinIt = mOrderedJoinInfoList.constBegin();
   for ( ; joinIt != mOrderedJoinInfoList.constEnd(); ++joinIt )
@@ -835,7 +845,12 @@ void QgsVectorLayerFeatureIterator::addVirtualAttributes( QgsFeature &f )
   }
 
   if ( !mFetchJoinInfo.isEmpty() )
-    addJoinedAttributes( f );
+  {
+    if ( joinIt->joinInfo->isUsingPK() )
+      addJoinedAttributesByFeatureId( f );
+    else
+      addJoinedAttributesByValue( f );
+  }
 
   // add remaining expression fields
   if ( !mExpressionFieldInfo.isEmpty() )
@@ -930,20 +945,27 @@ void QgsVectorLayerFeatureIterator::FetchJoinInfo::addJoinedAttributesDirect( Qg
     subsetString += '=' + v;
   }
 
-  // maybe user requested just a subset of layer's attributes
-  // so we do not have to cache everything
-  bool hasSubset = joinInfo->joinFieldNamesSubset();
-  QVector<int> subsetIndices;
-  if ( hasSubset )
-    subsetIndices = QgsVectorLayerJoinBuffer::joinSubsetIndices( joinLayer, *joinInfo->joinFieldNamesSubset() );
-
   // select (no geometry)
   QgsFeatureRequest request;
   request.setFlags( QgsFeatureRequest::NoGeometry );
   request.setSubsetOfAttributes( attributes );
   request.setFilterExpression( subsetString );
   request.setLimit( 1 );
+
+  getFeature( request, f );
+}
+
+bool QgsVectorLayerFeatureIterator::FetchJoinInfo::getFeature( const QgsFeatureRequest &request, QgsFeature &f ) const
+{
+  bool rc = false;
   QgsFeatureIterator fi = joinLayer->getFeatures( request );
+
+  // maybe user requested just a subset of layer's attributes
+  // so we do not have to cache everything
+  bool hasSubset = joinInfo->joinFieldNamesSubset();
+  QVector<int> subsetIndices;
+  if ( hasSubset )
+    subsetIndices = QgsVectorLayerJoinBuffer::joinSubsetIndices( joinLayer, *joinInfo->joinFieldNamesSubset() );
 
   // get first feature
   QgsFeature fet;
@@ -967,15 +989,16 @@ void QgsVectorLayerFeatureIterator::FetchJoinInfo::addJoinedAttributesDirect( Qg
         f.setAttribute( index++, attr.at( i ) );
       }
     }
+
+    rc= true;
   }
   else
   {
     // no suitable join feature found, keeping empty (null) attributes
   }
+
+  return rc;
 }
-
-
-
 
 bool QgsVectorLayerFeatureIterator::nextFeatureFid( QgsFeature &f )
 {
