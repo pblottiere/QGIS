@@ -108,6 +108,8 @@ class GUI_EXPORT QgsAttributeTableModel: public QAbstractTableModel
      */
     Qt::ItemFlags flags( const QModelIndex &index ) const override;
 
+    bool fieldIsEditable( const QgsVectorLayer &layer, int fieldIndex, QgsFeatureId fid ) const;
+
     /**
      * Reloads the model data between indices
      * \param index1 start index

@@ -77,6 +77,7 @@ static void setupIntEditor( const QVariant &min, const QVariant &max, const QVar
 
 void QgsRangeWidgetWrapper::initWidget( QWidget *editor )
 {
+  std::cout << "QgsRangeWidgetWrapper::initWidget 0" << std::endl;
   mDoubleSpinBox = qobject_cast<QDoubleSpinBox *>( editor );
   mIntSpinBox = qobject_cast<QSpinBox *>( editor );
 
@@ -93,6 +94,7 @@ void QgsRangeWidgetWrapper::initWidget( QWidget *editor )
 
   if ( mDoubleSpinBox )
   {
+    std::cout << "QgsRangeWidgetWrapper::initWidget 1" << std::endl;
     // set the precision if field is integer
     int precision = layer()->fields().at( fieldIdx() ).precision();
     if ( precision > 0 )
@@ -129,9 +131,14 @@ void QgsRangeWidgetWrapper::initWidget( QWidget *editor )
   }
   else if ( mIntSpinBox )
   {
+    std::cout << "QgsRangeWidgetWrapper::initWidget 2" << std::endl;
     QgsSpinBox *qgsWidget = dynamic_cast<QgsSpinBox *>( mIntSpinBox );
+    std::cout << "QgsRangeWidgetWrapper::initWidget readOnly: " << qgsWidget->isReadOnly() << std::endl;
     if ( qgsWidget )
+    {
+      std::cout << "QgsRangeWidgetWrapper::initWidget 3" << std::endl;
       qgsWidget->setShowClearButton( allowNull );
+    }
     if ( allowNull )
     {
       int minval = min.toInt();

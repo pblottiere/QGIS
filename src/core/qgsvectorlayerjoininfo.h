@@ -23,6 +23,7 @@ class CORE_EXPORT QgsVectorLayerJoinInfo
       : mMemoryCache( false )
       , cacheDirty( true )
       , mUseTargetFeatureId( false )
+      , mEditable( false )
     {}
 
     //! Sets weak reference to the joined layer
@@ -40,8 +41,11 @@ class CORE_EXPORT QgsVectorLayerJoinInfo
     //! Returns name of the field of our layer that will be used for join
     QString targetFieldName() const { return mTargetFieldName; }
 
-    void setUseTargetFeatureId( bool useTargetFeatureId ) { mUseTargetFeatureId = useTargetFeatureId; };
+    void setUseTargetFeatureId( bool useTargetFeatureId ) { mUseTargetFeatureId = useTargetFeatureId; }
     bool useTargetFeatureId() const { return mUseTargetFeatureId; }
+
+    void setEditable( bool editable ) { mEditable = editable; }
+    bool editable() const { return mEditable; }
 
     //! Sets name of the field of joined layer that will be used for join
     void setJoinFieldName( const QString &fieldName ) { mJoinFieldName = fieldName; }
@@ -107,7 +111,7 @@ class CORE_EXPORT QgsVectorLayerJoinInfo
     QHash< QString, QgsAttributes> cachedAttributes;
 
     bool mUseTargetFeatureId;
-
+    bool mEditable;
 };
 
 

@@ -85,6 +85,8 @@ class GUI_EXPORT QgsSpinBox : public QSpinBox
      */
     void setClearValue( int customValue, const QString &clearValueText = QString() );
 
+    // void setEnabled( bool enabled ) override;
+
     /**
      * Defines if the clear value should be the minimum or maximum values of the widget or a custom value.
      * \param mode mode to user for clear value

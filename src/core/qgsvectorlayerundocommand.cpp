@@ -218,6 +218,7 @@ QgsVectorLayerUndoCommandChangeAttribute::QgsVectorLayerUndoCommandChangeAttribu
   , mNewValue( newValue )
   , mFirstChange( true )
 {
+  std::cout << "QgsVectorLayerUndoCommandChangeAttribute NEw" << std::endl;
   if ( FID_IS_NEW( mFid ) )
   {
     // work with added feature
@@ -239,6 +240,7 @@ QgsVectorLayerUndoCommandChangeAttribute::QgsVectorLayerUndoCommandChangeAttribu
 
 void QgsVectorLayerUndoCommandChangeAttribute::undo()
 {
+  std::cout << "QgsVectorLayerUndoCommandChangeAttribute::undo" << std::endl;
   QVariant original = mOldValue;
 
   if ( FID_IS_NEW( mFid ) )
@@ -278,6 +280,7 @@ void QgsVectorLayerUndoCommandChangeAttribute::undo()
 
 void QgsVectorLayerUndoCommandChangeAttribute::redo()
 {
+  std::cout << "QgsVectorLayerUndoCommandChangeAttribute::redo" << std::endl;
   if ( FID_IS_NEW( mFid ) )
   {
     // updated added feature

@@ -119,6 +119,13 @@ QString QgsAuxiliaryStorageJoin::propertyName( const QgsPropertyDefinition &defi
   return QString( "%1-%2" ).arg( target, definition.name() );
 }
 
+bool QgsAuxiliaryStorageJoin::changeAttributeValue( QgsFeatureId fid, int field, const QVariant &newValue, const QVariant &oldValue )
+{
+  startEditing();
+  QgsVectorLayer::changeAttributeValue( fid, field, newValue, oldValue );
+  return commitChanges();
+}
+
 QgsAuxiliaryStorage::QgsAuxiliaryStorage()
   : mValid( false )
   , mFileName( "" )

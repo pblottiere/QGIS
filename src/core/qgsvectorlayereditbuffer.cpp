@@ -45,6 +45,13 @@ bool QgsVectorLayerEditBuffer::isModified() const
   return !L->undoStack()->isClean();
 }
 
+QgsAttributeMap QgsVectorLayerEditBuffer::changedAttributeValues( QgsFeatureId fid ) const
+{
+  if ( isFeatureAttributesChanged( fid ) )
+    return mChangedAttributeValues[ fid ];
+  else
+    return QgsAttributeMap();
+}
 
 void QgsVectorLayerEditBuffer::undoIndexChanged( int index )
 {

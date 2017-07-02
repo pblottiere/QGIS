@@ -264,6 +264,7 @@ void QgsAttributeForm::setFeature( const QgsFeature &feature )
 
 bool QgsAttributeForm::saveEdits()
 {
+  std::cout << "QgsAttributeForm::saveEdits 0" << std::endl;
   bool success = true;
   bool changedLayer = false;
 

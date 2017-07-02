@@ -187,12 +187,15 @@ QVariant QgsFeatureListModel::data( const QModelIndex &index, int role ) const
 
 Qt::ItemFlags QgsFeatureListModel::flags( const QModelIndex &index ) const
 {
+  std::cout << "QgsFeatureListModel::flags 0" << std::endl;
   if ( mInjectNull && index.row() == 0 )
   {
+    std::cout << "QgsFeatureListModel::flags 1" << std::endl;
     return Qt::ItemIsSelectable | Qt::ItemIsEnabled;
   }
   else
   {
+    std::cout << "QgsFeatureListModel::flags 2" << std::endl;
     return sourceModel()->flags( mapToSource( index ) ) & ~Qt::ItemIsEditable;
   }
 }

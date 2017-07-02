@@ -51,6 +51,7 @@ QgsDualView::QgsDualView( QWidget *parent )
   , mFeatureSelectionManager( nullptr )
   , mAttributeEditorScrollArea( nullptr )
 {
+  std::cout << "QgsDualView::QgsDualView NEW!" << std::endl;
   setupUi( this );
 
   mConditionalFormatWidget->hide();
@@ -71,6 +72,7 @@ QgsDualView::QgsDualView( QWidget *parent )
 
 void QgsDualView::init( QgsVectorLayer *layer, QgsMapCanvas *mapCanvas, const QgsFeatureRequest &request, const QgsAttributeEditorContext &context, bool loadFeatures )
 {
+  std::cout << "QgsDualView::init" << std::endl;
   mMapCanvas = mapCanvas;
 
   if ( !layer )
@@ -269,13 +271,16 @@ void QgsDualView::setSelectedOnTop( bool selectedOnTop )
 
 void QgsDualView::initLayerCache( bool cacheGeometry )
 {
+  std::cout << "QgsDUalView::initLayerCache 0" << std::endl;
   // Initialize the cache
   QgsSettings settings;
   int cacheSize = settings.value( QStringLiteral( "qgis/attributeTableRowCache" ), "10000" ).toInt();
   mLayerCache = new QgsVectorLayerCache( mLayer, cacheSize, this );
+  std::cout << "QgsDualView::initLayerCache 00 " << mLayer->getFeature( 0 ).attribute( 1 ).toString().toStdString() << std::endl;
   mLayerCache->setCacheGeometry( cacheGeometry );
   if ( 0 == cacheSize || 0 == ( QgsVectorDataProvider::SelectAtId & mLayer->dataProvider()->capabilities() ) )
   {
+    std::cout << "QgsDUalView::initLayerCache 1" << std::endl;
     connect( mLayerCache, &QgsVectorLayerCache::invalidated, this, &QgsDualView::rebuildFullLayerCache );
     rebuildFullLayerCache();
   }
@@ -309,12 +314,14 @@ void QgsDualView::initModels( QgsMapCanvas *mapCanvas, const QgsFeatureRequest &
 
 void QgsDualView::on_mFeatureList_aboutToChangeEditSelection( bool &ok )
 {
+  std::cout << "QgsDualView::on_mFeatureList_aboutToChangeEditSelection 0" << std::endl;
   if ( mLayer->isEditable() && !mAttributeForm->save() )
     ok = false;
 }
 
 void QgsDualView::on_mFeatureList_currentEditSelectionChanged( const QgsFeature &feat )
 {
+  std::cout << "QgsDualView::on_mFeatureList_currentEditSelectionChanged 0" << std::endl;
   if ( !mLayer->isEditable() || mAttributeForm->save() )
   {
     mAttributeForm->setFeature( feat );
@@ -328,6 +335,7 @@ void QgsDualView::on_mFeatureList_currentEditSelectionChanged( const QgsFeature 
 
 void QgsDualView::setCurrentEditSelection( const QgsFeatureIds &fids )
 {
+  std::cout << "QgsDualView::setCurrentEditSelection" << std::endl;
   mFeatureList->setCurrentFeatureEdited( false );
   mFeatureList->setEditSelection( fids );
 }
@@ -744,11 +752,13 @@ void QgsDualView::featureFormAttributeChanged()
 
 void QgsDualView::setFilteredFeatures( const QgsFeatureIds &filteredFeatures )
 {
+  std::cout << "QgsDualView::setFilteredFeatures" << std::endl;
   mFilterModel->setFilteredFeatures( filteredFeatures );
 }
 
 void QgsDualView::setRequest( const QgsFeatureRequest &request )
 {
+  std::cout << "QgsDualView::setRequest" << std::endl;
   mMasterModel->setRequest( request );
 }
 
@@ -816,6 +826,7 @@ void QgsDualView::finished()
 
 void QgsAttributeTableAction::execute()
 {
+  std::cout << "QgsDualView::execute" << std::endl;
   mDualView->masterModel()->executeAction( mAction, mFieldIdx );
 }
 

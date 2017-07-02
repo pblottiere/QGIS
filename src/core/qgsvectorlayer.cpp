@@ -156,6 +156,7 @@ QgsVectorLayer::QgsVectorLayer( const QString &vectorLayerPath,
   mActions = new QgsActionManager( this );
   mConditionalStyles = new QgsConditionalLayerStyles();
 
+  std::cout << "QgsVectorLayer::QgsVectorLayer " << baseName.toStdString() << std::endl;
   mJoinBuffer = new QgsVectorLayerJoinBuffer( this );
   connect( mJoinBuffer, &QgsVectorLayerJoinBuffer::joinedFieldsChanged, this, &QgsVectorLayer::onJoinedFieldsChanged );
 
@@ -210,7 +211,10 @@ void QgsVectorLayer::setAuxiliaryStorageJoin( QgsAuxiliaryStorageJoin *join )
   joinInfo.setJoinLayer( mAuxiliaryStorageJoin.get() );
   joinInfo.setJoinFieldName( "ROWID" );
   joinInfo.setUseTargetFeatureId( true );
+  joinInfo.setEditable( true );
+  std::cout << "QgsVectorLayer::setAuxiliaryStorageJoin 0" << std::endl;
   addJoin( joinInfo );
+  std::cout << "QgsVectorLayer::setAuxiliaryStorageJoin 1" << std::endl;
 }
 
 QgsAuxiliaryStorageJoin *QgsVectorLayer::auxiliaryStorageJoin()
@@ -2232,17 +2236,11 @@ bool QgsVectorLayer::changeAttributeValue( QgsFeatureId fid, int field, const QV
   {
     int srcFieldIndex;
     const QgsVectorLayerJoinInfo *info = mJoinBuffer->joinForFieldIndex( field, fields(), srcFieldIndex );
-    if ( info )
-    {
-      QgsVectorLayer *vl = info->joinLayer();
-      vl->startEditing();
-      vl->changeAttributeValue( fid, srcFieldIndex, newValue, oldValue );
-      return vl->commitChanges();
-    }
+
+    if ( info && info->editable() )
+      return info->joinLayer()->changeAttributeValue( fid, srcFieldIndex, newValue, oldValue );
     else
-    {
       return false;
-    }
   }
   else
   {
@@ -2961,6 +2959,7 @@ void QgsVectorLayer::destroyEditCommand()
 
 bool QgsVectorLayer::addJoin( const QgsVectorLayerJoinInfo &joinInfo )
 {
+  std::cout << "QgsVectorLayer::addJoin" << std::endl;
   return mJoinBuffer->addJoin( joinInfo );
 }
 

@@ -232,6 +232,7 @@ QgsVectorLayerFeatureIterator::~QgsVectorLayerFeatureIterator()
 
 bool QgsVectorLayerFeatureIterator::fetchFeature( QgsFeature &f )
 {
+  std::cout << "QgsVectorLayerFeatureIterator::fetchFeature 0" << std::endl;
   f.setValid( false );
 
   if ( mClosed )
@@ -241,7 +242,9 @@ bool QgsVectorLayerFeatureIterator::fetchFeature( QgsFeature &f )
   {
     if ( mFetchedFid )
       return false;
+    std::cout << "QgsVectorLayerFeatureIterator::fetchFeature 01" << std::endl;
     bool res = nextFeatureFid( f );
+    std::cout << "QgsVectorLayerFeatureIterator::fetchFeature 1 " << f.attribute( 1 ).toString().toStdString() << std::endl;
     mFetchedFid = true;
     return res;
   }
@@ -257,7 +260,10 @@ bool QgsVectorLayerFeatureIterator::fetchFeature( QgsFeature &f )
   if ( mRequest.filterType() == QgsFeatureRequest::FilterExpression )
   {
     if ( fetchNextChangedAttributeFeature( f ) )
+    {
+      std::cout << "QgsVectorLayerFeatureIterator::fetchFeature 2 " << f.attribute( 1 ).toString().toStdString() << std::endl;
       return true;
+    }
 
     // no more changed features
   }
@@ -684,26 +690,41 @@ void QgsVectorLayerFeatureIterator::prepareField( int fieldIdx )
 
 void QgsVectorLayerFeatureIterator::addJoinedAttributes( QgsFeature &f )
 {
+  std::cout << "QgsVectorLayerFeatureIterator::addJoinedAttributes 0" << std::endl;
   QList< FetchJoinInfo >::const_iterator joinIt = mOrderedJoinInfoList.constBegin();
   for ( ; joinIt != mOrderedJoinInfoList.constEnd(); ++joinIt )
   {
+    std::cout << "QgsVectorLayerFeatureIterator::addJoinedAttributes 1 " << joinIt->joinInfo->joinLayer()->name().toStdString() << std::endl;
     QVariant targetFieldValue = f.attribute( joinIt->targetField );
     if ( joinIt->joinInfo->useTargetFeatureId() )
+    {
+      std::cout << "QgsVectorLayerFeatureIterator::addJoinedAttributes 2 " << joinIt->joinInfo->joinLayer()->name().toStdString() << std::endl;
       targetFieldValue = f.id();
+    }
+
+    std::cout << "QgsVectorLayerFeatureIterator::addJoinedAttributes 3 " << targetFieldValue.toString().toStdString() << std::endl;
 
     if ( !targetFieldValue.isValid() )
       continue;
 
+    std::cout << "QgsVectorLayerFeatureIterator::addJoinedAttributes 4 " << std::endl;
     const QHash< QString, QgsAttributes> &memoryCache = joinIt->joinInfo->cachedAttributes;
     if ( memoryCache.isEmpty() )
+    {
+      std::cout << "QgsVectorLayerFeatureIterator::addJoinedAttributes 5 " << std::endl;
       joinIt->addJoinedAttributesDirect( f, targetFieldValue );
+    }
     else
+    {
+      std::cout << "QgsVectorLayerFeatureIterator::addJoinedAttributes 6 " << std::endl;
       joinIt->addJoinedAttributesCached( f, targetFieldValue );
+    }
   }
 }
 
 void QgsVectorLayerFeatureIterator::addVirtualAttributes( QgsFeature &f )
 {
+  std::cout << "QgsVectorLayerFeatureIterator::addVirtualAttributes 0" << std::endl;
   // make sure we have space for newly added attributes
   QgsAttributes attr = f.attributes();
   attr.resize( mSource->mFields.count() );  // Provider attrs count + joined attrs count + expression attrs count
@@ -726,7 +747,10 @@ void QgsVectorLayerFeatureIterator::addVirtualAttributes( QgsFeature &f )
   }
 
   if ( !mFetchJoinInfo.isEmpty() )
+  {
+    std::cout << "QgsVectorLayerFeatureIterator::addVirtualAttributes 1" << std::endl;
     addJoinedAttributes( f );
+  }
 
   // add remaining expression fields
   if ( !mExpressionFieldInfo.isEmpty() )
@@ -773,16 +797,19 @@ bool QgsVectorLayerFeatureIterator::providerCanSimplify( QgsSimplifyMethod::Meth
 
 void QgsVectorLayerFeatureIterator::FetchJoinInfo::addJoinedAttributesCached( QgsFeature &f, const QVariant &joinValue ) const
 {
+  std::cout << "QgsVectorLayerFeatureIterator::addJoinedAttributesCached 0" << std::endl;
   const QHash<QString, QgsAttributes> &memoryCache = joinInfo->cachedAttributes;
   QHash<QString, QgsAttributes>::const_iterator it = memoryCache.find( joinValue.toString() );
   if ( it == memoryCache.constEnd() )
     return; // joined value not found -> leaving the attributes empty (null)
 
+  std::cout << "QgsVectorLayerFeatureIterator::addJoinedAttributesCached 1" << std::endl;
   int index = indexOffset;
 
   const QgsAttributes &featureAttributes = it.value();
   for ( int i = 0; i < featureAttributes.count(); ++i )
   {
+    std::cout << "QgsVectorLayerFeatureIterator::addJoinedAttributesCached 2 for " << i << " is " << featureAttributes.at( i ).toString().toStdString() << std::endl;
     f.setAttribute( index++, featureAttributes.at( i ) );
   }
 }
@@ -791,6 +818,7 @@ void QgsVectorLayerFeatureIterator::FetchJoinInfo::addJoinedAttributesCached( Qg
 
 void QgsVectorLayerFeatureIterator::FetchJoinInfo::addJoinedAttributesDirect( QgsFeature &f, const QVariant &joinValue ) const
 {
+  std::cout << "QgsVectorLayerFeatureIterator::addJoinedAttributesDirect 0" << std::endl;
   // no memory cache, query the joined values by setting substring
   QString subsetString;
 
@@ -838,25 +866,31 @@ void QgsVectorLayerFeatureIterator::FetchJoinInfo::addJoinedAttributesDirect( Qg
 
   // get first feature
   QgsFeature fet;
+  std::cout << "QgsVectorLayerFeatureIterator::addJoinedAttributesDirect 1" << std::endl;
   if ( fi.nextFeature( fet ) )
   {
+    std::cout << "QgsVectorLayerFeatureIterator::addJoinedAttributesDirect 2" << std::endl;
     int index = indexOffset;
     QgsAttributes attr = fet.attributes();
     if ( hasSubset )
     {
+      std::cout << "QgsVectorLayerFeatureIterator::addJoinedAttributesDirect 3" << std::endl;
       for ( int i = 0; i < subsetIndices.count(); ++i )
         f.setAttribute( index++, attr.at( subsetIndices.at( i ) ) );
     }
     else
     {
+      std::cout << "QgsVectorLayerFeatureIterator::addJoinedAttributesDirect 4" << std::endl;
       // use all fields except for the one used for join (has same value as exiting field in target layer)
       for ( int i = 0; i < attr.count(); ++i )
       {
         if ( i == joinField )
           continue;
 
+        std::cout << "QgsVectorLayerFeatureIterator::addJoinedAttributesDirect 5 at " << i << " is " << attr.at( i ).toString().toStdString() << std::endl;
         f.setAttribute( index++, attr.at( i ) );
       }
+      std::cout << "QgsVectorLayerFeatureIterator::addJoinedAttributesDirect 6 " << f.attribute( 1 ).toString().toStdString() << std::endl;
     }
   }
   else
@@ -870,44 +904,58 @@ void QgsVectorLayerFeatureIterator::FetchJoinInfo::addJoinedAttributesDirect( Qg
 
 bool QgsVectorLayerFeatureIterator::nextFeatureFid( QgsFeature &f )
 {
+  std::cout << "QgsVectorLayerFeatureIterator::nextFeatureFid 0" << std::endl;
   QgsFeatureId featureId = mRequest.filterFid();
 
   // deleted already?
   if ( mSource->mDeletedFeatureIds.contains( featureId ) )
     return false;
 
+  std::cout << "QgsVectorLayerFeatureIterator::nextFeatureFid 1" << std::endl;
   // has changed geometry?
   if ( !( mRequest.flags() & QgsFeatureRequest::NoGeometry ) && mSource->mChangedGeometries.contains( featureId ) )
   {
+    std::cout << "QgsVectorLayerFeatureIterator::nextFeatureFid 2" << std::endl;
     useChangedAttributeFeature( featureId, mSource->mChangedGeometries[featureId], f );
     return true;
   }
 
   // added features
+  std::cout << "QgsVectorLayerFeatureIterator::nextFeatureFid 3" << std::endl;
   for ( QgsFeatureMap::ConstIterator iter = mSource->mAddedFeatures.constBegin(); iter != mSource->mAddedFeatures.constEnd(); ++iter )
   {
     if ( iter->id() == featureId )
     {
+      std::cout << "QgsVectorLayerFeatureIterator::nextFeatureFid 4" << std::endl;
       useAddedFeature( *iter, f );
       return true;
     }
   }
 
   // regular features
+  std::cout << "QgsVectorLayerFeatureIterator::nextFeatureFid 5" << std::endl;
   QgsFeatureIterator fi = mSource->mProviderFeatureSource->getFeatures( mProviderRequest );
   if ( fi.nextFeature( f ) )
   {
+    std::cout << "QgsVectorLayerFeatureIterator::nextFeatureFid 6" << std::endl;
     f.setFields( mSource->mFields );
 
     if ( mSource->mHasEditBuffer )
+    {
+      std::cout << "QgsVectorLayerFeatureIterator::nextFeatureFid 7" << std::endl;
       updateChangedAttributes( f );
+    }
 
     if ( mHasVirtualAttributes )
+    {
+      std::cout << "QgsVectorLayerFeatureIterator::nextFeatureFid 8" << std::endl;
       addVirtualAttributes( f );
+    }
 
     return true;
   }
 
+  std::cout << "QgsVectorLayerFeatureIterator::nextFeatureFid 7" << std::endl;
   return false;
 }
 

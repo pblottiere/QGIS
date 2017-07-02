@@ -515,9 +515,13 @@ Qt::ItemFlags QgsAttributeTableFilterModel::flags( const QModelIndex &index ) co
 {
   // Handle the action column flags here, the master model doesn't know it
   if ( mapColumnToSource( index.column() ) == -1 )
+  {
+//    std::cout << "QgsAttributeTableFilterModel::flags 1" << std::endl;
     return Qt::ItemIsEnabled | Qt::ItemIsSelectable;
+  }
 
   QModelIndex source_index = mapToSource( index );
+// std::cout << "QgsAttributeTableFilterModel::flags 2 "<< index.column() << " / " << masterModel()->flags( source_index ) << std::endl;
   return masterModel()->flags( source_index );
 }
 

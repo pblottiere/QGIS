@@ -56,6 +56,7 @@ QgsEditorWidgetWrapper *QgsEditorWidgetWrapper::fromWidget( QWidget *widget )
 
 void QgsEditorWidgetWrapper::setEnabled( bool enabled )
 {
+  std::cout << "QgsEditorWidgetWrapper::setEnabled " << enabled << std::endl;
   QWidget *wdg = widget();
   if ( wdg )
   {
@@ -65,6 +66,7 @@ void QgsEditorWidgetWrapper::setEnabled( bool enabled )
 
 void QgsEditorWidgetWrapper::setFeature( const QgsFeature &feature )
 {
+  std::cout << "QgsEditorWidgetWrapper::setFeature " << std::endl;
   mFeature = feature;
   setValue( feature.attribute( mFieldIdx ) );
 }

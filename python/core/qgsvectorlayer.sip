@@ -337,6 +337,12 @@ class QgsVectorLayer : QgsMapLayer, QgsExpressionContextGenerator
 
 //     QgsVectorLayer &operator=( QgsVectorLayer const &rhs ) = delete;
 
+    void setAuxiliaryStorageJoin( QgsAuxiliaryStorageJoin *j /Transfer/ );
+    QgsAuxiliaryStorageJoin *auxiliaryStorageJoin();
+%Docstring
+ :rtype: QgsAuxiliaryStorageJoin
+%End
+
     QString storageType() const;
 %Docstring
 Returns the permanent storage type for this layer as a friendly name.
@@ -1194,7 +1200,7 @@ Change feature's geometry
  :rtype: bool
 %End
 
-    bool changeAttributeValue( QgsFeatureId fid, int field, const QVariant &newValue, const QVariant &oldValue = QVariant() );
+    virtual bool changeAttributeValue( QgsFeatureId fid, int field, const QVariant &newValue, const QVariant &oldValue = QVariant() );
 %Docstring
  Changes an attribute value (but does not commit it)
 

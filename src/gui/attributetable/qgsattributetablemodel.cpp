@@ -33,6 +33,7 @@
 #include "qgsvectordataprovider.h"
 #include "qgssymbollayerutils.h"
 #include "qgsfieldformatterregistry.h"
+#include "qgsvectorlayerjoinbuffer.h"
 
 #include <QVariant>
 
@@ -71,6 +72,7 @@ QgsAttributeTableModel::QgsAttributeTableModel( QgsVectorLayerCache *layerCache,
 
 bool QgsAttributeTableModel::loadFeatureAtId( QgsFeatureId fid ) const
 {
+  std::cout << "QgsAttributeTableModel::loadFeatureAtId" << std::endl;
   QgsDebugMsgLevel( QString( "loading feature %1" ).arg( fid ), 3 );
 
   if ( fid == std::numeric_limits<int>::min() )
@@ -236,6 +238,7 @@ void QgsAttributeTableModel::featureAdded( QgsFeatureId fid )
 
 void QgsAttributeTableModel::updatedFields()
 {
+  std::cout << "QgsAttributeTableModel::updatedFields" << std::endl;
   loadAttributes();
   emit modelChanged();
 }
@@ -267,6 +270,7 @@ void QgsAttributeTableModel::layerDeleted()
 
 void QgsAttributeTableModel::fieldFormatterRemoved( QgsFieldFormatter *fieldFormatter )
 {
+  std::cout << "QgsAttributeTableModel::fieldFormatterRemoved" << std::endl;
   for ( int i = 0; i < mFieldFormatters.size(); ++i )
   {
     if ( mFieldFormatters.at( i ) == fieldFormatter )
@@ -276,6 +280,7 @@ void QgsAttributeTableModel::fieldFormatterRemoved( QgsFieldFormatter *fieldForm
 
 void QgsAttributeTableModel::attributeValueChanged( QgsFeatureId fid, int idx, const QVariant &value )
 {
+  std::cout << "QgsAttributeTableModel::attributeValueChanged" << std::endl;
   QgsDebugMsgLevel( QString( "(%4) fid: %1, idx: %2, value: %3" ).arg( fid ).arg( idx ).arg( value.toString() ).arg( mFeatureRequest.filterType() ), 3 );
 
   if ( mSortCacheAttributes.contains( idx ) )
@@ -332,6 +337,7 @@ void QgsAttributeTableModel::attributeValueChanged( QgsFeatureId fid, int idx, c
 
 void QgsAttributeTableModel::loadAttributes()
 {
+  std::cout << "QgsAttributeTableModel::loadAttributes" << std::endl;
   if ( !layer() )
   {
     return;
@@ -392,6 +398,7 @@ void QgsAttributeTableModel::loadAttributes()
 
 void QgsAttributeTableModel::loadLayer()
 {
+  std::cout << "QgsAttributeTableModel::loadLayer" << std::endl;
   // make sure attributes are properly updated before caching the data
   // (emit of progress() signal may enter event loop and thus attribute
   // table view may be updated with inconsistent model which may assume
@@ -583,6 +590,7 @@ QVariant QgsAttributeTableModel::headerData( int section, Qt::Orientation orient
 
 QVariant QgsAttributeTableModel::data( const QModelIndex &index, int role ) const
 {
+  //std::cout << "QgsAttributeTableModel::data" << std::endl;
   if ( !index.isValid() ||
        ( role != Qt::TextAlignmentRole
          && role != Qt::DisplayRole
@@ -596,15 +604,24 @@ QVariant QgsAttributeTableModel::data( const QModelIndex &index, int role ) cons
          && role != Qt::FontRole
        )
      )
+  {
+    //std::cout << "QgsAttributeTableModel::data RETURN0" << std::endl;
     return QVariant();
+  }
 
   QgsFeatureId rowId = rowToId( index.row() );
 
   if ( role == FeatureIdRole )
+  {
+    //std::cout << "QgsAttributeTableModel::data RETURN1" << std::endl;
     return rowId;
+  }
 
   if ( index.column() >= mFieldCount )
+  {
+    //std::cout << "QgsAttributeTableModel::data RETURN2" << std::endl;
     return QVariant();
+  }
 
   int fieldId = mAttributes.at( index.column() );
 
@@ -617,6 +634,7 @@ QVariant QgsAttributeTableModel::data( const QModelIndex &index, int role ) cons
   }
 
   QgsField field = layer()->fields().at( fieldId );
+  //std::cout << "QgsAttributeTableModel::data field name: " << field.name().toStdString() << std::endl;
 
   if ( role == Qt::TextAlignmentRole )
   {
@@ -687,6 +705,7 @@ QVariant QgsAttributeTableModel::data( const QModelIndex &index, int role ) cons
 
 bool QgsAttributeTableModel::setData( const QModelIndex &index, const QVariant &value, int role )
 {
+  std::cout << "QgsAttributeTableModel::setData" << std::endl;
   Q_UNUSED( value )
 
   if ( !index.isValid() || index.column() >= mFieldCount || role != Qt::EditRole || !layer()->isEditable() )
@@ -724,25 +743,63 @@ bool QgsAttributeTableModel::setData( const QModelIndex &index, const QVariant &
 
 Qt::ItemFlags QgsAttributeTableModel::flags( const QModelIndex &index ) const
 {
+  /* std::cout << "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!" << std::endl;
+   std::cout << "!!!!!!!! QgsAttributeTableModel::flags 0" << std::endl; */
   if ( !index.isValid() )
     return Qt::ItemIsEnabled;
 
+// std::cout << "!!!!!!!! QgsAttributeTableModel::flags 1" << std::endl;
   if ( index.column() >= mFieldCount )
     return Qt::NoItemFlags;
 
   Qt::ItemFlags flags = QAbstractItemModel::flags( index );
 
-  if ( layer()->isEditable() &&
-       !layer()->editFormConfig().readOnly( mAttributes[index.column()] ) &&
-       ( ( layer()->dataProvider() && layer()->dataProvider()->capabilities() & QgsVectorDataProvider::ChangeAttributeValues ) ||
-         FID_IS_NEW( rowToId( index.row() ) ) ) )
+  // std::cout << "!!!!!!!! QgsAttributeTableModel::flags 2 " << std::endl;
+
+  int fieldIndex = mAttributes[index.column()];
+  int fieldOrigin = layer()->fields().fieldOrigin( fieldIndex );
+  QgsFeatureId fid = rowToId( index.row() );
+  bool editable = false;
+  if ( fieldOrigin == QgsFields::OriginJoin )
+  {
+    // std::cout << "!!!!!!!! QgsAttributeTableModel::flags 3 " << std::endl;
+    int srcFieldIndex;
+    const QgsVectorLayerJoinInfo *info = layer()->joinBuffer()->joinForFieldIndex( fieldIndex, layer()->fields(), srcFieldIndex );
+
+    if ( info && info->editable() )
+    {
+      //std::cout << "!!!!!!!! QgsAttributeTableModel::flags 4 " << std::endl;
+      editable = fieldIsEditable( *info->joinLayer(), srcFieldIndex, fid );
+    }
+  }
+  else
+  {
+    //std::cout << "!!!!!!!! QgsAttributeTableModel::flags 5 " << std::endl;
+    editable = fieldIsEditable( *layer(), fieldIndex, fid );
+  }
+
+  if ( editable )
+  {
+    //std::cout << "!!!!!!!! QgsAttributeTableModel::flags EDITABLE!!!" << std::endl;
     flags |= Qt::ItemIsEditable;
+  }
+
+  //std::cout << "!!!!!!!! QgsAttributeTableModel::flags FLAGS: " << flags << std::endl;
 
   return flags;
 }
 
+bool QgsAttributeTableModel::fieldIsEditable( const QgsVectorLayer &layer, int fieldIndex, QgsFeatureId fid ) const
+{
+  return ( layer.isEditable() &&
+           !layer.editFormConfig().readOnly( fieldIndex ) &&
+           ( ( layer.dataProvider() && layer.dataProvider()->capabilities() & QgsVectorDataProvider::ChangeAttributeValues ) ||
+             FID_IS_NEW( fid ) ) );
+}
+
 void QgsAttributeTableModel::reload( const QModelIndex &index1, const QModelIndex &index2 )
 {
+  std::cout << "QgsAttributeTableModel::reload" << std::endl;
   mFeat.setId( std::numeric_limits<int>::min() );
   emit dataChanged( index1, index2 );
 }
@@ -750,18 +807,21 @@ void QgsAttributeTableModel::reload( const QModelIndex &index1, const QModelInde
 
 void QgsAttributeTableModel::executeAction( const QUuid &action, const QModelIndex &idx ) const
 {
+  std::cout << "QgsAttributeTableModel::executeAction 0" << std::endl;
   QgsFeature f = feature( idx );
   layer()->actions()->doAction( action, f, fieldIdx( idx.column() ) );
 }
 
 void QgsAttributeTableModel::executeMapLayerAction( QgsMapLayerAction *action, const QModelIndex &idx ) const
 {
+  std::cout << "QgsAttributeTableModel::executeMapLayerAction" << std::endl;
   QgsFeature f = feature( idx );
   action->triggerForFeature( layer(), &f );
 }
 
 QgsFeature QgsAttributeTableModel::feature( const QModelIndex &idx ) const
 {
+  std::cout << "QgsAttributeTableModel::feature" << std::endl;
   QgsFeature f;
   f.initAttributes( mAttributes.size() );
   f.setId( rowToId( idx.row() ) );
@@ -851,6 +911,7 @@ QString QgsAttributeTableModel::sortCacheExpression() const
 
 void QgsAttributeTableModel::setRequest( const QgsFeatureRequest &request )
 {
+  std::cout << "QgsAttributeTableModel::setRequest" << std::endl;
   mFeatureRequest = request;
   if ( layer() && !layer()->hasGeometryType() )
     mFeatureRequest.setFlags( mFeatureRequest.flags() | QgsFeatureRequest::NoGeometry );

@@ -22,6 +22,8 @@
 #include "qgseditorwidgetwrapper.h"
 #include "qgssearchwidgetwrapper.h"
 
+#include "qgsspinbox.h"
+
 // Editors
 #include "qgsclassificationwidgetwrapperfactory.h"
 #include "qgscheckboxwidgetfactory.h"
@@ -100,10 +102,12 @@ QgsEditorWidgetWrapper *QgsEditorWidgetRegistry::create( QgsVectorLayer *vl, int
 
 QgsEditorWidgetWrapper *QgsEditorWidgetRegistry::create( const QString &widgetId, QgsVectorLayer *vl, int fieldIdx, const QVariantMap &config, QWidget *editor, QWidget *parent, const QgsAttributeEditorContext &context )
 {
+  std::cout << "QgsEditorWidgetRegistry::create for field " << vl->fields().field( fieldIdx ).name().toStdString() << std::endl;
   if ( mWidgetFactories.contains( widgetId ) )
   {
     QgsEditorWidgetWrapper *ww = mWidgetFactories[widgetId]->create( vl, fieldIdx, editor, parent );
 
+    std::cout << "QgsEditorWidgetRegistry::create widget " << mWidgetFactories[widgetId]->name().toStdString() << std::endl;
     if ( ww )
     {
       ww->setConfig( config );
@@ -112,9 +116,13 @@ QgsEditorWidgetWrapper *QgsEditorWidgetRegistry::create( const QString &widgetId
       // so setValue() et al won't crash
       ww->widget();
 
+      std::cout << "QgsEditorWidgetRegistry::create enabled " << ww->widget()->isEnabled() << std::endl;
+
+
       // If we tried to set a widget which is not supported by this wrapper
       if ( !ww->valid() )
       {
+        std::cout << "QgsEditorWidgetRegistry::create INVALID!!!" << std::endl;
         delete ww;
         QString wid = findSuitableWrapper( editor, QStringLiteral( "TextEdit" ) );
         ww = mWidgetFactories[wid]->create( vl, fieldIdx, editor, parent );

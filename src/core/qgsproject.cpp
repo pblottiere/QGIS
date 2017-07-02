@@ -688,8 +688,10 @@ bool QgsProject::addLayer( const QDomElement &layerElem, QList<QDomNode> &broken
   QgsDebugMsg( "Layer type is " + type );
   QgsMapLayer *mapLayer = nullptr;
 
+  std::cout << "QgsProject::addLayer -1" << std::endl;
   if ( type == QLatin1String( "vector" ) )
   {
+    std::cout << "QgsProject::addLayer 0" << std::endl;
     mapLayer = new QgsVectorLayer;
   }
   else if ( type == QLatin1String( "raster" ) )
@@ -712,6 +714,7 @@ bool QgsProject::addLayer( const QDomElement &layerElem, QList<QDomNode> &broken
   Q_CHECK_PTR( mapLayer ); // NOLINT
 
   // have the layer restore state that is stored in Dom node
+  std::cout << "QgsProject::addLayer 1" << std::endl;
   if ( mapLayer->readLayerXml( layerElem, pathResolver() ) && mapLayer->isValid() )
   {
     emit readMapLayer( mapLayer, layerElem );
@@ -907,10 +910,15 @@ bool QgsProject::read()
 
   // Resolve references to other vector layers
   // Needs to be done here once all dependent layers are loaded
+  std::cout << "QgsProject::read 0" << std::endl;
   for ( QMap<QString, QgsMapLayer *>::iterator it = mMapLayers.begin(); it != mMapLayers.end(); it++ )
   {
+    std::cout << "QgsProject::read 1" << std::endl;
     if ( QgsVectorLayer *vl = qobject_cast<QgsVectorLayer *>( it.value() ) )
+    {
+      std::cout << "QgsProject::read 3" << std::endl;
       vl->resolveReferences( this );
+    }
   }
 
   mLayerTreeRegistryBridge->setEnabled( true );

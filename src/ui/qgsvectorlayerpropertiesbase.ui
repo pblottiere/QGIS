@@ -282,7 +282,7 @@
           </sizepolicy>
          </property>
          <property name="currentIndex">
-          <number>0</number>
+          <number>7</number>
          </property>
          <widget class="QWidget" name="mOptsPage_General">
           <layout class="QVBoxLayout" name="verticalLayout_14">
@@ -311,8 +311,8 @@
                <rect>
                 <x>0</x>
                 <y>0</y>
-                <width>652</width>
-                <height>541</height>
+                <width>653</width>
+                <height>542</height>
                </rect>
               </property>
               <layout class="QVBoxLayout" name="verticalLayout_13">
@@ -501,7 +501,7 @@
                <item>
                 <widget class="QgsCollapsibleGroupBox" name="mScaleVisibilityGroupBox">
                  <property name="title">
-                  <string>Scale dependent visibility</string>
+                  <string>Scale dependen&amp;t visibility</string>
                  </property>
                  <property name="checkable">
                   <bool>true</bool>
@@ -616,8 +616,8 @@
                <rect>
                 <x>0</x>
                 <y>0</y>
-                <width>100</width>
-                <height>30</height>
+                <width>653</width>
+                <height>542</height>
                </rect>
               </property>
               <layout class="QVBoxLayout" name="verticalLayout_18">
@@ -717,8 +717,8 @@
                <rect>
                 <x>0</x>
                 <y>0</y>
-                <width>100</width>
-                <height>30</height>
+                <width>653</width>
+                <height>542</height>
                </rect>
               </property>
               <layout class="QVBoxLayout" name="verticalLayout_20">
@@ -777,15 +777,15 @@
                <rect>
                 <x>0</x>
                 <y>0</y>
-                <width>523</width>
-                <height>222</height>
+                <width>653</width>
+                <height>542</height>
                </rect>
               </property>
               <layout class="QVBoxLayout" name="verticalLayout_32">
                <item>
                 <widget class="QGroupBox" name="mSimplifyDrawingGroupBox">
                  <property name="title">
-                  <string>Simplify geometry</string>
+                  <string>Simplify &amp;geometry</string>
                  </property>
                  <property name="checkable">
                   <bool>true</bool>
@@ -1094,8 +1094,8 @@
                <rect>
                 <x>0</x>
                 <y>0</y>
-                <width>100</width>
-                <height>30</height>
+                <width>653</width>
+                <height>542</height>
                </rect>
               </property>
               <layout class="QVBoxLayout" name="verticalLayout_21">
@@ -1160,8 +1160,8 @@
                <rect>
                 <x>0</x>
                 <y>0</y>
-                <width>104</width>
-                <height>103</height>
+                <width>653</width>
+                <height>542</height>
                </rect>
               </property>
               <layout class="QVBoxLayout" name="verticalLayout_23">
@@ -1180,7 +1180,7 @@
                <item>
                 <widget class="QTreeWidget" name="mJoinTreeWidget">
                  <property name="columnCount">
-                  <number>6</number>
+                  <number>7</number>
                  </property>
                  <column>
                   <property name="text">
@@ -1200,6 +1200,11 @@
                  <column>
                   <property name="text">
                    <string>Memory cache</string>
+                  </property>
+                 </column>
+                 <column>
+                  <property name="text">
+                   <string>Editable</string>
                   </property>
                  </column>
                  <column>
@@ -1329,8 +1334,8 @@
                <rect>
                 <x>0</x>
                 <y>0</y>
-                <width>297</width>
-                <height>556</height>
+                <width>325</width>
+                <height>613</height>
                </rect>
               </property>
               <layout class="QGridLayout" name="gridLayout_3">

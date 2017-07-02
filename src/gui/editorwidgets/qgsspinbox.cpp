@@ -18,6 +18,8 @@
 #include <QSettings>
 #include <QStyle>
 
+#include <iostream>
+
 #include "qgsspinbox.h"
 #include "qgsexpression.h"
 #include "qgsapplication.h"
@@ -47,39 +49,52 @@ QgsSpinBox::QgsSpinBox( QWidget *parent )
 
 void QgsSpinBox::setShowClearButton( const bool showClearButton )
 {
+//  std::cout << "QgsSPinBox::setShowClearButton" << std::endl;
   mShowClearButton = showClearButton;
   mLineEdit->setShowClearButton( showClearButton );
 }
 
 void QgsSpinBox::setExpressionsEnabled( const bool enabled )
 {
+//  std::cout << "QgsSPinBox::setExpressionEnabled " << std::endl;
   mExpressionsEnabled = enabled;
 }
 
+/*void QgsSpinBox::setEnabled( bool enabled )
+{
+  std::cout << "QgsSpinBox::setEnabled " << enabled << std::endl;
+  QSpinBox::setEnabled( enabled );
+}*/
+
 void QgsSpinBox::changeEvent( QEvent *event )
 {
+//  std::cout << "QgsSPinBox::changeEvent " << std::endl;
   QSpinBox::changeEvent( event );
   mLineEdit->setShowClearButton( shouldShowClearForValue( value() ) );
 }
 
 void QgsSpinBox::paintEvent( QPaintEvent *event )
 {
+//  std::cout << "QgsSPinBox::paintVenet " << std::endl;
   mLineEdit->setShowClearButton( shouldShowClearForValue( value() ) );
   QSpinBox::paintEvent( event );
 }
 
 void QgsSpinBox::changed( int value )
 {
+//  std::cout << "QgsSPinBox::changed " << std::endl;
   mLineEdit->setShowClearButton( shouldShowClearForValue( value ) );
 }
 
 void QgsSpinBox::clear()
 {
+//  std::cout << "QgsSPinBox::clear " << std::endl;
   setValue( clearValue() );
 }
 
 void QgsSpinBox::setClearValue( int customValue, const QString &specialValueText )
 {
+// std::cout << "QgsSPinBox::setClearValue" << std::endl;
   mClearValueMode = CustomValue;
   mCustomClearValue = customValue;
 
@@ -94,6 +109,7 @@ void QgsSpinBox::setClearValue( int customValue, const QString &specialValueText
 
 void QgsSpinBox::setClearValueMode( QgsSpinBox::ClearValueMode mode, const QString &specialValueText )
 {
+// std::cout << "QgsSPinBox::setClearValueMode" << std::endl;
   mClearValueMode = mode;
   mCustomClearValue = 0;
 
@@ -108,6 +124,7 @@ void QgsSpinBox::setClearValueMode( QgsSpinBox::ClearValueMode mode, const QStri
 
 int QgsSpinBox::clearValue() const
 {
+  //std::cout << "QgsSPinBox::clearValue" << std::endl;
   if ( mClearValueMode == MinimumValue )
     return minimum() ;
   else if ( mClearValueMode == MaximumValue )
@@ -118,6 +135,7 @@ int QgsSpinBox::clearValue() const
 
 int QgsSpinBox::valueFromText( const QString &text ) const
 {
+//  std::cout << "QgsSPinBox::valueFromText" << std::endl;
   if ( !mExpressionsEnabled )
   {
     return QSpinBox::valueFromText( text );
@@ -134,6 +152,7 @@ int QgsSpinBox::valueFromText( const QString &text ) const
 
 QValidator::State QgsSpinBox::validate( QString &input, int &pos ) const
 {
+// std::cout << "QgsSPinBox::validate " << std::endl;
   if ( !mExpressionsEnabled )
   {
     QValidator::State r = QSpinBox::validate( input, pos );
@@ -150,15 +169,20 @@ int QgsSpinBox::frameWidth() const
 
 bool QgsSpinBox::shouldShowClearForValue( const int value ) const
 {
+  //std::cout << "QgsSpinBow::shouldShowClearForValue 0" << std::endl;
+
   if ( !mShowClearButton || !isEnabled() )
   {
+//    std::cout << "QgsSpinBow::shouldShowClearForValue 1" << std::endl;
     return false;
   }
+//  std::cout << "QgsSpinBow::shouldShowClearForValue 2" << std::endl;
   return value != clearValue();
 }
 
 QString QgsSpinBox::stripped( const QString &originalText ) const
 {
+// std::cout << "QgsSPinBox::stripped" << std::endl;
   //adapted from QAbstractSpinBoxPrivate::stripped
   //trims whitespace, prefix and suffix from spin box text
   QString text = originalText;

@@ -20,6 +20,7 @@ QgsCachedFeatureIterator::QgsCachedFeatureIterator( QgsVectorLayerCache *vlCache
   : QgsAbstractFeatureIterator( featureRequest )
   , mVectorLayerCache( vlCache )
 {
+  std::cout << "QgsCachedFeatureIterator::QgsCachedFeatureIterator NEW 0" << std::endl;
   switch ( featureRequest.filterType() )
   {
     case QgsFeatureRequest::FilterFids:
@@ -43,6 +44,7 @@ QgsCachedFeatureIterator::QgsCachedFeatureIterator( QgsVectorLayerCache *vlCache
 
 bool QgsCachedFeatureIterator::fetchFeature( QgsFeature &f )
 {
+  std::cout << "QgsCachedFeatureIterator::fetchFeature 0 " << f.attribute( 1 ).toString().toStdString() << std::endl;
   if ( mClosed )
     return false;
 
@@ -74,6 +76,7 @@ QgsCachedFeatureWriterIterator::QgsCachedFeatureWriterIterator( QgsVectorLayerCa
   : QgsAbstractFeatureIterator( featureRequest )
   , mVectorLayerCache( vlCache )
 {
+  std::cout << "QgsCachedFeatureWriterIterator::QgsCachedFeatureWriterIterator NEW 1" << std::endl;
   mFeatIt = vlCache->layer()->getFeatures( featureRequest );
 }
 
@@ -82,6 +85,7 @@ bool QgsCachedFeatureWriterIterator::fetchFeature( QgsFeature &f )
   if ( mFeatIt.nextFeature( f ) )
   {
     // As long as features can be fetched from the provider: Write them to cache
+    std::cout << "QgsCachedFeatureWriterIterator::fetchFeature 0 " << f.attribute( 1 ).toString().toStdString() << std::endl;
     mVectorLayerCache->cacheFeature( f );
     mFids.insert( f.id() );
     return true;

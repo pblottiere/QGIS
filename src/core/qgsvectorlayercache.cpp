@@ -17,6 +17,8 @@
 
 #include "qgsvectorlayercache.h"
 #include "qgscacheindex.h"
+#include "qgsvectorlayerjoinbuffer.h"
+#include "qgsvectorlayereditbuffer.h"
 #include "qgscachedfeatureiterator.h"
 
 QgsVectorLayerCache::QgsVectorLayerCache( QgsVectorLayer *layer, int cacheSize, QObject *parent )
@@ -24,6 +26,7 @@ QgsVectorLayerCache::QgsVectorLayerCache( QgsVectorLayer *layer, int cacheSize, 
   , mLayer( layer )
   , mFullCache( false )
 {
+  std::cout << "QgsVectorLayerCache::QgsVectorLayerCache NEW!!!!!" << std::endl;
   mCache.setMaxCost( cacheSize );
 
   connect( mLayer, &QgsVectorLayer::featureDeleted, this, &QgsVectorLayerCache::featureDeleted );
@@ -38,6 +41,17 @@ QgsVectorLayerCache::QgsVectorLayerCache( QgsVectorLayer *layer, int cacheSize, 
   connect( mLayer, &QgsVectorLayer::updatedFields, this, &QgsVectorLayerCache::invalidate );
   connect( mLayer, &QgsVectorLayer::dataChanged, this, &QgsVectorLayerCache::invalidate );
   connect( mLayer, &QgsVectorLayer::attributeValueChanged, this, &QgsVectorLayerCache::onAttributeValueChanged );
+
+  QgsVectorJoinList::const_iterator it = mLayer->vectorJoins().begin();
+  for ( ; it != mLayer->vectorJoins().end(); ++it )
+  {
+    QgsVectorLayer *vl = it->joinLayer();
+
+    if ( vl )
+    {
+      connect( vl, &QgsVectorLayer::attributeValueChanged, this, &QgsVectorLayerCache::onAttributeValueChanged );
+    }
+  }
 }
 
 QgsVectorLayerCache::~QgsVectorLayerCache()
@@ -82,6 +96,7 @@ void QgsVectorLayerCache::setCacheSubsetOfAttributes( const QgsAttributeList &at
 
 void QgsVectorLayerCache::setFullCache( bool fullCache )
 {
+  std::cout << "QgsVectorLayerCache::setFullCache 0" << std::endl;
   mFullCache = fullCache;
 
   if ( mFullCache )
@@ -90,6 +105,7 @@ void QgsVectorLayerCache::setFullCache( bool fullCache )
     setCacheSize( mLayer->featureCount() + 100 );
 
     // Initialize the cache...
+    std::cout << "QgsVectorLayerCache::setFullCache 1" << std::endl;
     QgsFeatureIterator it( new QgsCachedFeatureWriterIterator( this, QgsFeatureRequest()
                            .setSubsetOfAttributes( mCachedAttributes )
                            .setFlags( mCacheGeometry ? QgsFeatureRequest::NoFlags : QgsFeatureRequest::NoGeometry ) ) );
@@ -140,18 +156,22 @@ void QgsVectorLayerCache::setCacheAddedAttributes( bool cacheAddedAttributes )
 
 bool QgsVectorLayerCache::featureAtId( QgsFeatureId featureId, QgsFeature &feature, bool skipCache )
 {
+  std::cout << "QgsVectorLayerCache::featureAtId 0" << std::endl;
   bool featureFound = false;
 
   QgsCachedFeature *cachedFeature = nullptr;
 
   if ( !skipCache )
   {
+    std::cout << "QgsVectorLayerCache::featureAtId 1" << std::endl;
     cachedFeature = mCache[ featureId ];
   }
 
   if ( cachedFeature )
   {
+    std::cout << "QgsVectorLayerCache::featureAtId 2" << std::endl;
     feature = QgsFeature( *cachedFeature->feature() );
+    // syncFeatureWithJoinedLayers( feature );
     featureFound = true;
   }
   else if ( mLayer->getFeatures( QgsFeatureRequest()
@@ -160,11 +180,46 @@ bool QgsVectorLayerCache::featureAtId( QgsFeatureId featureId, QgsFeature &featu
                                  .setFlags( !mCacheGeometry ? QgsFeatureRequest::NoGeometry : QgsFeatureRequest::Flags( nullptr ) ) )
             .nextFeature( feature ) )
   {
+    std::cout << "QgsVectorLayerCache::featureAtId 3" << std::endl;
+
+    // syncFeatureWithJoinedLayers( feature );
+
     cacheFeature( feature );
     featureFound = true;
   }
 
   return featureFound;
+}
+
+void QgsVectorLayerCache::syncFeatureWithJoinedLayers( QgsFeature &feature )
+{
+  std::cout << "SYNC FEATURE 0!!!!!" << std::endl;
+  // update the feature with not committed data of join layers
+  QgsVectorJoinList::const_iterator it = mLayer->vectorJoins().begin();
+  for ( ; it != mLayer->vectorJoins().end(); ++it )
+  {
+    std::cout << "SYNC FEATURE 1!!!!!" << std::endl;
+    const QgsVectorLayerJoinInfo *info = &( *it );
+    QgsVectorLayer *joinLayer = info->joinLayer();
+
+    if ( joinLayer && joinLayer->editBuffer() )
+    {
+      if ( joinLayer->editBuffer()->isFeatureAttributesChanged( feature.id() ) )
+      {
+        QgsAttributeMap attrs = joinLayer->editBuffer()->changedAttributeValues( feature.id() );
+        QgsAttributeMap::const_iterator ait = attrs.begin();
+        for ( ; ait != attrs.end(); ++ait )
+        {
+          QString fieldName = QString( "%1_%2" ).arg( joinLayer->name(), joinLayer->fields().field( ait.key() ).name() );
+          std::cout << "SYNC FEATURE for " << fieldName.toStdString() << std::endl;
+          int idxOffset = mLayer->joinBuffer()->joinedFieldsOffset( info, feature.fields() );
+          std::cout << "SYNC FEATURE offset field " << ait.key() << std::endl;
+          std::cout << "SYNC FEATURE offset index " << idxOffset << std::endl;
+          feature.setAttribute( fieldName, ait.value() );
+        }
+      }
+    }
+  }
 }
 
 bool QgsVectorLayerCache::removeCachedFeature( QgsFeatureId fid )
@@ -326,25 +381,30 @@ bool QgsVectorLayerCache::canUseCacheForRequest( const QgsFeatureRequest &featur
 
 QgsFeatureIterator QgsVectorLayerCache::getFeatures( const QgsFeatureRequest &featureRequest )
 {
+  std::cout << "QgsVectorLayerCache::getFeatures 0" << std::endl;
   QgsFeatureIterator it;
   bool requiresWriterIt = true; // If a not yet cached, but cachable request is made, this stays true.
 
   if ( checkInformationCovered( featureRequest ) )
   {
+    std::cout << "QgsVectorLayerCache::getFeatures 1" << std::endl;
     // If we have a full cache available, run on this
     if ( mFullCache )
     {
+      std::cout << "QgsVectorLayerCache::getFeatures 2" << std::endl;
       it = QgsFeatureIterator( new QgsCachedFeatureIterator( this, featureRequest ) );
       requiresWriterIt = false;
     }
     else
     {
+      std::cout << "QgsVectorLayerCache::getFeatures 3" << std::endl;
       // may still be able to satisfy request using cache
       requiresWriterIt = !canUseCacheForRequest( featureRequest, it );
     }
   }
   else
   {
+    std::cout << "QgsVectorLayerCache::getFeatures 4" << std::endl;
     // Let the layer answer the request, so no caching of requests
     // we don't want to cache is done
     requiresWriterIt = false;
@@ -353,6 +413,7 @@ QgsFeatureIterator QgsVectorLayerCache::getFeatures( const QgsFeatureRequest &fe
 
   if ( requiresWriterIt && mLayer->dataProvider() )
   {
+    std::cout << "QgsVectorLayerCache::getFeatures 5" << std::endl;
     // No index was able to satisfy the request
     QgsFeatureRequest myRequest = QgsFeatureRequest( featureRequest );
 

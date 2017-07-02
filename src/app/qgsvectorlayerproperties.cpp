@@ -1190,16 +1190,21 @@ void QgsVectorLayerProperties::addJoinToTreeWidget( const QgsVectorLayerJoinInfo
     joinItem->setText( 3, QChar( 0x2714 ) );
   }
 
-  joinItem->setText( 4, join.prefix() );
+  if ( join.editable() )
+  {
+    joinItem->setText( 4, QChar( 0x2714 ) );
+  }
+
+  joinItem->setText( 5, join.prefix() );
 
   const QStringList *list = join.joinFieldNamesSubset();
   if ( list )
   {
-    joinItem->setText( 5, QStringLiteral( "%1" ).arg( list->count() ) );
+    joinItem->setText( 6, QStringLiteral( "%1" ).arg( list->count() ) );
   }
   else
   {
-    joinItem->setText( 5, tr( "all" ) );
+    joinItem->setText( 6, tr( "all" ) );
   }
 
   if ( insertIndex >= 0 )
@@ -1210,7 +1215,7 @@ void QgsVectorLayerProperties::addJoinToTreeWidget( const QgsVectorLayerJoinInfo
   {
     mJoinTreeWidget->addTopLevelItem( joinItem );
   }
-  for ( int c = 0; c < 5; c++ )
+  for ( int c = 0; c < 6; c++ )
   {
     mJoinTreeWidget->resizeColumnToContents( c );
   }

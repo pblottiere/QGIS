@@ -14,6 +14,7 @@
  ***************************************************************************/
 
 #include "qgslistwidget.h"
+#include <iostream>
 
 QgsListWidget::QgsListWidget( QVariant::Type subType, QWidget *parent )
   : QgsTableWidgetBase( parent )
@@ -113,6 +114,7 @@ bool QgsListModel::setData( const QModelIndex &index, const QVariant &value, int
 
 Qt::ItemFlags QgsListModel::flags( const QModelIndex &index ) const
 {
+  std::cout << "QgsListModel::flags 0" << std::endl;
   return QAbstractTableModel::flags( index ) | Qt::ItemIsEditable;
 }
 

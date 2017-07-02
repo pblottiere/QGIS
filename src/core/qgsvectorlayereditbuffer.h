@@ -114,6 +114,8 @@ class CORE_EXPORT QgsVectorLayerEditBuffer : public QObject
     */
     QgsChangedAttributesMap changedAttributeValues() const { return mChangedAttributeValues; }
 
+    QgsAttributeMap changedAttributeValues( QgsFeatureId fid ) const;
+
     /** Returns true if the specified feature ID has had an attribute changed but not committed.
      * \param id feature ID
      * \since QGIS 3.0

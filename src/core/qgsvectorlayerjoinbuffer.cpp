@@ -27,6 +27,7 @@
 QgsVectorLayerJoinBuffer::QgsVectorLayerJoinBuffer( QgsVectorLayer *layer )
   : mLayer( layer )
 {
+  std::cout << "QgsVectorLayerJoinBuffer::QgsVectorLayerJoinBuffer for layer " << layer->name().toStdString() << std::endl;
 }
 
 static QList<QgsVectorLayer *> _outEdges( QgsVectorLayer *vl )
@@ -60,6 +61,7 @@ static bool _hasCycleDFS( QgsVectorLayer *n, QHash<QgsVectorLayer *, int> &mark 
 
 bool QgsVectorLayerJoinBuffer::addJoin( const QgsVectorLayerJoinInfo &joinInfo )
 {
+  std::cout << "QgsVectorLayerJoinBuffer::addJoin 0 for " << mLayer->name().toStdString() << std::endl;
   QMutexLocker locker( &mMutex );
   mVectorJoins.push_back( joinInfo );
 
@@ -68,6 +70,7 @@ bool QgsVectorLayerJoinBuffer::addJoin( const QgsVectorLayerJoinInfo &joinInfo )
   QHash<QgsVectorLayer *, int> markDFS;
   if ( mLayer && _hasCycleDFS( mLayer, markDFS ) )
   {
+    std::cout << "QgsVectorLayerJoinBuffer::addJoin 1" << std::endl;
     // we have to reject this one
     mVectorJoins.pop_back();
     return false;
@@ -83,8 +86,10 @@ bool QgsVectorLayerJoinBuffer::addJoin( const QgsVectorLayerJoinInfo &joinInfo )
   // During project load the joined layers possibly do not exist yet so the connection will not be created,
   // but then QgsProject makes sure to call createJoinCaches() which will do the connection.
   // Unique connection makes sure we do not respond to one layer's update more times (in case of multiple join)
+  std::cout << "QgsVectorLayerJoinBuffer::addJoin 2" << std::endl;
   if ( QgsVectorLayer *vl = joinInfo.joinLayer() )
   {
+    std::cout << "QgsVectorLayerJoinBuffer::addJoin 3" << std::endl;
     connectJoinedLayer( vl );
   }
 
@@ -275,6 +280,7 @@ void QgsVectorLayerJoinBuffer::writeXml( QDomNode &layer_node, QDomDocument &doc
     joinElem.setAttribute( QStringLiteral( "joinFieldName" ), joinIt->joinFieldName() );
 
     joinElem.setAttribute( QStringLiteral( "memoryCache" ), joinIt->isUsingMemoryCache() );
+    joinElem.setAttribute( QStringLiteral( "editable" ), joinIt->editable() );
 
     if ( joinIt->joinFieldNamesSubset() )
     {
@@ -301,13 +307,17 @@ void QgsVectorLayerJoinBuffer::writeXml( QDomNode &layer_node, QDomDocument &doc
 
 void QgsVectorLayerJoinBuffer::readXml( const QDomNode &layer_node )
 {
+  QString mnl = layer_node.namedItem( QStringLiteral( "layername" ) ).toElement().text();
+  std::cout << "QgsVectorLayerJoinBuffer::readXml 0 for " << mnl.toStdString()  << std::endl;
   mVectorJoins.clear();
   QDomElement vectorJoinsElem = layer_node.firstChildElement( QStringLiteral( "vectorjoins" ) );
   if ( !vectorJoinsElem.isNull() )
   {
+    std::cout << "QgsVectorLayerJoinBuffer::readXml 1" << std::endl;
     QDomNodeList joinList = vectorJoinsElem.elementsByTagName( QStringLiteral( "join" ) );
     for ( int i = 0; i < joinList.size(); ++i )
     {
+      std::cout << "QgsVectorLayerJoinBuffer::readXml 2" << std::endl;
       QDomElement infoElem = joinList.at( i ).toElement();
       QgsVectorLayerJoinInfo info;
       info.setJoinFieldName( infoElem.attribute( QStringLiteral( "joinFieldName" ) ) );
@@ -315,6 +325,9 @@ void QgsVectorLayerJoinBuffer::readXml( const QDomNode &layer_node )
       info.setJoinLayerId( infoElem.attribute( QStringLiteral( "joinLayerId" ) ) );
       info.setTargetFieldName( infoElem.attribute( QStringLiteral( "targetFieldName" ) ) );
       info.setUsingMemoryCache( infoElem.attribute( QStringLiteral( "memoryCache" ) ).toInt() );
+      info.setEditable( infoElem.attribute( QStringLiteral( "editable" ) ).toInt() );
+
+      std::cout << "joinLayerId: " << info.joinLayerId().toStdString() << " / " << info.editable() << std::endl;
 
       QDomElement subsetElem = infoElem.firstChildElement( QStringLiteral( "joinFieldsSubset" ) );
       if ( !subsetElem.isNull() )
@@ -332,6 +345,7 @@ void QgsVectorLayerJoinBuffer::readXml( const QDomNode &layer_node )
       else
         info.setPrefix( QString::null );
 
+      std::cout << "QgsVectorLayerJoinBuffer::readXml 3" << std::endl;
       addJoin( info );
     }
   }
@@ -339,21 +353,28 @@ void QgsVectorLayerJoinBuffer::readXml( const QDomNode &layer_node )
 
 void QgsVectorLayerJoinBuffer::resolveReferences( QgsProject *project )
 {
+  std::cout << "QgsVectorLayerJoinBuffer::resolveReferences 0" << std::endl;
   bool resolved = false;
   for ( QgsVectorJoinList::iterator it = mVectorJoins.begin(); it != mVectorJoins.end(); ++it )
   {
+    std::cout << "QgsVectorLayerJoinBuffer::resolveReferences 1 for " << mLayer->name().toStdString() << " with joined layer " << it->joinLayerId().toStdString() << std::endl;
     if ( it->joinLayer() )
       continue;  // already resolved
 
+    std::cout << "QgsVectorLayerJoinBuffer::resolveReferences 2" << std::endl;
     if ( QgsVectorLayer *joinedLayer = qobject_cast<QgsVectorLayer *>( project->mapLayer( it->joinLayerId() ) ) )
     {
+      std::cout << "QgsVectorLayerJoinBuffer::resolveReferences 3" << std::endl;
       it->setJoinLayer( joinedLayer );
+      connectJoinedLayer( joinedLayer );
       resolved = true;
     }
   }
 
   if ( resolved )
     emit joinedFieldsChanged();
+
+  std::cout << "QgsVectorLayerJoinBuffer::resolveReferences 1" << std::endl;
 }
 
 int QgsVectorLayerJoinBuffer::joinedFieldsOffset( const QgsVectorLayerJoinInfo *info, const QgsFields &fields )
@@ -421,6 +442,7 @@ void QgsVectorLayerJoinBuffer::joinedLayerUpdatedFields()
 
 void QgsVectorLayerJoinBuffer::joinedLayerModified()
 {
+  std::cout << "QgsVectorLayerJoinBuffer::joinLayerModified !!!!!!!!!!!!!!!!!!!" << std::endl;
   QgsVectorLayer *joinedLayer = qobject_cast<QgsVectorLayer *>( sender() );
   Q_ASSERT( joinedLayer );
 
@@ -430,6 +452,7 @@ void QgsVectorLayerJoinBuffer::joinedLayerModified()
     if ( joinedLayer == it->joinLayer() )
     {
       it->cacheDirty = true;
+      std::cout << "QgsVectorLayerJoinBuffer::joinLayerModified cache dirty for " << joinedLayer->name().toStdString() << std::endl;
     }
   }
 }
@@ -444,7 +467,9 @@ void QgsVectorLayerJoinBuffer::joinedLayerWillBeDeleted()
 
 void QgsVectorLayerJoinBuffer::connectJoinedLayer( QgsVectorLayer *vl )
 {
+  std::cout << "QgsVectorLayerJoinBuffer::connectJoinedLayer for " << vl->name().toStdString() << std::endl;
   connect( vl, &QgsVectorLayer::updatedFields, this, &QgsVectorLayerJoinBuffer::joinedLayerUpdatedFields, Qt::UniqueConnection );
+  connect( vl, &QgsVectorLayer::attributeValueChanged, this, &QgsVectorLayerJoinBuffer::joinedLayerModified, Qt::UniqueConnection );
   connect( vl, &QgsVectorLayer::layerModified, this, &QgsVectorLayerJoinBuffer::joinedLayerModified, Qt::UniqueConnection );
   connect( vl, &QgsVectorLayer::willBeDeleted, this, &QgsVectorLayerJoinBuffer::joinedLayerWillBeDeleted, Qt::UniqueConnection );
 }

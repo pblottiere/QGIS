@@ -32,22 +32,27 @@ QgsAbstractFeatureIterator::QgsAbstractFeatureIterator( const QgsFeatureRequest 
 
 bool QgsAbstractFeatureIterator::nextFeature( QgsFeature &f )
 {
+  std::cout << "QgsAbstractFeatureIterator::nextFeature 0" << std::endl;
   bool dataOk = false;
   if ( mRequest.limit() >= 0 && mFetchedCount >= mRequest.limit() )
   {
+    std::cout << "QgsAbstractFeatureIterator::nextFeature 1" << std::endl;
     return false;
   }
 
   if ( mUseCachedFeatures )
   {
+    std::cout << "QgsAbstractFeatureIterator::nextFeature 2" << std::endl;
     if ( mFeatureIterator != mCachedFeatures.constEnd() )
     {
+      std::cout << "QgsAbstractFeatureIterator::nextFeature 3" << std::endl;
       f = mFeatureIterator->mFeature;
       ++mFeatureIterator;
       dataOk = true;
     }
     else
     {
+      std::cout << "QgsAbstractFeatureIterator::nextFeature 4" << std::endl;
       dataOk = false;
       // even the zombie dies at this point...
       mZombie = false;
@@ -55,18 +60,22 @@ bool QgsAbstractFeatureIterator::nextFeature( QgsFeature &f )
   }
   else
   {
+    std::cout << "QgsAbstractFeatureIterator::nextFeature 5" << std::endl;
     switch ( mRequest.filterType() )
     {
       case QgsFeatureRequest::FilterExpression:
+        std::cout << "QgsAbstractFeatureIterator::nextFeature 6 " << f.attribute( 1 ).toString().toStdString() << std::endl;
         dataOk = nextFeatureFilterExpression( f );
         break;
 
       case QgsFeatureRequest::FilterFids:
+        std::cout << "QgsAbstractFeatureIterator::nextFeature 7" << std::endl;
         dataOk = nextFeatureFilterFids( f );
         break;
 
       default:
         dataOk = fetchFeature( f );
+        std::cout << "QgsAbstractFeatureIterator::nextFeature 8 " << f.attribute( 1 ).toString().toStdString() << std::endl;
         break;
     }
   }
