@@ -237,6 +237,7 @@ void QgsAttributeForm::changeAttribute( const QString &field, const QVariant &va
 
 void QgsAttributeForm::setFeature( const QgsFeature &feature )
 {
+  std::cout << "QgsAttributeForm::setFeature 0" << std::endl;
   mIsSettingFeature = true;
   mFeature = feature;
 
@@ -245,7 +246,7 @@ void QgsAttributeForm::setFeature( const QgsFeature &feature )
     case SingleEditMode:
     case AddFeatureMode:
     {
-      searchJoinedFeatures();
+      updateJoinedFeatures( feature );
 
       resetValues();
 
@@ -325,6 +326,7 @@ bool QgsAttributeForm::saveEdits()
       {
         mFeature.setValid( true );
         mLayer->beginEditCommand( mEditCommandMessage );
+
         bool res = mLayer->addFeature( updatedFeature );
         if ( res )
         {
@@ -649,6 +651,7 @@ QString QgsAttributeForm::createFilterExpression() const
 
 void QgsAttributeForm::onAttributeChanged( const QVariant &value )
 {
+  std::cout << "QgsAttributeForm::onAttributeChanged 0" << std::endl;
   QgsEditorWidgetWrapper *eww = qobject_cast<QgsEditorWidgetWrapper *>( sender() );
 
   Q_ASSERT( eww );
@@ -663,6 +666,8 @@ void QgsAttributeForm::onAttributeChanged( const QVariant &value )
       {
         emit attributeChanged( eww->field().name(), value );
       }
+
+      updateJoinedFieldsForm( *eww );
       break;
     }
     case MultiEditMode:
@@ -900,6 +905,7 @@ void QgsAttributeForm::onAttributeDeleted( int idx )
 
 void QgsAttributeForm::onUpdatedFields()
 {
+  std::cout << "QgsAttributeForm::onUpdatedFields" << std::endl;
   mPreventFeatureRefresh = false;
   if ( mFeature.isValid() )
   {
@@ -2014,13 +2020,15 @@ void QgsAttributeForm::ContainerInformation::apply( QgsExpressionContext *expres
   }
 }
 
-void QgsAttributeForm::searchJoinedFeatures()
+void QgsAttributeForm::updateJoinedFeatures( const QgsFeature &feature )
 {
+  // search all joined features linked to the current feature to resolve
+  // constraints
   mJoinedFeatures.clear();
 
-  for ( int  i = 0; i < mFeature.fields().count(); i++ )
+  for ( int  i = 0; i < feature.fields().count(); i++ )
   {
-    if ( mFeature.fields().fieldOrigin( i ) == QgsFields::OriginJoin )
+    if ( feature.fields().fieldOrigin( i ) == QgsFields::OriginJoin )
     {
       int srcFieldIndex;
       const QgsVectorLayerJoinInfo *info = mLayer->joinBuffer()->joinForFieldIndex( i, mLayer->fields(), srcFieldIndex );
@@ -2028,12 +2036,71 @@ void QgsAttributeForm::searchJoinedFeatures()
       if ( info &&
            ! mJoinedFeatures.contains( info ) &&
            info->joinLayer()->fields().field( srcFieldIndex ).constraints().constraints() )
-      {
-        QgsFeature joinFeature;
-        if ( !mLayer->joinBuffer()->joinFeature( *info, mFeature.id(), joinFeature ) )
-          joinFeature = QgsVectorLayerUtils::createFeature( info->joinLayer(), QgsGeometry(), QgsAttributeMap() );
+        mJoinedFeatures[info] = getJoinedFeature( info, feature );
+    }
+  }
+}
 
-        mJoinedFeatures[info] = joinFeature;
+QgsFeature QgsAttributeForm::getJoinedFeature( const QgsVectorLayerJoinInfo *info, const QgsFeature &feature )
+{
+  std::cout << "getJoinedFeature 0" << std::endl;
+  QgsFeature joinFeature;
+
+  // try to get the corresponding feature in joined layer. If none is
+  // found, then a new one is created to resolve constraints in a clean
+  // context
+  if ( !mLayer->joinBuffer()->joinFeature( *info, feature, joinFeature ) )
+  {
+    std::cout << "getJoinedFeature 1" << std::endl;
+    joinFeature = QgsVectorLayerUtils::createFeature( info->joinLayer(), QgsGeometry(), QgsAttributeMap() );
+  }
+
+  return joinFeature;
+}
+
+void QgsAttributeForm::updateJoinedFieldsForm( const QgsEditorWidgetWrapper &eww )
+{
+  std::cout << "updateJoinedFieldsForm 0" << std::endl;
+  // search all joins where the widget is a field id
+  QgsFeature currentFeature;
+  QString fieldName = eww.layer()->fields().field( eww.fieldIdx() ).name();
+
+  QList<const QgsVectorLayerJoinInfo *> infos = eww.layer()->joinBuffer()->joinForTargetField( fieldName );
+
+  if ( infos.count() == 0 || !currentFormFeature( currentFeature ) )
+    return;
+
+  std::cout << "updateJoinedFieldsForm 1 " << currentFeature.id() << std::endl;
+  // for each join where the widget is effectively an id, we want to display
+  // in form the corresponding fields from the joined feature
+  Q_FOREACH ( const QgsVectorLayerJoinInfo *info, infos )
+  {
+    std::cout << "updateJoinedFieldsForm 2 " << std::endl;
+    // update joined feature to resolve constraint
+    QgsFeature joinFeature = getJoinedFeature( info, currentFeature );
+    mJoinedFeatures[info] = joinFeature;
+
+    std::cout << "updateJoinedFieldsForm 3 " << joinFeature.id() << std::endl;
+
+    // update current widgets on form for each joined fields
+    QStringList *joinedFields = info->joinFieldNamesSubset();
+    if ( joinedFields )
+    {
+      // only a subset of fields is joined
+      Q_FOREACH ( const QString &joinField, *joinedFields )
+      {
+        QString prefixedName = info->prefixedNameField( joinField );
+        changeAttribute( prefixedName, joinFeature.attribute( joinField ) );
+      }
+    }
+    else
+    {
+      // all feature's fields are updated
+      for ( int i = 0; i < joinFeature.fields().count(); i++ )
+      {
+        QgsField joinField = joinFeature.fields().field( i );
+        QString prefixedName = info->prefixedNameField( joinField );
+        changeAttribute( prefixedName, joinFeature.attribute( joinField.name() ) );
       }
     }
   }

@@ -102,6 +102,15 @@ Returns whether values from the joined layer should be cached in memory to speed
  :rtype: str
 %End
 
+    QString unprefixedNameField( const QgsField &field ) const;
+%Docstring
+ Returns the field name without prefix.
+ \param field the field
+ :return: the unprefixed name of the field
+.. versionadded:: 3.0
+ :rtype: str
+%End
+
     void setEditable( bool editable );
 %Docstring
  Sets whether values from the joined layer may be editing from the

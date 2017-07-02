@@ -49,3 +49,22 @@ QString QgsVectorLayerJoinInfo::prefixedNameField( const QString &fieldName ) co
 
   return name;
 }
+
+QString QgsVectorLayerJoinInfo::unprefixedNameField( const QgsField &field ) const
+{
+  QString name = field.name();
+
+  if ( joinLayer() )
+  {
+    int prefixSize = 0;
+
+    if ( prefix().isNull() )
+      prefixSize = joinLayer()->name().size() + 1;
+    else
+      prefixSize = prefix().size();
+
+    name = name.mid( prefixSize );;
+  }
+
+  return name;
+}

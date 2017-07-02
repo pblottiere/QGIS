@@ -394,23 +394,28 @@ QgsVectorLayerJoinBuffer *QgsVectorLayerJoinBuffer::clone() const
   return cloned;
 }
 
-bool QgsVectorLayerJoinBuffer::joinFeature( const QgsVectorLayerJoinInfo &info, QgsFeatureId fid, QgsFeature &joinFeature ) const
+bool QgsVectorLayerJoinBuffer::joinFeature( const QgsVectorLayerJoinInfo &info, QgsFeatureId fid, QgsFeature &joinFt ) const
 {
-  joinFeature.setValid( false );
+  joinFt.setValid( false );
   const QgsFeature feature = mLayer->getFeature( fid );
 
   if ( info.joinLayer() && feature.isValid() )
-  {
-    const QVariant targetFieldValue = feature.attribute( info.targetFieldName() );
-    const QString filter = QString( "\"%1\" = %2" ).arg( info.joinFieldName(), targetFieldValue.toString() );
+    joinFeature( info, feature, joinFt );
 
-    QgsFeatureRequest request;
-    request.setFilterExpression( filter );
-    request.setLimit( 1 );
-    QgsFeatureIterator it = info.joinLayer()->getFeatures( request );
+  return joinFt.isValid();
+}
 
-    it.nextFeature( joinFeature );
-  }
+bool QgsVectorLayerJoinBuffer::joinFeature( const QgsVectorLayerJoinInfo &info, const QgsFeature &feature, QgsFeature &joinFeature ) const
+{
+  const QVariant targetFieldValue = feature.attribute( info.targetFieldName() );
+  const QString filter = QString( "\"%1\" = %2" ).arg( info.joinFieldName(), targetFieldValue.toString() );
+
+  QgsFeatureRequest request;
+  request.setFilterExpression( filter );
+  request.setLimit( 1 );
+
+  QgsFeatureIterator it = info.joinLayer()->getFeatures( request );
+  it.nextFeature( joinFeature );
 
   return joinFeature.isValid();
 }
@@ -490,3 +495,61 @@ void QgsVectorLayerJoinBuffer::connectJoinedLayer( QgsVectorLayer *vl )
   connect( vl, &QgsVectorLayer::layerModified, this, &QgsVectorLayerJoinBuffer::joinedLayerModified, Qt::UniqueConnection );
   connect( vl, &QgsVectorLayer::willBeDeleted, this, &QgsVectorLayerJoinBuffer::joinedLayerWillBeDeleted, Qt::UniqueConnection );
 }
+
+QList<const QgsVectorLayerJoinInfo *> QgsVectorLayerJoinBuffer::joinForTargetField( QString &targetField ) const
+{
+  QList<const QgsVectorLayerJoinInfo *> infos;
+
+  for ( int i = 0; i < mVectorJoins.count(); i++ )
+  {
+    const QgsVectorLayerJoinInfo *info = &( mVectorJoins[i] );
+
+    if ( info->targetFieldName() == targetField &&
+         ! infos.contains( info ) )
+      infos.append( info );
+  }
+
+  return infos;
+}
+
+/*QList<int> QgsVectorLayerJoinBuffer::indexesForTargetFieldName( const QString &target ) const
+{
+  std::cout << "QgsVectorLayerJoinBuffer::indexesForTargetFieldName 0 " << mLayer->name().toStdString() << std::endl;
+
+  for ( int i = 0; i < mLayer->fields().count(); i++ )
+    std::cout << mLayer->fields().field( i ).name().toStdString() << std::endl;
+
+  QList<int> indexes;
+
+  Q_FOREACH( const QgsVectorLayerJoinInfo &info, vectorJoins() )
+  {
+    if ( info.targetFieldName() != target )
+      continue;
+
+    QStringList *joinedFields = info.joinFieldNamesSubset();
+    if ( joinedFields )
+    {
+      Q_FOREACH( const QString &joinField, *joinedFields )
+      {
+        QString prefixedName = info.prefixedNameField( joinField );
+        int idx = mLayer->fields().indexOf( prefixedName );
+
+        if ( idx >=0 )
+          indexes.append( idx );
+      }
+    }
+    else
+    {
+      for ( int i = 0; i < info.joinLayer()->fields().count(); i++ )
+      {
+        QString prefixedName = info.prefixedNameField( info.joinLayer()->fields().field( i ) );
+        int idx = mLayer->fields().indexOf( prefixedName );
+
+        if ( idx >=0 )
+          indexes.append( idx );
+      }
+    }
+  }
+
+  return indexes;
+}*/

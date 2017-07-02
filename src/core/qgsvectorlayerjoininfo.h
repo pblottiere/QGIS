@@ -71,6 +71,13 @@ class CORE_EXPORT QgsVectorLayerJoinInfo
      */
     QString prefixedNameField( const QString &fieldName ) const;
 
+    /** Returns the field name without prefix.
+     * \param field the field
+     * \returns the unprefixed name of the field
+     * \since QGIS 3.0
+     */
+    QString unprefixedNameField( const QgsField &field ) const;
+
     /** Sets whether values from the joined layer may be editing from the
      *  target layer.
      * \since QGIS 3.0

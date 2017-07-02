@@ -87,6 +87,11 @@ Quick way to test if there is any join at all
  :rtype: QgsVectorLayerJoinInfo
 %End
 
+    QList<const QgsVectorLayerJoinInfo *> joinForTargetField( QString &targetField ) const;
+%Docstring
+ :rtype: list of const QgsVectorLayerJoinInfo
+%End
+
     int joinedFieldsOffset( const QgsVectorLayerJoinInfo *info, const QgsFields &fields );
 %Docstring
 .. versionadded:: 2.6
@@ -111,6 +116,11 @@ Quick way to test if there is any join at all
  :rtype: bool
 %End
 
+    bool joinFeature( const QgsVectorLayerJoinInfo &info, const QgsFeature &feature, QgsFeature &joinFeature ) const;
+%Docstring
+ :rtype: bool
+%End
+
     bool feature( const QgsVectorLayerJoinInfo &info, QgsFeatureId joinFid, QgsFeature &feature ) const;
 %Docstring
  Gets feature corresponding to the joined feature id given in parameter.
@@ -121,6 +131,7 @@ Quick way to test if there is any join at all
 .. versionadded:: 3.0
  :rtype: bool
 %End
+
 
     QgsVectorLayerJoinBuffer *clone() const /Factory/;
 %Docstring

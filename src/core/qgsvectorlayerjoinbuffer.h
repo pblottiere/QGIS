@@ -76,6 +76,8 @@ class CORE_EXPORT QgsVectorLayerJoinBuffer : public QObject
       \param sourceFieldIndex Output: field's index in source layer */
     const QgsVectorLayerJoinInfo *joinForFieldIndex( int index, const QgsFields &fields, int &sourceFieldIndex SIP_OUT ) const;
 
+    QList<const QgsVectorLayerJoinInfo *> joinForTargetField( QString &targetField ) const;
+
     //! Find out what is the first index of the join within fields. Returns -1 if join is not present
     //! \since QGIS 2.6
     int joinedFieldsOffset( const QgsVectorLayerJoinInfo *info, const QgsFields &fields );
@@ -94,6 +96,8 @@ class CORE_EXPORT QgsVectorLayerJoinBuffer : public QObject
      */
     bool joinFeature( const QgsVectorLayerJoinInfo &info, QgsFeatureId fid, QgsFeature &joinFeature ) const;
 
+    bool joinFeature( const QgsVectorLayerJoinInfo &info, const QgsFeature &feature, QgsFeature &joinFeature ) const;
+
     /** Gets feature corresponding to the joined feature id given in parameter.
      * \param info the join information
      * \param joinFid the joined feature id
@@ -102,6 +106,12 @@ class CORE_EXPORT QgsVectorLayerJoinBuffer : public QObject
      * \since QGIS 3.0
      */
     bool feature( const QgsVectorLayerJoinInfo &info, QgsFeatureId joinFid, QgsFeature &feature ) const;
+
+    /** Gets a list of index where the target name is considered as an id
+     *  for joining
+     * \since QGIS 3.0
+     */
+    // QList<int> indexesForTargetFieldName( const QString &target ) const;
 
     //! Create a copy of the join buffer
     //! \since QGIS 2.6

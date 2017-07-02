@@ -2662,10 +2662,11 @@ bool QgsVectorLayer::addFeaturesToJoinedLayers( QgsFeatureList &features, Flags 
 
       Q_FOREACH ( const QgsFeature &feature, features )
       {
+        QVariant idFieldValue = feature.attribute( info.targetFieldName() );
         QgsFeature joinFeature;
         joinFeature.initAttributes( joinLayer->fields().count() );
         joinFeature.setFields( joinLayer->fields() );
-        joinFeature.setAttribute( info.joinFieldName(), feature.attribute( info.targetFieldName() ) );
+        joinFeature.setAttribute( info.joinFieldName(), idFieldValue );
 
         for ( int  i = 0; i < joinFeature.fields().count(); i++ )
         {
@@ -2676,7 +2677,22 @@ bool QgsVectorLayer::addFeaturesToJoinedLayers( QgsFeatureList &features, Flags 
             joinFeature.setAttribute( f.name(), feature.attribute( prefixedName ) );
         }
 
-        joinFeatures << joinFeature;
+        // we don't want to add a new feature in joined layer when the id
+        // column value yet exist
+        const QString filter = QString( "\"%1\" = %2" ).arg( info.joinFieldName(), idFieldValue.toString() );
+
+        QgsFeatureRequest request;
+        request.setFilterExpression( filter );
+        request.setLimit( 1 );
+
+        QgsFeatureIterator it = info.joinLayer()->getFeatures( request );
+        QgsFeature existingFeature;
+        it.nextFeature( existingFeature );
+
+        if ( existingFeature.isValid() )
+          updateFeature( joinFeature );
+        else
+          joinFeatures << joinFeature;
       }
 
       joinLayer->addFeatures( joinFeatures );
