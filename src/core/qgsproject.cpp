@@ -64,6 +64,8 @@
 #include <sys/utime.h>
 #endif
 
+#include <ctime>
+
 // canonical project instance
 QgsProject *QgsProject::sProject = nullptr;
 
@@ -760,6 +762,12 @@ bool QgsProject::read( const QString &filename )
 
 bool QgsProject::read()
 {
+  std::cout << "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!" << std::endl;
+  std::cout << "QgsProject::read()" << std::endl;
+  std::cout << "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!" << std::endl;
+  std::clock_t start;
+  start = std::clock();
+
   clearError();
 
   std::unique_ptr<QDomDocument> doc( new QDomDocument( QStringLiteral( "qgis" ) ) );
@@ -987,6 +995,10 @@ bool QgsProject::read()
   emit nonIdentifiableLayersChanged( nonIdentifiableLayers() );
   emit crsChanged();
   emit ellipsoidChanged( ellipsoid() );
+
+  std::cout << "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!" << std::endl;
+  std::cout << "QgsProject::read() Time: " << ( std::clock() - start ) / ( double )( CLOCKS_PER_SEC / 1000 ) << " ms" << std::endl;
+  std::cout << "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!" << std::endl;
 
   return true;
 }

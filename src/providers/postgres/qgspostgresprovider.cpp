@@ -1507,11 +1507,13 @@ QStringList QgsPostgresProvider::parseUriKey( const QString &key )
 
 void QgsPostgresProvider::determinePrimaryKeyFromUriKeyColumn( bool checkPrimaryKeyUnicity )
 {
+  std::cout << "QgsPostgresProvider::determinePrimaryKeyFromUriKeyColumn 0" << std::endl;
   QString primaryKey = mUri.keyColumn();
   mPrimaryKeyType = PktUnknown;
 
   if ( !primaryKey.isEmpty() )
   {
+    std::cout << "QgsPostgresProvider::determinePrimaryKeyFromUriKeyColumn 1" << std::endl;
     QStringList cols = parseUriKey( primaryKey );
 
     primaryKey = QLatin1String( "" );
@@ -1535,11 +1537,17 @@ void QgsPostgresProvider::determinePrimaryKeyFromUriKeyColumn( bool checkPrimary
       mPrimaryKeyAttrs << idx;
     }
 
+    std::cout << "QgsPostgresProvider::determinePrimaryKeyFromUriKeyColumn 2" << std::endl;
     if ( !mPrimaryKeyAttrs.isEmpty() )
     {
+      std::cout << "QgsPostgresProvider::determinePrimaryKeyFromUriKeyColumn 3" << std::endl;
       bool unique = true;
       if ( checkPrimaryKeyUnicity )
+      {
+        std::cout << "QgsPostgresProvider::determinePrimaryKeyFromUriKeyColumn 4" << std::endl;
         unique = uniqueData( primaryKey );
+      }
+      std::cout << "QgsPostgresProvider::determinePrimaryKeyFromUriKeyColumn 5" << std::endl;
 
       if ( mUseEstimatedMetadata || unique )
       {

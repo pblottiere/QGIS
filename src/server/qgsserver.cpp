@@ -51,6 +51,7 @@
 // TODO: remove, it's only needed by a single debug message
 #include <fcgi_stdio.h>
 #include <stdlib.h>
+#include <ctime>
 
 
 
@@ -306,6 +307,12 @@ void QgsServer::putenv( const QString &var, const QString &val )
 
 void QgsServer::handleRequest( QgsServerRequest &request, QgsServerResponse &response )
 {
+  std::cout << "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!" << std::endl;
+  std::cout << "QgsServer::handleRequest()" << std::endl;
+  std::cout << "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!" << std::endl;
+  std::clock_t start;
+  start = std::clock();
+
   QgsMessageLog::MessageLevel logLevel = QgsServerLogger::instance()->logLevel();
   QTime time; //used for measuring request time if loglevel < 1
   QgsProject::instance()->removeAllMapLayers();
@@ -426,6 +433,10 @@ void QgsServer::handleRequest( QgsServerRequest &request, QgsServerResponse &res
   {
     QgsMessageLog::logMessage( "Request finished in " + QString::number( time.elapsed() ) + " ms", QStringLiteral( "Server" ), QgsMessageLog::INFO );
   }
+
+  std::cout << "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!" << std::endl;
+  std::cout << "QgsServer::handleRequest() Time: " << ( std::clock() - start ) / ( double )( CLOCKS_PER_SEC / 1000 ) << " ms" << std::endl;
+  std::cout << "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!" << std::endl;
 }
 
 

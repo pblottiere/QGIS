@@ -790,33 +790,42 @@ void QgsVectorLayer::setExtent( const QgsRectangle &r )
 
 QgsRectangle QgsVectorLayer::extent() const
 {
+  std::cout << "QgsVectorLayer::extent() 0 for " << name().toStdString() << std::endl;
   QgsRectangle rect;
   rect.setMinimal();
 
+  std::cout << "QgsVectorLayer::extent() 1 for " << name().toStdString() << std::endl;
   if ( !hasGeometryType() )
     return rect;
 
+  std::cout << "QgsVectorLayer::extent() 2 for " << name().toStdString() << std::endl;
   if ( !mValidExtent && mLazyExtent && mDataProvider )
   {
+    std::cout << "QgsVectorLayer::extent() 3 for " << name().toStdString() << std::endl;
     QgsRectangle mbr;
 
     // get the extent from project if conditions are met
     if ( !mDataProvider->dataSourceHasMetadata() && !mExtentProject.isNull() )
     {
+      std::cout << "QgsVectorLayer::extent() 4 for " << name().toStdString() << std::endl;
       QSettings settings;
       bool trustProject = settings.value( QStringLiteral( "/qgis/trustProject" ), false ).toBool();
       if ( trustProject )
       {
+        std::cout << "QgsVectorLayer::extent() 5 for " << name().toStdString() << std::endl;
         mbr = mExtentProject;
       }
     }
 
+    std::cout << "QgsVectorLayer::extent() 6 for " << name().toStdString() << std::endl;
     // get extent directly from data
     if ( mbr.isNull() )
     {
+      std::cout << "QgsVectorLayer::extent() 7 for " << name().toStdString() << std::endl;
       mbr = mDataProvider->extent();
     }
 
+    std::cout << "QgsVectorLayer::extent() 8 for " << name().toStdString() << std::endl;
     // show the extent
     QgsDebugMsg( "Extent of layer: " + mbr.toString() );
     // store the extent
@@ -826,9 +835,11 @@ QgsRectangle QgsVectorLayer::extent() const
     mLazyExtent = false;
   }
 
+  std::cout << "QgsVectorLayer::extent() 9 for " << name().toStdString() << std::endl;
   if ( mValidExtent )
     return QgsMapLayer::extent();
 
+  std::cout << "QgsVectorLayer::extent() 10 for " << name().toStdString() << std::endl;
   if ( !mValid || !mDataProvider )
   {
     QgsDebugMsg( "invoked with invalid layer or null mDataProvider" );
