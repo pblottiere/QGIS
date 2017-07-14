@@ -18,7 +18,7 @@
 #include <QFileInfo>
 #include <QDir>
 
-#include "zip.h"
+#include <zip.h>
 
 #include "qgsmessagelog.h"
 #include "qgsziputils.h"
