@@ -141,7 +141,8 @@ bool QgsZipUtils::zip( const QString &zipFilename, const QStringList &files )
       zip_source *src = zip_source_file( z, file.toStdString().c_str(), 0, 0 );
       if ( src != NULL )
       {
-        if ( zip_file_add( z, fileInfo.fileName().toStdString().c_str(), src, 0 ) == -1 )
+        int rc = ( int ) zip_file_add( z, fileInfo.fileName().toStdString().c_str(), src, 0 );
+        if ( rc == -1 )
         {
           QString err = QObject::tr( "Error adding file: '%1'" ).arg( zip_strerror( z ) );
           QgsMessageLog::logMessage( err, QStringLiteral( "QgsZipUtils" ) );
