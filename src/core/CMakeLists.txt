@@ -300,6 +300,7 @@ SET(QGIS_CORE_SRCS
   qgsxmlutils.cpp
   qgssettings.cpp
   qgsstacktrace.cpp
+  qgsziputils.cpp
 
   composer/qgsaddremoveitemcommand.cpp
   composer/qgsaddremovemultiframecommand.cpp
@@ -875,6 +876,7 @@ SET(QGIS_CORE_HDRS
   qgsxmlutils.h
   qgsvector.h
   qgslocalec.h
+  qgsziputils.h
 
   annotations/qgsannotationregistry.h
 
