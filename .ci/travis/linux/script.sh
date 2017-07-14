@@ -31,3 +31,10 @@ export CTEST_BUILD_COMMAND="/usr/bin/make -j3 -i -k"
 
 python ${TRAVIS_BUILD_DIR}/.ci/travis/scripts/ctest2travis.py \
   xvfb-run ctest -V -E "$(cat ${DIR}/blacklist.txt | sed -r '/^(#.*?)?$/d' | paste -sd '|' -)" -S ${DIR}/../travis.ctest --output-on-failure
+
+
+echo "COUCOU!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!"
+locate "zip.h"
+
+cat /usr/include/zip.h
+echo "COUCOU!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!"
