@@ -37,4 +37,7 @@ echo "COUCOU!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!"
 locate "zip.h"
 
 cat /usr/include/zip.h
+
+find /usr/include -name "zipconf.h"
+cat $(find /usr/include -name "zipconf.h")
 echo "COUCOU!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!"
