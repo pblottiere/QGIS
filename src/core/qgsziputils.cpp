@@ -142,7 +142,7 @@ bool QgsZipUtils::zip( const QString &zipFilename, const QStringList &files )
       if ( src != NULL )
       {
 #if LIBZIP_VERSION_MAJOR < 1
-        int rc = ( int ) zip_file( z, fileInfo.fileName().toStdString().c_str(), src, 0 );
+        int rc = ( int ) zip_add( z, fileInfo.fileName().toStdString().c_str(), src, 0 );
 #else
         int rc = ( int ) zip_file_add( z, fileInfo.fileName().toStdString().c_str(), src, 0 );
 #endif
