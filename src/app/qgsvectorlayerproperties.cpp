@@ -338,6 +338,7 @@ QgsVectorLayerProperties::QgsVectorLayerProperties(
 
   connect( mRefreshLayerCheckBox, &QCheckBox::toggled, mRefreshLayerIntervalSpinBox, &QDoubleSpinBox::setEnabled );
 
+  updateAuxiliaryStoragePage();
 } // QgsVectorLayerProperties ctor
 
 
@@ -1435,4 +1436,21 @@ void QgsVectorLayerProperties::updateFieldsPropertiesDialog()
 void QgsVectorLayerProperties::showHelp()
 {
   QgsHelp::openHelp( QStringLiteral( "working_with_vector/vector_properties.html" ) );
+}
+
+void QgsVectorLayerProperties::updateAuxiliaryStoragePage()
+{
+  mAuxiliaryStorageInformationGrpBox->setEnabled( false );
+  mAuxiliaryStorageFieldsGrpBox->setEnabled( false );
+
+  QStandardItemModel *model = qobject_cast<QStandardItemModel *>( mAuxiliaryStorageCbBox->model() );
+
+  QStandardItem *item = model->item( 1 );
+  item->setFlags( item->flags() & ~Qt::ItemIsEnabled );
+
+  item = model->item( 2 );
+  item->setFlags( item->flags() & ~Qt::ItemIsEnabled );
+
+  item = model->item( 3 );
+  item->setFlags( item->flags() & ~Qt::ItemIsEnabled );
 }

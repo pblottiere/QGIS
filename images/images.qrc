@@ -318,6 +318,7 @@
         <file>themes/default/mActionFilterTableFields.svg</file>
         <file>themes/default/mIconAtlas.svg</file>
         <file>themes/default/mIconAutoPlacementSettings.svg</file>
+        <file>themes/default/mIconAuxiliaryStorage.svg</file>
         <file>themes/default/mIconCertificate.svg</file>
         <file>themes/default/mIconCertificateMissing.svg</file>
         <file>themes/default/mIconCertificateTrusted.svg</file>
