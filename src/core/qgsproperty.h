@@ -105,6 +105,12 @@ class CORE_EXPORT QgsPropertyDefinition
       DataTypeBoolean,
     };
 
+    enum Target
+    {
+      Diagram,
+      Pal
+    };
+
     /**
      * Constructs an empty property.
      */
@@ -116,7 +122,7 @@ class CORE_EXPORT QgsPropertyDefinition
      * \param description can be any localised string describing what the property is used for.
      * \param type one of the predefined standard property template
      */
-    QgsPropertyDefinition( const QString &name, const QString &description, StandardPropertyTemplate type );
+    QgsPropertyDefinition( const QString &name, const QString &description, StandardPropertyTemplate type, Target target = Target::Pal );
 
     /**
      * Constructor for custom QgsPropertyDefinitions.
@@ -126,12 +132,14 @@ class CORE_EXPORT QgsPropertyDefinition
      * \param helpText parameter should specify a descriptive string for users outlining the types
      * of value acceptable by the property (eg 'dashed' or 'solid' for a line style property).
      */
-    QgsPropertyDefinition( const QString &name, DataType dataType, const QString &description, const QString &helpText );
+    QgsPropertyDefinition( const QString &name, DataType dataType, const QString &description, const QString &helpText, Target target = Target::Pal );
 
     /**
      * Returns the name of the property. This is used internally and should be a unique, alphanumeric string.
      */
     QString name() const { return mName; }
+
+    Target target() const { return mTarget; }
 
     /**
      * Descriptive name of the property.
@@ -167,6 +175,7 @@ class CORE_EXPORT QgsPropertyDefinition
     DataType mTypes;
     QString mHelpText;
     StandardPropertyTemplate mStandardType = Custom;
+    Target mTarget;
 
     static QString trString();
 };
