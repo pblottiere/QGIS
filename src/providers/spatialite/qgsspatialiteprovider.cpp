@@ -4177,14 +4177,22 @@ bool QgsSpatiaLiteProvider::addAttributes( const QList<QgsField> &attributes )
 
   for ( QList<QgsField>::const_iterator iter = attributes.begin(); iter != attributes.end(); ++iter )
   {
-    sql = QStringLiteral( "ALTER TABLE \"%1\" ADD COLUMN \"%2\" %3" )
-          .arg( mTableName,
-                iter->name(),
-                iter->typeName() );
-    ret = sqlite3_exec( mSqliteHandle, sql.toUtf8().constData(), nullptr, nullptr, &errMsg );
-    if ( ret != SQLITE_OK )
+    QgsField f = *iter;
+    if ( convertField( f ) )
     {
-      handleError( sql, errMsg, true );
+      sql = QStringLiteral( "ALTER TABLE \"%1\" ADD COLUMN \"%2\" %3" )
+            .arg( mTableName,
+                  f.name(),
+                  f.typeName() );
+      ret = sqlite3_exec( mSqliteHandle, sql.toUtf8().constData(), nullptr, nullptr, &errMsg );
+      if ( ret != SQLITE_OK )
+      {
+        handleError( sql, errMsg, true );
+        return false;
+      }
+    }
+    else
+    {
       return false;
     }
   }
