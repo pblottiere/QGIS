@@ -22,6 +22,7 @@
 #include "qgsvectorlayer.h"
 #include "qgspanelwidget.h"
 #include "qgspropertyassistantwidget.h"
+#include "qgsauxiliarystorage.h"
 
 #include <QClipboard>
 #include <QMenu>
@@ -65,6 +66,8 @@ QgsPropertyOverrideButton::QgsPropertyOverrideButton( QWidget *parent,
   mActionActive->setFont( f );
 
   mActionDescription = new QAction( tr( "Description..." ), this );
+
+  mActionAutocreate = new QAction( tr( "Autocreate" ), this );
 
   mActionExpDialog = new QAction( tr( "Edit..." ), this );
   mActionExpression = nullptr;
@@ -162,6 +165,7 @@ void QgsPropertyOverrideButton::updateFieldLists()
           fieldType = tr( "string" );
           break;
         case QVariant::Int:
+        case QVariant::LongLong: // integers loaded from spatialite are longlong
           fieldType = tr( "integer" );
           break;
         case QVariant::Double:
@@ -325,6 +329,16 @@ void QgsPropertyOverrideButton::aboutToShowMenu()
   if ( !mFullDescription.isEmpty() )
   {
     mDefineMenu->addAction( mActionDescription );
+  }
+
+  mDefineMenu->addSeparator();
+
+  // deactivate autocreate button if the property yet exist in auxiliary storage join
+  mDefineMenu->addAction( mActionAutocreate );
+  const QgsAuxiliaryStorageJoin *asl = mVectorLayer->auxiliaryStorageJoin();
+  if ( !asl || asl->propertyExists( mDefinition ) )
+  {
+    mActionAutocreate->setEnabled( false );
   }
 
   mDefineMenu->addSeparator();
@@ -506,6 +520,10 @@ void QgsPropertyOverrideButton::menuActionTriggered( QAction *action )
   else if ( action == mActionAssistant )
   {
     showAssistant();
+  }
+  else if ( action == mActionAutocreate )
+  {
+    emit autocreated();
   }
   else if ( mFieldsMenu->actions().contains( action ) )  // a field name clicked
   {

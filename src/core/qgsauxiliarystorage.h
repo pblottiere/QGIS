@@ -21,6 +21,7 @@
 #include "qgis_core.h"
 #include "qgsvectorlayer.h"
 #include "qgsvectorlayerjoininfo.h"
+#include "qgsproperty.h"
 
 #include <QString>
 
@@ -29,6 +30,13 @@ class CORE_EXPORT QgsAuxiliaryStorageJoin : public QgsVectorLayer
     Q_OBJECT
 
   public:
+    struct QgsAuxiliaryStorageField
+    {
+      QString mTarget;
+      QString mProperty;
+      QString mType;
+    };
+
     QgsAuxiliaryStorageJoin( const QString &pkField, const QString &filename, const QString &table, QgsVectorLayer *layer, bool yetFilled = false );
     virtual ~QgsAuxiliaryStorageJoin();
 
@@ -39,6 +47,16 @@ class CORE_EXPORT QgsAuxiliaryStorageJoin : public QgsVectorLayer
     QgsAuxiliaryStorageJoin &operator=( QgsAuxiliaryStorageJoin const &rhs ) = delete;
 
     QgsVectorLayerJoinInfo joinInfo() const;
+
+    bool propertyExists( const QgsPropertyDefinition &definition ) const;
+
+    QString propertyName( const QgsPropertyDefinition &definition ) const;
+
+    bool createProperty( const QgsPropertyDefinition &definition );
+
+    QString propertyFieldName( const QgsPropertyDefinition &definition ) const;
+
+    QList<QgsAuxiliaryStorageField> storageFields() const;
 
   private:
     QgsVectorLayer *mLayer;

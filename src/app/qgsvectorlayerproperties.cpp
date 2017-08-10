@@ -1446,19 +1446,34 @@ void QgsVectorLayerProperties::updateAuxiliaryStoragePage()
 
   if ( asj )
   {
+    // set widgets to enable state
     mAuxiliaryStorageInformationGrpBox->setEnabled( true );
     mAuxiliaryStorageFieldsGrpBox->setEnabled( true );
 
+    // update feature count
     int features = asj->featureCount();
     mAuxiliaryStorageFeaturesLineEdit->setText( QString::number( features ) );
 
+    // update fields count
     int fields = asj->fields().count() - 1; // ignore rowid
     mAuxiliaryStorageFieldsLineEdit->setText( QString::number( fields ) );
 
+    // update items of combobox
     mAuxiliaryStorageCbBox->setCurrentIndex( 1 ); // clear
 
     QStandardItem *item = model->item( 0 ); // new
     item->setFlags( item->flags() & ~Qt::ItemIsEnabled );
+
+    // add fields
+    Q_FOREACH ( const QgsAuxiliaryStorageJoin::QgsAuxiliaryStorageField &field, asj->storageFields() )
+    {
+      QTreeWidgetItem *item = new QTreeWidgetItem();
+      item->setText( 0, field.mTarget );
+      item->setText( 1, field.mProperty );
+      item->setText( 2, field.mType );
+
+      mAuxiliaryStorageFieldsTree->addTopLevelItem( item );
+    }
   }
   else
   {

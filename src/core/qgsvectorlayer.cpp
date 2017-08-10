@@ -150,6 +150,7 @@ QgsVectorLayer::QgsVectorLayer( const QString &vectorLayerPath,
   , mExpressionFieldBuffer( nullptr )
   , mDiagramRenderer( nullptr )
   , mDiagramLayerSettings( nullptr )
+  , mAuxiliaryStorageJoin( nullptr )
   , mValidExtent( false )
   , mLazyExtent( true )
   , mSymbolFeatureCounted( false )
@@ -4523,6 +4524,11 @@ void QgsVectorLayer::setAuxiliaryStorageJoin( QgsAuxiliaryStorageJoin *join )
 }
 
 const QgsAuxiliaryStorageJoin *QgsVectorLayer::auxiliaryStorageJoin() const
+{
+  return mAuxiliaryStorageJoin.get();
+}
+
+QgsAuxiliaryStorageJoin *QgsVectorLayer::auxiliaryStorageJoin()
 {
   return mAuxiliaryStorageJoin.get();
 }

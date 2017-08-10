@@ -55,6 +55,7 @@ QgsAuxiliaryStorageJoin::QgsAuxiliaryStorageJoin( const QString &pkField, const 
   }
 
   // init join info
+  mJoinInfo.setPrefix( "auxiliary_storage_" );
   mJoinInfo.setJoinLayer( this );
   mJoinInfo.setJoinFieldName( AS_PKFIELD );
   mJoinInfo.setTargetFieldName( pkField );
@@ -70,6 +71,90 @@ QgsAuxiliaryStorageJoin::~QgsAuxiliaryStorageJoin()
 QgsVectorLayerJoinInfo QgsAuxiliaryStorageJoin::joinInfo() const
 {
   return mJoinInfo;
+}
+
+bool QgsAuxiliaryStorageJoin::createProperty( const QgsPropertyDefinition &definition )
+{
+  if ( propertyExists( definition ) )
+    return false;
+
+  QVariant::Type type;
+  int len( 0 ), precision( 0 );
+  switch ( definition.dataType() )
+  {
+    case QgsPropertyDefinition::DataTypeString:
+      type = QVariant::String;
+      len = 50;
+      break;
+    case QgsPropertyDefinition::DataTypeNumeric:
+      type = QVariant::Double;
+      len = 0;
+      precision = 0;
+      break;
+    case QgsPropertyDefinition::DataTypeBoolean:
+      type = QVariant::Int; // sqlite does not have a bool type
+      break;
+    default:
+      break;
+  }
+
+  QgsField field;
+  field.setType( type );
+  field.setName( propertyName( definition ) );
+  field.setLength( len );
+  field.setPrecision( precision );
+  dataProvider()->addAttributes( QList<QgsField>() << field );
+  updateFields();
+
+  return true;
+}
+
+bool QgsAuxiliaryStorageJoin::propertyExists( const QgsPropertyDefinition &definition ) const
+{
+  return ( fields().indexOf( propertyName( definition ) ) >= 0 );
+}
+
+QString QgsAuxiliaryStorageJoin::propertyName( const QgsPropertyDefinition &definition ) const
+{
+  // joined field name
+  QString target;
+  switch ( definition.target() )
+  {
+    case QgsPropertyDefinition::Pal:
+      target = "pal";
+      break;
+    case QgsPropertyDefinition::Diagram:
+      target = "diagram";
+      break;
+    default:
+      break;
+  }
+
+  return QString( "%1_%2" ).arg( target, definition.name() );
+}
+
+QString QgsAuxiliaryStorageJoin::propertyFieldName( const QgsPropertyDefinition &definition ) const
+{
+  // joined field name
+  return QString( "%1%2" ).arg( mJoinInfo.prefix(), propertyName( definition ) );
+}
+
+QList<QgsAuxiliaryStorageJoin::QgsAuxiliaryStorageField> QgsAuxiliaryStorageJoin::storageFields() const
+{
+  QList<QgsAuxiliaryStorageJoin::QgsAuxiliaryStorageField> asFields;
+
+  for ( int i = 1; i < fields().count(); i++ ) // ignore PK field
+  {
+    QgsField f = fields().field( i );
+    QString target = f.name().split( '_' )[0];
+    QString property = f.name().split( '_' )[1];
+    QString type = f.typeName();
+
+    QgsAuxiliaryStorageField asField = { target, property, type };
+    asFields.append( asField );
+  }
+
+  return asFields;
 }
 
 QgsAuxiliaryStorage::QgsAuxiliaryStorage( const QgsProject &project )

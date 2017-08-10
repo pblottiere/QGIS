@@ -187,6 +187,8 @@ class GUI_EXPORT QgsPropertyOverrideButton: public QToolButton
      */
     void setSymbol( std::shared_ptr< QgsSymbol > symbol ) { mSymbol = symbol; } SIP_SKIP
 
+    void updateFieldLists();
+
   public slots:
 
     /**
@@ -199,6 +201,8 @@ class GUI_EXPORT QgsPropertyOverrideButton: public QToolButton
     //! Emitted when property definition changes
     void changed();
 
+    void autocreated();
+
     //! Emitted when the activated status of the widget changes
     void activated( bool isActive );
 
@@ -206,8 +210,6 @@ class GUI_EXPORT QgsPropertyOverrideButton: public QToolButton
     void mouseReleaseEvent( QMouseEvent *event ) override;
 
   private:
-
-    void updateFieldLists();
 
     void showDescriptionDialog();
     void showExpressionDialog();
@@ -245,6 +247,7 @@ class GUI_EXPORT QgsPropertyOverrideButton: public QToolButton
     QAction *mActionCopyExpr = nullptr;
     QAction *mActionClearExpr = nullptr;
     QAction *mActionAssistant = nullptr;
+    QAction *mActionAutocreate = nullptr;
 
     QgsPropertyDefinition mDefinition;
 

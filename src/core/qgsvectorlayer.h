@@ -423,6 +423,7 @@ class CORE_EXPORT QgsVectorLayer : public QgsMapLayer, public QgsExpressionConte
 
     void setAuxiliaryStorageJoin( QgsAuxiliaryStorageJoin *join = nullptr );
     const QgsAuxiliaryStorageJoin *auxiliaryStorageJoin() const;
+    QgsAuxiliaryStorageJoin *auxiliaryStorageJoin();
 
     /**
      * This is a shorthand for accessing the displayExpression if it is a simple field.
