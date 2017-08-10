@@ -49,6 +49,7 @@
 #include "qgslayoutmanager.h"
 #include "qgsmaplayerstore.h"
 #include "qgsziputils.h"
+#include "qgsauxiliarystorage.h"
 
 #include <QApplication>
 #include <QFileInfo>
@@ -334,6 +335,7 @@ QgsProject::QgsProject( QObject *parent )
   , mRootGroup( new QgsLayerTree )
   , mLabelingEngineSettings( new QgsLabelingEngineSettings )
   , mArchive( new QgsProjectArchive() )
+  , mAuxiliaryStorage( new QgsAuxiliaryStorage() )
   , mAutoTransaction( false )
   , mEvaluateDefaultValues( false )
   , mDirty( false )
@@ -771,9 +773,14 @@ bool QgsProject::read()
   bool rc;
 
   if ( QgsZipUtils::isZipFile( mFile.fileName() ) )
+  {
     rc = unzip( mFile.fileName() );
+  }
   else
+  {
+    mAuxiliaryStorage.reset( new QgsAuxiliaryStorage( *this ) );
     rc = readProjectFile( mFile.fileName() );
+  }
 
   mFile.setFileName( filename );
   return rc;
@@ -1013,7 +1020,6 @@ bool QgsProject::readProjectFile( const QString &filename )
   return true;
 }
 
-
 void QgsProject::loadEmbeddedNodes( QgsLayerTreeGroup *group )
 {
   Q_FOREACH ( QgsLayerTreeNode *child, group->children() )
@@ -1246,9 +1252,21 @@ bool QgsProject::write( const QString &filename )
 bool QgsProject::write()
 {
   if ( QgsZipUtils::isZipFile( mFile.fileName() ) )
+  {
     return zip( mFile.fileName() );
+  }
   else
+  {
+    if ( mAuxiliaryStorage->isNew() )
+    {
+      removeAuxiliaryStorageLayers();
+      mAuxiliaryStorage->saveAs( *this );
+      mAuxiliaryStorage.reset( new QgsAuxiliaryStorage( *this ) );
+      reloadAuxiliaryStorageLayers();
+    }
+
     return writeProjectFile( mFile.fileName() );
+  }
 }
 
 bool QgsProject::writeProjectFile( const QString &filename )
@@ -2114,6 +2132,16 @@ bool QgsProject::unzip( const QString &filename )
     return false;
   }
 
+  // load auxiliary storage
+  if ( !mArchive->auxiliaryStorageFile().isEmpty() )
+  {
+    mAuxiliaryStorage.reset( new QgsAuxiliaryStorage( mArchive->auxiliaryStorageFile() ) );
+  }
+  else
+  {
+    mAuxiliaryStorage.reset( new QgsAuxiliaryStorage( *this ) );
+  }
+
   // read the project file
   if ( ! readProjectFile( archive->projectFile() ) )
   {
@@ -2152,8 +2180,9 @@ bool QgsProject::zip( const QString &filename )
     return false;
   }
 
-  // create the archive
+  // add files to the archive
   archive->addFile( qgsFile.fileName() );
+  archive->addFile( mAuxiliaryStorage->fileName() );
 
   // zip
   QString errMsg;
@@ -2182,6 +2211,16 @@ QList<QgsMapLayer *> QgsProject::addMapLayers(
     if ( addToLegend )
       emit legendLayersAdded( myResultList );
   }
+
+  Q_FOREACH ( QgsMapLayer *mlayer, myResultList )
+  {
+    if ( QgsVectorLayer *vl = qobject_cast<QgsVectorLayer *>( mlayer ) )
+    {
+      QgsAuxiliaryStorageJoin *asl = mAuxiliaryStorage->createStorageLayer( vl );
+      vl->setAuxiliaryStorageJoin( asl );
+    }
+  }
+
   return myResultList;
 }
 
@@ -2240,6 +2279,14 @@ QMap<QString, QgsMapLayer *> QgsProject::mapLayers() const
   return mLayerStore->mapLayers();
 }
 
+void QgsProject::removeAuxiliaryStorageLayers()
+{
+  Q_FOREACH ( QgsMapLayer *mlayer, mLayerStore->mapLayers() )
+  {
+    if ( QgsVectorLayer *vl = qobject_cast<QgsVectorLayer *>( mlayer ) )
+      vl->setAuxiliaryStorageJoin();
+  }
+}
 
 QgsCoordinateReferenceSystem QgsProject::defaultCrsForNewLayers() const
 {
@@ -2260,4 +2307,15 @@ QgsCoordinateReferenceSystem QgsProject::defaultCrsForNewLayers() const
   }
 
   return defaultCrs;
+
+void QgsProject::reloadAuxiliaryStorageLayers()
+{
+  Q_FOREACH ( QgsMapLayer *mlayer, mLayerStore->mapLayers() )
+  {
+    if ( QgsVectorLayer *vl = qobject_cast<QgsVectorLayer *>( mlayer ) )
+    {
+      QgsAuxiliaryStorageJoin *asl = mAuxiliaryStorage->createStorageLayer( vl );
+      vl->setAuxiliaryStorageJoin( asl );
+    }
+  }
 }

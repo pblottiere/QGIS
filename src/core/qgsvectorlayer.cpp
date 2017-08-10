@@ -86,6 +86,7 @@
 #include "qgsxmlutils.h"
 #include "qgsunittypes.h"
 #include "qgstaskmanager.h"
+#include "qgsauxiliarystorage.h"
 
 #include "diagram/qgsdiagram.h"
 
@@ -153,7 +154,6 @@ QgsVectorLayer::QgsVectorLayer( const QString &vectorLayerPath,
   , mLazyExtent( true )
   , mSymbolFeatureCounted( false )
   , mEditCommandActive( false )
-
 {
   mActions = new QgsActionManager( this );
   mConditionalStyles = new QgsConditionalLayerStyles();
@@ -4507,4 +4507,22 @@ QgsAbstractVectorLayerLabeling *QgsVectorLayer::readLabelingFromCustomProperties
   }
 
   return labeling;
+}
+
+void QgsVectorLayer::setAuxiliaryStorageJoin( QgsAuxiliaryStorageJoin *join )
+{
+  if ( join )
+  {
+    if ( mAuxiliaryStorageJoin )
+      removeJoin( mAuxiliaryStorageJoin->id() );
+
+    addJoin( join->joinInfo() );
+  }
+
+  mAuxiliaryStorageJoin.reset( join );
+}
+
+const QgsAuxiliaryStorageJoin *QgsVectorLayer::auxiliaryStorageJoin() const
+{
+  return mAuxiliaryStorageJoin.get();
 }

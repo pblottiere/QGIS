@@ -54,6 +54,7 @@
 #include "qgssettings.h"
 #include "qgsrendererpropertiesdialog.h"
 #include "qgsstyle.h"
+#include "qgsauxiliarystorage.h"
 
 #include "layertree/qgslayertreelayer.h"
 #include "qgslayertree.h"
@@ -1440,17 +1441,37 @@ void QgsVectorLayerProperties::showHelp()
 
 void QgsVectorLayerProperties::updateAuxiliaryStoragePage()
 {
-  mAuxiliaryStorageInformationGrpBox->setEnabled( false );
-  mAuxiliaryStorageFieldsGrpBox->setEnabled( false );
-
+  const QgsAuxiliaryStorageJoin *asj = mLayer->auxiliaryStorageJoin();
   QStandardItemModel *model = qobject_cast<QStandardItemModel *>( mAuxiliaryStorageCbBox->model() );
 
-  QStandardItem *item = model->item( 1 );
-  item->setFlags( item->flags() & ~Qt::ItemIsEnabled );
+  if ( asj )
+  {
+    mAuxiliaryStorageInformationGrpBox->setEnabled( true );
+    mAuxiliaryStorageFieldsGrpBox->setEnabled( true );
 
-  item = model->item( 2 );
-  item->setFlags( item->flags() & ~Qt::ItemIsEnabled );
+    int features = asj->featureCount();
+    mAuxiliaryStorageFeaturesLineEdit->setText( QString::number( features ) );
 
-  item = model->item( 3 );
-  item->setFlags( item->flags() & ~Qt::ItemIsEnabled );
+    int fields = asj->fields().count() - 1; // ignore rowid
+    mAuxiliaryStorageFieldsLineEdit->setText( QString::number( fields ) );
+
+    mAuxiliaryStorageCbBox->setCurrentIndex( 1 ); // clear
+
+    QStandardItem *item = model->item( 0 ); // new
+    item->setFlags( item->flags() & ~Qt::ItemIsEnabled );
+  }
+  else
+  {
+    mAuxiliaryStorageInformationGrpBox->setEnabled( false );
+    mAuxiliaryStorageFieldsGrpBox->setEnabled( false );
+
+    QStandardItem *item = model->item( 1 ); // clear
+    item->setFlags( item->flags() & ~Qt::ItemIsEnabled );
+
+    item = model->item( 2 ); // delete
+    item->setFlags( item->flags() & ~Qt::ItemIsEnabled );
+
+    item = model->item( 3 ); // export
+    item->setFlags( item->flags() & ~Qt::ItemIsEnabled );
+  }
 }

@@ -134,6 +134,8 @@ class  CORE_EXPORT QgsProjectArchive : public QgsArchive
      * \returns true if the file is well removed, false otherwise
      */
     bool clearProjectFile();
+
+    QString auxiliaryStorageFile() const;
 };
 
 #endif

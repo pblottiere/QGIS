@@ -21,6 +21,7 @@
 #include "qgslogger.h"
 #include "qgsproject.h"
 #include "qgsvectordataprovider.h"
+#include "qgsauxiliarystorage.h"
 
 #include <QDomElement>
 
@@ -267,6 +268,11 @@ void QgsVectorLayerJoinBuffer::writeXml( QDomNode &layer_node, QDomDocument &doc
   QList< QgsVectorLayerJoinInfo >::const_iterator joinIt = mVectorJoins.constBegin();
   for ( ; joinIt != mVectorJoins.constEnd(); ++joinIt )
   {
+    // do not write join information about auxiliary storage layer
+    const QgsAuxiliaryStorageJoin *join = mLayer->auxiliaryStorageJoin();
+    if ( join && joinIt->joinLayerId() == join->id() )
+      continue;
+
     QDomElement joinElem = document.createElement( QStringLiteral( "join" ) );
 
     joinElem.setAttribute( QStringLiteral( "targetFieldName" ), joinIt->targetFieldName() );
