@@ -1956,34 +1956,14 @@ border-radius: 2px;</string>
                <item row="1" column="0">
                 <widget class="QLabel" name="mAuxiliaryStorageFieldsLabel">
                  <property name="text">
-                  <string>Number of fields</string>
-                 </property>
-                </widget>
-               </item>
-               <item row="2" column="0">
-                <widget class="QLabel" name="mAuxiliaryStorageSizeLabel">
-                 <property name="text">
-                  <string>Size in Mb</string>
+                  <string>Fields</string>
                  </property>
                 </widget>
                </item>
                <item row="0" column="0">
                 <widget class="QLabel" name="mAuxiliaryStorageFeaturesLabel">
                  <property name="text">
-                  <string>Number of features</string>
-                 </property>
-                </widget>
-               </item>
-               <item row="2" column="1">
-                <widget class="QLineEdit" name="mAuxiliaryStorageSizeLineEdit">
-                 <property name="toolTip">
-                  <string>The title is for the benefit of humans to identify layer.</string>
-                 </property>
-                 <property name="readOnly">
-                  <bool>true</bool>
-                 </property>
-                 <property name="placeholderText">
-                  <string/>
+                  <string>Features</string>
                  </property>
                 </widget>
                </item>
@@ -2108,6 +2088,11 @@ border-radius: 2px;</string>
                </item>
                <item row="0" column="0">
                 <widget class="QTreeWidget" name="mAuxiliaryStorageFieldsTree">
+                 <column>
+                  <property name="text">
+                   <string>Target</string>
+                  </property>
+                 </column>
                  <column>
                   <property name="text">
                    <string>Property</string>
