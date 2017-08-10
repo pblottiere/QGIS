@@ -157,6 +157,13 @@ QList<QgsAuxiliaryStorageJoin::QgsAuxiliaryStorageField> QgsAuxiliaryStorageJoin
   return asFields;
 }
 
+bool QgsAuxiliaryStorageJoin::changeAttributeValue( QgsFeatureId fid, int field, const QVariant &newValue, const QVariant &oldValue )
+{
+  startEditing();
+  QgsVectorLayer::changeAttributeValue( fid, field, newValue, oldValue );
+  return commitChanges();
+}
+
 QgsAuxiliaryStorage::QgsAuxiliaryStorage( const QgsProject &project )
   : mValid( false )
   , mTmp( false )

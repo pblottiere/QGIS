@@ -56,6 +56,8 @@ class CORE_EXPORT QgsAuxiliaryStorageJoin : public QgsVectorLayer
 
     QString propertyFieldName( const QgsPropertyDefinition &definition ) const;
 
+    bool changeAttributeValue( QgsFeatureId fid, int field, const QVariant &newValue, const QVariant &oldValue = QVariant() );
+
     QList<QgsAuxiliaryStorageField> storageFields() const;
 
   private:
