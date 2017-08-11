@@ -1219,6 +1219,9 @@ void QgsVectorLayerProperties::on_mJoinTreeWidget_itemDoubleClicked( QTreeWidget
 
 void QgsVectorLayerProperties::addJoinToTreeWidget( const QgsVectorLayerJoinInfo &join, const int insertIndex )
 {
+  if ( join.auxiliaryStorage() )
+    return;
+
   QTreeWidgetItem *joinItem = new QTreeWidgetItem();
   joinItem->setFlags( Qt::ItemIsEnabled );
 

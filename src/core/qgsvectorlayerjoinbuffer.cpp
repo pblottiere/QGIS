@@ -285,6 +285,7 @@ void QgsVectorLayerJoinBuffer::writeXml( QDomNode &layer_node, QDomDocument &doc
     joinElem.setAttribute( QStringLiteral( "editable" ), joinIt->isEditable() );
     joinElem.setAttribute( QStringLiteral( "upsertOnEdit" ), joinIt->hasUpsertOnEdit() );
     joinElem.setAttribute( QStringLiteral( "cascadedDelete" ), joinIt->hasCascadedDelete() );
+    joinElem.setAttribute( QStringLiteral( "auxiliaryStorage" ), joinIt->auxiliaryStorage() );
 
     if ( joinIt->joinFieldNamesSubset() )
     {
@@ -329,6 +330,7 @@ void QgsVectorLayerJoinBuffer::readXml( const QDomNode &layer_node )
       info.setEditable( infoElem.attribute( QStringLiteral( "editable" ) ).toInt() );
       info.setUpsertOnEdit( infoElem.attribute( QStringLiteral( "upsertOnEdit" ) ).toInt() );
       info.setCascadedDelete( infoElem.attribute( QStringLiteral( "cascadedDelete" ) ).toInt() );
+      info.setAuxiliaryStorage( infoElem.attribute( QStringLiteral( "auxiliaryStorage" ) ).toInt() );
 
       QDomElement subsetElem = infoElem.firstChildElement( QStringLiteral( "joinFieldsSubset" ) );
       if ( !subsetElem.isNull() )
