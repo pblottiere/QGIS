@@ -598,11 +598,6 @@ QgsSpatiaLiteProvider::QgsSpatiaLiteProvider( QString const &uri )
     return;
   }
 
-  if ( mTableBased && hasRowid() )
-  {
-    mPrimaryKey = QStringLiteral( "ROWID" );
-  }
-
   // retrieve version information
   spatialiteVersion();
 
@@ -1061,6 +1056,11 @@ void QgsSpatiaLiteProvider::loadFields()
   {
     // setting the Primary Key column name
     mPrimaryKey = pkName;
+  }
+
+  if ( mTableBased && mPrimaryKey.isEmpty() && hasRowid() )
+  {
+    mPrimaryKey = QStringLiteral( "ROWID" );
   }
 
   updatePrimaryKeyCapabilities();
