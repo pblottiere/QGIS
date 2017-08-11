@@ -37,6 +37,7 @@ class APP_EXPORT QgsMapToolLabel: public QgsMapTool
         \param xCol out: index of the attribute for data defined x coordinate
         \param yCol out: index of the attribute for data defined y coordinate
         \returns true if labels of layer can be moved*/
+    bool labelMoveable( QgsVectorLayer *vlayer ) const;
     bool labelMoveable( QgsVectorLayer *vlayer, int &xCol, int &yCol ) const;
     bool labelMoveable( QgsVectorLayer *vlayer, const QgsPalLayerSettings &settings, int &xCol, int &yCol ) const;
 
@@ -118,6 +119,8 @@ class APP_EXPORT QgsMapToolLabel: public QgsMapTool
 
     //! Returns a data defined attribute column name for particular property or empty string if not defined
     QString dataDefinedColumnName( QgsPalLayerSettings::Property p, const QgsPalLayerSettings &labelSettings ) const;
+
+    QString dataDefinedColumnName( QgsVectorLayer *layer, QgsPalLayerSettings::Property p, const QgsPalLayerSettings &labelSettings, bool &auxiliaryStorage ) const;
 
     /** Returns a data defined attribute column index
       \returns -1 if column does not exist or an expression is used instead */

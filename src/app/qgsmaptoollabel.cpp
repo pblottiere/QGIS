@@ -25,6 +25,8 @@
 #include "qgsvectorlayerlabeling.h"
 #include "qgsdiagramrenderer.h"
 #include "qgssettings.h"
+#include "qgsauxiliarystorage.h"
+#include "qgsvectorlayerjoinbuffer.h"
 
 #include <QMouseEvent>
 
@@ -419,6 +421,28 @@ QString QgsMapToolLabel::dataDefinedColumnName( QgsPalLayerSettings::Property p,
   return prop.field();
 }
 
+QString QgsMapToolLabel::dataDefinedColumnName( QgsVectorLayer *layer, QgsPalLayerSettings::Property p, const QgsPalLayerSettings &labelSettings, bool &auxiliaryStorage ) const
+{
+  QString fieldName = QString();
+  int fieldIdx = dataDefinedColumnIndex( p, labelSettings, layer );
+
+  auxiliaryStorage = false;
+
+  if ( fieldIdx < 0 )
+    return fieldName;
+
+  // check if the field comes from auxiliary storage
+  if ( layer->fields().fieldOrigin( fieldIdx ) == QgsFields::OriginJoin )
+  {
+    int srcFieldIndex;
+    const QgsVectorLayerJoinInfo *info = layer->joinBuffer()->joinForFieldIndex( fieldIdx, layer->fields(), srcFieldIndex );
+    if ( info && info->auxiliaryStorage() )
+      auxiliaryStorage = true;
+  }
+
+  return layer->fields().field( fieldIdx ).name();
+}
+
 int QgsMapToolLabel::dataDefinedColumnIndex( QgsPalLayerSettings::Property p, const QgsPalLayerSettings &labelSettings, const QgsVectorLayer *vlayer ) const
 {
   QString fieldname = dataDefinedColumnName( p, labelSettings );
@@ -588,9 +612,15 @@ bool QgsMapToolLabel::diagramMoveable( QgsVectorLayer *vlayer, int &xCol, int &y
   return false;
 }
 
+bool QgsMapToolLabel::labelMoveable( QgsVectorLayer *vlayer ) const
+{
+  int x, y;
+  return labelMoveable( vlayer, x, y );
+}
+
 bool QgsMapToolLabel::labelMoveable( QgsVectorLayer *vlayer, int &xCol, int &yCol ) const
 {
-  if ( !vlayer || !vlayer->isEditable() || !vlayer->labeling() )
+  if ( !vlayer || !vlayer->labeling() )
   {
     return false;
   }
@@ -606,8 +636,14 @@ bool QgsMapToolLabel::labelMoveable( QgsVectorLayer *vlayer, int &xCol, int &yCo
 
 bool QgsMapToolLabel::labelMoveable( QgsVectorLayer *vlayer, const QgsPalLayerSettings &settings, int &xCol, int &yCol ) const
 {
-  QString xColName = dataDefinedColumnName( QgsPalLayerSettings::PositionX, settings );
-  QString yColName = dataDefinedColumnName( QgsPalLayerSettings::PositionY, settings );
+  bool auxiliaryStorageX, auxiliaryStorageY;
+
+  QString xColName = dataDefinedColumnName( vlayer, QgsPalLayerSettings::PositionX, settings, auxiliaryStorageX );
+  QString yColName = dataDefinedColumnName( vlayer, QgsPalLayerSettings::PositionY, settings, auxiliaryStorageY );
+
+  if ( ( !auxiliaryStorageX || !auxiliaryStorageY ) && !vlayer->isEditable() )
+    return false;
+
   //return !xColName.isEmpty() && !yColName.isEmpty();
   xCol = vlayer->fields().lookupField( xColName );
   yCol = vlayer->fields().lookupField( yColName );
