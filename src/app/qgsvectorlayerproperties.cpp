@@ -1453,6 +1453,9 @@ void QgsVectorLayerProperties::updateAuxiliaryStoragePage()
     mAuxiliaryStorageInformationGrpBox->setEnabled( true );
     mAuxiliaryStorageFieldsGrpBox->setEnabled( true );
 
+    // update key
+    mAuxiliaryStorageKeyLineEdit->setText( asj->joinInfo().targetFieldName() );
+
     // update feature count
     int features = asj->featureCount();
     mAuxiliaryStorageFeaturesLineEdit->setText( QString::number( features ) );

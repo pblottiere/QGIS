@@ -1946,28 +1946,28 @@ border-radius: 2px;</string>
                <property name="sizeConstraint">
                 <enum>QLayout::SetDefaultConstraint</enum>
                </property>
-               <item row="0" column="1">
+               <item row="2" column="1">
                 <widget class="QLineEdit" name="mAuxiliaryStorageFeaturesLineEdit">
                  <property name="readOnly">
                   <bool>true</bool>
                  </property>
                 </widget>
                </item>
-               <item row="1" column="0">
+               <item row="3" column="0">
                 <widget class="QLabel" name="mAuxiliaryStorageFieldsLabel">
                  <property name="text">
                   <string>Fields</string>
                  </property>
                 </widget>
                </item>
-               <item row="0" column="0">
+               <item row="2" column="0">
                 <widget class="QLabel" name="mAuxiliaryStorageFeaturesLabel">
                  <property name="text">
                   <string>Features</string>
                  </property>
                 </widget>
                </item>
-               <item row="1" column="1">
+               <item row="3" column="1">
                 <widget class="QLineEdit" name="mAuxiliaryStorageFieldsLineEdit">
                  <property name="toolTip">
                   <string>A name used to identify the layer. The short name is a text string used for machine-to-machine communication.</string>
@@ -1983,6 +1983,20 @@ border-radius: 2px;</string>
                  </property>
                  <property name="placeholderText">
                   <string/>
+                 </property>
+                </widget>
+               </item>
+               <item row="1" column="0">
+                <widget class="QLabel" name="mAuxiliaryStorageKeyLabel">
+                 <property name="text">
+                  <string>Key</string>
+                 </property>
+                </widget>
+               </item>
+               <item row="1" column="1">
+                <widget class="QLineEdit" name="mAuxiliaryStorageKeyLineEdit">
+                 <property name="readOnly">
+                  <bool>true</bool>
                  </property>
                 </widget>
                </item>
