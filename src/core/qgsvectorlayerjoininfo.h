@@ -131,6 +131,9 @@ class CORE_EXPORT QgsVectorLayerJoinInfo
      */
     QgsFeature extractJoinedFeature( const QgsFeature &feature ) const;
 
+    void setAuxiliaryStorage( bool auxiliaryStorage ) { mAuxiliaryStorage = auxiliaryStorage; }
+    bool auxiliaryStorage() const { return mAuxiliaryStorage; }
+
     bool operator==( const QgsVectorLayerJoinInfo &other ) const
     {
       return mTargetFieldName == other.mTargetFieldName &&
@@ -183,6 +186,8 @@ class CORE_EXPORT QgsVectorLayerJoinInfo
     bool mUpsertOnEdit = false;
 
     bool mCascadedDelete = false;
+
+    bool mAuxiliaryStorage = false;
 
     //! Cache for joined attributes to provide fast lookup (size is 0 if no memory caching)
     QHash< QString, QgsAttributes> cachedAttributes;
