@@ -166,32 +166,38 @@ bool QgsAuxiliaryStorageJoin::changeAttributeValue( QgsFeatureId fid, int field,
   return commitChanges();
 }
 
-QgsAuxiliaryStorage::QgsAuxiliaryStorage( const QgsProject &project )
+QgsAuxiliaryStorage::QgsAuxiliaryStorage( const QgsProject &project, bool copy )
   : mValid( false )
-  , mTmp( false )
   , mFileName( QString() )
+  , mTmpFileName( QString() )
+  , mCopy( copy )
 {
+  initTmpFileName();
+
   QFileInfo info = project.fileInfo();
   QString path = info.path() + QDir::separator() + info.baseName();
   QString asFileName = path + "." + QgsAuxiliaryStorage::extension();
+  mFileName = asFileName;
 
   sqlite3 *handler = open( asFileName );
   close( handler );
 }
 
-QgsAuxiliaryStorage::QgsAuxiliaryStorage( const QString &filename )
+QgsAuxiliaryStorage::QgsAuxiliaryStorage( const QString &filename, bool copy )
   : mValid( false )
-  , mTmp( false )
-  , mFileName( QString() )
+  , mFileName( filename )
+  , mTmpFileName( QString() )
+  , mCopy( copy )
 {
+  initTmpFileName();
+
   sqlite3 *handler = open( filename );
   close( handler );
 }
 
 QgsAuxiliaryStorage::~QgsAuxiliaryStorage()
 {
-  if ( mTmp )
-    QFile::remove( mFileName );
+  QFile::remove( mTmpFileName );
 }
 
 bool QgsAuxiliaryStorage::isValid() const
@@ -204,19 +210,37 @@ QString QgsAuxiliaryStorage::fileName() const
   return mFileName;
 }
 
-bool QgsAuxiliaryStorage::isNew() const
+bool QgsAuxiliaryStorage::save() const
 {
-  return mTmp;
+  if ( mFileName.isEmpty() )
+  {
+    // only a saveAs is available on a new database
+    return false;
+  }
+  else if ( mCopy )
+  {
+    if ( QFile::exists( mFileName ) )
+      QFile::remove( mFileName );
+
+    return QFile::copy( mTmpFileName, mFileName );
+  }
+  else
+  {
+    // if the file is not empty the copy mode is not activated, then we're
+    // directly working on the database since the beginning (no savepoints
+    // /rollback for now)
+    return true;
+  }
 }
 
-void QgsAuxiliaryStorage::saveAs( const QString &filename ) const
+bool QgsAuxiliaryStorage::saveAs( const QString &filename ) const
 {
-  QFile::copy( mFileName, filename );
+  return  QFile::copy( currentFileName(), filename );
 }
 
-void QgsAuxiliaryStorage::saveAs( const QgsProject &project ) const
+bool QgsAuxiliaryStorage::saveAs( const QgsProject &project ) const
 {
-  saveAs( filenameForProject( project ) );
+  return saveAs( filenameForProject( project ) );
 }
 
 QString QgsAuxiliaryStorage::extension()
@@ -244,9 +268,8 @@ QgsAuxiliaryStorageJoin *QgsAuxiliaryStorage::createStorageLayer( const QgsField
 
   if ( mValid )
   {
-    bool tmp = mTmp;
     QString table( layer->id() );
-    sqlite3 *handler = open( mFileName );
+    sqlite3 *handler = open( currentFileName() );
 
     bool exist = tableExists( table, handler );
     if ( !exist )
@@ -258,9 +281,8 @@ QgsAuxiliaryStorageJoin *QgsAuxiliaryStorage::createStorageLayer( const QgsField
       }
     }
 
-    asl = new QgsAuxiliaryStorageJoin( field.name(), mFileName, table, layer, exist );
+    asl = new QgsAuxiliaryStorageJoin( field.name(), currentFileName(), table, layer, exist );
     close( handler );
-    mTmp = tmp;
   }
 
   return asl;
@@ -431,35 +453,21 @@ sqlite3 *QgsAuxiliaryStorage::open( const QString &filename )
 
   if ( filename.isEmpty() )
   {
-    QTemporaryFile tmpFile;
-    tmpFile.setAutoRemove( false );
-    tmpFile.open();
-    tmpFile.close();
-
-    if ( ( handler = createDB( tmpFile.fileName() ) ) )
-    {
-      mTmp = true;
+    if ( ( handler = createDB( currentFileName() ) ) )
       mValid = true;
-      mFileName = tmpFile.fileName();
-    }
   }
   else if ( QFile::exists( filename ) )
   {
-    if ( ( handler = openDB( filename ) ) )
-    {
-      mTmp = false;
+    if ( mCopy )
+      QFile::copy( filename, mTmpFileName );
+
+    if ( ( handler = openDB( currentFileName() ) ) )
       mValid = true;
-      mFileName = filename;
-    }
   }
   else
   {
-    if ( ( handler = createDB( filename ) ) )
-    {
-      mTmp = false;
+    if ( ( handler = createDB( currentFileName() ) ) )
       mValid = true;
-      mFileName = filename;
-    }
   }
 
   return handler;
@@ -484,4 +492,20 @@ QString QgsAuxiliaryStorage::filenameForProject( const QgsProject &project )
   QFileInfo info = project.fileInfo();
   QString path = info.path() + QDir::separator() + info.baseName();
   return path + "." + QgsAuxiliaryStorage::extension();
+}
+
+void QgsAuxiliaryStorage::initTmpFileName()
+{
+  QTemporaryFile tmpFile;
+  tmpFile.open();
+  tmpFile.close();
+  mTmpFileName = tmpFile.fileName();
+}
+
+QString QgsAuxiliaryStorage::currentFileName() const
+{
+  if ( mCopy || mFileName.isEmpty() )
+    return mTmpFileName;
+  else
+    return mFileName;
 }

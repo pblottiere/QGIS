@@ -1257,13 +1257,10 @@ bool QgsProject::write()
   }
   else
   {
-    if ( mAuxiliaryStorage->isNew() )
-    {
-      removeAuxiliaryStorageLayers();
+    if ( mAuxiliaryStorage->fileName().isEmpty() ) // new project
       mAuxiliaryStorage->saveAs( *this );
-      mAuxiliaryStorage.reset( new QgsAuxiliaryStorage( *this ) );
-      reloadAuxiliaryStorageLayers();
-    }
+    else
+      mAuxiliaryStorage->save();
 
     return writeProjectFile( mFile.fileName() );
   }
@@ -2133,9 +2130,9 @@ bool QgsProject::unzip( const QString &filename )
   }
 
   // load auxiliary storage
-  if ( !mArchive->auxiliaryStorageFile().isEmpty() )
+  if ( !archive->auxiliaryStorageFile().isEmpty() )
   {
-    mAuxiliaryStorage.reset( new QgsAuxiliaryStorage( mArchive->auxiliaryStorageFile() ) );
+    mAuxiliaryStorage.reset( new QgsAuxiliaryStorage( archive->auxiliaryStorageFile(), false ) );
   }
   else
   {
@@ -2180,9 +2177,19 @@ bool QgsProject::zip( const QString &filename )
     return false;
   }
 
+  // save auxiliary storage
+  QFileInfo info( qgsFile );
+  QString asFileName = info.path() + QDir::separator() + info.completeBaseName() + "." + QgsAuxiliaryStorage::extension();
+
+  if ( ! mAuxiliaryStorage->saveAs( asFileName ) )
+  {
+    setError( tr( "Unable to copy auxiliary storage" ) );
+    return false;
+  }
+
   // add files to the archive
   archive->addFile( qgsFile.fileName() );
-  archive->addFile( mAuxiliaryStorage->fileName() );
+  archive->addFile( asFileName );
 
   // zip
   QString errMsg;

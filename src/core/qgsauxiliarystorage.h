@@ -69,9 +69,9 @@ class CORE_EXPORT QgsAuxiliaryStorage
 {
   public:
 
-    QgsAuxiliaryStorage( const QgsProject &project );
+    QgsAuxiliaryStorage( const QgsProject &project, bool copy = true );
 
-    QgsAuxiliaryStorage( const QString &filename = QString() );
+    QgsAuxiliaryStorage( const QString &filename = QString(), bool copy = true );
 
     virtual ~QgsAuxiliaryStorage();
 
@@ -79,11 +79,11 @@ class CORE_EXPORT QgsAuxiliaryStorage
 
     QString fileName() const;
 
-    bool isNew() const;
+    bool saveAs( const QString &filename ) const;
 
-    void saveAs( const QString &filename ) const;
+    bool saveAs( const QgsProject &project ) const;
 
-    void saveAs( const QgsProject &project ) const;
+    bool save() const;
 
     QgsAuxiliaryStorageJoin *createStorageLayer( QgsVectorLayer *layer );
 
@@ -96,6 +96,9 @@ class CORE_EXPORT QgsAuxiliaryStorage
     sqlite3 *open( const QgsProject &project );
     void close( sqlite3 *handler );
 
+    QString currentFileName() const;
+    void initTmpFileName();
+
     static QString filenameForProject( const QgsProject &project );
     static sqlite3 *createDB( const QString &filename );
     static sqlite3 *openDB( const QString &filename );
@@ -107,8 +110,9 @@ class CORE_EXPORT QgsAuxiliaryStorage
     static void debugMsg( const QString &sql, sqlite3 *handler );
 
     bool mValid;
-    bool mTmp;
-    QString mFileName;
+    QString mFileName; // original filename
+    QString mTmpFileName; // temporary filename used in copy mode
+    bool mCopy;
 };
 
 #endif
