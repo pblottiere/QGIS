@@ -28,7 +28,8 @@
 #include <sqlite3.h>
 #include <spatialite.h>
 
-const QString AS_PKFIELD = "ASPK";
+const QString AS_PKFIELD = "ROWID";
+const QString AS_JOINFIELD = "ASPK";
 const QString AS_EXTENSION = "qgd";
 
 QgsAuxiliaryStorageJoin::QgsAuxiliaryStorageJoin( const QString &pkField, const QString &filename, const QString &table, QgsVectorLayer *layer, bool exist ):
@@ -57,11 +58,12 @@ QgsAuxiliaryStorageJoin::QgsAuxiliaryStorageJoin( const QString &pkField, const 
   // init join info
   mJoinInfo.setPrefix( "auxiliary_storage_" );
   mJoinInfo.setJoinLayer( this );
-  mJoinInfo.setJoinFieldName( AS_PKFIELD );
+  mJoinInfo.setJoinFieldName( AS_JOINFIELD );
   mJoinInfo.setTargetFieldName( pkField );
   mJoinInfo.setEditable( true );
   mJoinInfo.setUpsertOnEdit( true );
   mJoinInfo.setCascadedDelete( true );
+  mJoinInfo.setAuxiliaryStorage( true );
 }
 
 QgsAuxiliaryStorageJoin::~QgsAuxiliaryStorageJoin()
@@ -395,7 +397,7 @@ bool QgsAuxiliaryStorage::initializeSpatialMetadata( sqlite3 *handler )
 
 bool QgsAuxiliaryStorage::createTable( const QString &type, const QString &table, sqlite3 *handler )
 {
-  QString sql = QString( "CREATE TABLE IF NOT EXISTS '%1' ( '%2' %3 PRIMARY KEY )" ).arg( table ).arg( AS_PKFIELD ).arg( type );
+  QString sql = QString( "CREATE TABLE IF NOT EXISTS '%1' ( '%2' %3  )" ).arg( table ).arg( AS_JOINFIELD ).arg( type );
 
   if ( !exec( sql, handler ) )
     return false;
