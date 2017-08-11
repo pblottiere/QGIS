@@ -285,6 +285,7 @@ Create the instance from a DOM element with saved configuration
     virtual QDomElement save( QDomDocument &doc, const QgsReadWriteContext &context ) const;
     virtual QStringList subProviders() const;
     virtual QgsPalLayerSettings settings( const QString &providerId = QString() ) const;
+    virtual void setSettings( QgsPalLayerSettings *settings /Transfer/, const QString &providerId = QString() );
     virtual bool requiresAdvancedEffects() const;
 
 

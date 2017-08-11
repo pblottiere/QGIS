@@ -641,6 +641,18 @@ bool QgsMapToolLabel::labelMoveable( QgsVectorLayer *vlayer, const QgsPalLayerSe
   QString xColName = dataDefinedColumnName( vlayer, QgsPalLayerSettings::PositionX, settings, auxiliaryStorageX );
   QString yColName = dataDefinedColumnName( vlayer, QgsPalLayerSettings::PositionY, settings, auxiliaryStorageY );
 
+  if ( xColName.isEmpty() )
+  {
+    autocreate( vlayer, QgsPalLayerSettings::PositionX );
+    xColName = dataDefinedColumnName( vlayer, QgsPalLayerSettings::PositionX, settings, auxiliaryStorageX );
+  }
+
+  if ( yColName.isEmpty() )
+  {
+    autocreate( vlayer, QgsPalLayerSettings::PositionY );
+    yColName = dataDefinedColumnName( vlayer, QgsPalLayerSettings::PositionY, settings, auxiliaryStorageY );
+  }
+
   if ( ( !auxiliaryStorageX || !auxiliaryStorageY ) && !vlayer->isEditable() )
     return false;
 
@@ -742,4 +754,36 @@ QgsMapToolLabel::LabelDetails::LabelDetails( const QgsLabelPosition &p )
     layer = nullptr;
     settings = QgsPalLayerSettings();
   }
+}
+
+bool QgsMapToolLabel::autocreate( QgsVectorLayer *layer, const QgsPalLayerSettings::Property &p ) const
+{
+  bool rc = false;
+
+  if ( layer && layer->labeling() )
+  {
+    QgsAuxiliaryStorageJoin *asj = layer->auxiliaryStorageJoin();
+
+    if ( !asj )
+      return rc;
+
+    const QgsPropertyDefinition def = layer->labeling()->settings().propertyDefinitions()[p];
+    rc = asj->createProperty( def );
+
+    if ( rc )
+    {
+      const QString fieldName = asj->propertyFieldName( def );
+      const QgsProperty prop = QgsProperty::fromField( fieldName );
+
+      QgsPalLayerSettings *settings = new QgsPalLayerSettings( layer->labeling()->settings() );
+
+      QgsPropertyCollection c = settings->dataDefinedProperties();
+      c.setProperty( p, prop );
+      settings->setDataDefinedProperties( c );
+
+      layer->labeling()->setSettings( settings );
+    }
+  }
+
+  return rc;
 }

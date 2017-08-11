@@ -229,6 +229,7 @@ class CORE_EXPORT QgsRuleBasedLabeling : public QgsAbstractVectorLayerLabeling
 
         //! Try to find a rule given its unique key
         const QgsRuleBasedLabeling::Rule *findRuleByKey( const QString &key ) const;
+        QgsRuleBasedLabeling::Rule *findRuleByKey( const QString &key ) SIP_SKIP;
 
         //! clone this rule, return new instance
         QgsRuleBasedLabeling::Rule *clone() const SIP_FACTORY;
@@ -341,6 +342,7 @@ class CORE_EXPORT QgsRuleBasedLabeling : public QgsAbstractVectorLayerLabeling
     virtual QgsVectorLayerLabelProvider *provider( QgsVectorLayer *layer ) const override SIP_SKIP;
     virtual QStringList subProviders() const override;
     virtual QgsPalLayerSettings settings( const QString &providerId = QString() ) const override;
+    virtual void setSettings( QgsPalLayerSettings *settings SIP_TRANSFER, const QString &providerId = QString() ) override;
     bool requiresAdvancedEffects() const override;
 
   protected:

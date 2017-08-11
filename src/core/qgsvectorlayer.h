@@ -1057,7 +1057,8 @@ class CORE_EXPORT QgsVectorLayer : public QgsMapLayer, public QgsExpressionConte
     /** Access to labeling configuration. May be null if labeling is not used.
      * \since QGIS 3.0
      */
-    const QgsAbstractVectorLayerLabeling *labeling() const { return mLabeling; }
+    const QgsAbstractVectorLayerLabeling *labeling() const SIP_SKIP { return mLabeling; }
+    QgsAbstractVectorLayerLabeling *labeling() { return mLabeling; }
 
     /** Set labeling configuration. Takes ownership of the object.
      * \since QGIS 3.0

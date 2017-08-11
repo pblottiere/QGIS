@@ -75,6 +75,16 @@ QgsPalLayerSettings QgsVectorLayerSimpleLabeling::settings( const QString &provi
   return *mSettings;
 }
 
+void QgsVectorLayerSimpleLabeling::setSettings( QgsPalLayerSettings *settings, const QString &providerId )
+{
+  Q_UNUSED( providerId );
+
+  if ( mSettings.get() == settings )
+    return;
+
+  mSettings.reset( settings );
+}
+
 bool QgsVectorLayerSimpleLabeling::requiresAdvancedEffects() const
 {
   return mSettings->format().containsAdvancedEffects();

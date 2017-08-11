@@ -182,6 +182,21 @@ const QgsRuleBasedLabeling::Rule *QgsRuleBasedLabeling::Rule::findRuleByKey( con
   return nullptr;
 }
 
+
+QgsRuleBasedLabeling::Rule *QgsRuleBasedLabeling::Rule::findRuleByKey( const QString &key )
+{
+  if ( key == mRuleKey )
+    return this;
+
+  Q_FOREACH ( Rule *rule, mChildren )
+  {
+    Rule *r = rule->findRuleByKey( key );
+    if ( r )
+      return r;
+  }
+  return nullptr;
+}
+
 QgsRuleBasedLabeling::Rule *QgsRuleBasedLabeling::Rule::clone() const
 {
   QgsPalLayerSettings *s = mSettings ? new QgsPalLayerSettings( *mSettings ) : nullptr;
@@ -450,6 +465,16 @@ QgsPalLayerSettings QgsRuleBasedLabeling::settings( const QString &providerId ) 
     return *rule->settings();
 
   return QgsPalLayerSettings();
+}
+
+void QgsRuleBasedLabeling::setSettings( QgsPalLayerSettings *settings, const QString &providerId )
+{
+  if ( settings )
+  {
+    Rule *rule = mRootRule->findRuleByKey( providerId );
+    if ( rule && rule->settings() )
+      return rule->setSettings( settings );
+  }
 }
 
 bool QgsRuleBasedLabeling::requiresAdvancedEffects() const

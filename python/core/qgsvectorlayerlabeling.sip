@@ -60,6 +60,8 @@ they are identified by their ID (e.g. in case of rule-based labeling, provider I
  :rtype: QgsPalLayerSettings
 %End
 
+    virtual void setSettings( QgsPalLayerSettings *settings /Transfer/, const QString &providerId = QString() ) = 0;
+
     virtual bool requiresAdvancedEffects() const = 0;
 %Docstring
  Returns true if drawing labels requires advanced effects like composition
@@ -108,6 +110,7 @@ Constructs simple labeling configuration with given initial settings
     virtual QgsAbstractVectorLayerLabeling *clone() const /Factory/;
     virtual QDomElement save( QDomDocument &doc, const QgsReadWriteContext &context ) const;
     virtual QgsPalLayerSettings settings( const QString &providerId = QString() ) const;
+    virtual void setSettings( QgsPalLayerSettings *settings /Transfer/, const QString &providerId = QString() );
     virtual bool requiresAdvancedEffects() const;
 
     virtual void toSld( QDomNode &parent, const QgsStringMap &props ) const;
