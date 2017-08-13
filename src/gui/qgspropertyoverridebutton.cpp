@@ -335,8 +335,8 @@ void QgsPropertyOverrideButton::aboutToShowMenu()
 
   // deactivate autocreate button if the property yet exist in auxiliary storage join
   mDefineMenu->addAction( mActionAutocreate );
-  const QgsAuxiliaryStorageJoin *asl = mVectorLayer->auxiliaryStorageJoin();
-  if ( !asl || asl->propertyExists( mDefinition ) )
+  const QgsAuxiliaryLayer *alayer = mVectorLayer->auxiliaryLayer();
+  if ( !alayer || alayer->exists( mDefinition ) )
   {
     mActionAutocreate->setEnabled( false );
   }

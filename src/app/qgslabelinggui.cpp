@@ -619,12 +619,11 @@ void QgsLabelingGui::autocreateProperty()
   QgsPropertyDefinition def = QgsPalLayerSettings::propertyDefinitions()[key];
 
   // create property in auxiliary storage
-  mLayer->auxiliaryStorageJoin()->createProperty( def );
+  mLayer->auxiliaryLayer()->addAuxiliaryField( def );
 
   // update property with join field name from auxiliary storage
-  const QgsVectorLayer *vl = button->vectorLayer();
   QgsProperty property = button->toProperty();
-  property.setField( vl->auxiliaryStorageJoin()->propertyFieldName( def ) );
+  property.setField( QgsAuxiliaryField::name( def, true ) );
   property.setActive( true );
   button->updateFieldLists();
   button->setToProperty( property );

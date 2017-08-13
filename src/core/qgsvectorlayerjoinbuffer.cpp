@@ -269,8 +269,8 @@ void QgsVectorLayerJoinBuffer::writeXml( QDomNode &layer_node, QDomDocument &doc
   for ( ; joinIt != mVectorJoins.constEnd(); ++joinIt )
   {
     // do not write join information about auxiliary storage layer
-    const QgsAuxiliaryStorageJoin *join = mLayer->auxiliaryStorageJoin();
-    if ( join && joinIt->joinLayerId() == join->id() )
+    const QgsAuxiliaryLayer *alayer = mLayer->auxiliaryLayer();
+    if ( alayer && joinIt->joinLayerId() == alayer->id() )
       continue;
 
     QDomElement joinElem = document.createElement( QStringLiteral( "join" ) );

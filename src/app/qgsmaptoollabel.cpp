@@ -762,17 +762,17 @@ bool QgsMapToolLabel::autocreate( QgsVectorLayer *layer, const QgsPalLayerSettin
 
   if ( layer && layer->labeling() )
   {
-    QgsAuxiliaryStorageJoin *asj = layer->auxiliaryStorageJoin();
+    QgsAuxiliaryLayer *alayer = layer->auxiliaryLayer();
 
-    if ( !asj )
+    if ( !alayer )
       return rc;
 
     const QgsPropertyDefinition def = layer->labeling()->settings().propertyDefinitions()[p];
-    rc = asj->createProperty( def );
+    rc = alayer->addAuxiliaryField( def );
 
     if ( rc )
     {
-      const QString fieldName = asj->propertyFieldName( def );
+      const QString fieldName = QgsAuxiliaryField::name( def, true );
       const QgsProperty prop = QgsProperty::fromField( fieldName );
 
       QgsPalLayerSettings *settings = new QgsPalLayerSettings( layer->labeling()->settings() );

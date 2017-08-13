@@ -25,43 +25,53 @@
 
 #include <QString>
 
-class CORE_EXPORT QgsAuxiliaryStorageJoin : public QgsVectorLayer
+class CORE_EXPORT QgsAuxiliaryField : public QgsField
+{
+  public:
+    QgsAuxiliaryField( const QgsPropertyDefinition &def );
+
+    QgsPropertyDefinition propertyDefinition() const;
+
+    static QString name( const QgsPropertyDefinition &def, bool joined = false );
+
+  private:
+    QgsAuxiliaryField( const QgsField &f ); // only for auxiliary layer
+
+    void init( const QgsPropertyDefinition &def );
+
+    QgsPropertyDefinition mPropertyDefinition;
+
+    friend class QgsAuxiliaryLayer;
+};
+
+typedef QList<QgsAuxiliaryField> QgsAuxiliaryFields;
+
+class CORE_EXPORT QgsAuxiliaryLayer : public QgsVectorLayer
 {
     Q_OBJECT
 
   public:
-    struct QgsAuxiliaryStorageField
-    {
-      QString mTarget;
-      QString mProperty;
-      QString mType;
-    };
+    QgsAuxiliaryLayer( const QString &pkField, const QString &filename, const QString &table, const QgsVectorLayer &vlayer, bool exist = false );
 
-    QgsAuxiliaryStorageJoin( const QString &pkField, const QString &filename, const QString &table, QgsVectorLayer *layer, bool yetFilled = false );
-    virtual ~QgsAuxiliaryStorageJoin();
+    virtual ~QgsAuxiliaryLayer();
 
     //! QgsAuxiliaryStorage cannot be copied.
-    QgsAuxiliaryStorageJoin( const QgsAuxiliaryStorageJoin &rhs ) = delete;
+    QgsAuxiliaryLayer( const QgsAuxiliaryLayer &rhs ) = delete;
 
     //! QgsAuxiliaryStorage cannot be copied.
-    QgsAuxiliaryStorageJoin &operator=( QgsAuxiliaryStorageJoin const &rhs ) = delete;
+    QgsAuxiliaryLayer &operator=( QgsAuxiliaryLayer const &rhs ) = delete;
 
     QgsVectorLayerJoinInfo joinInfo() const;
 
-    bool propertyExists( const QgsPropertyDefinition &definition ) const;
+    bool exists( const QgsPropertyDefinition &definition ) const;
 
-    QString propertyName( const QgsPropertyDefinition &definition ) const;
-
-    bool createProperty( const QgsPropertyDefinition &definition );
-
-    QString propertyFieldName( const QgsPropertyDefinition &definition ) const;
+    bool addAuxiliaryField( const QgsPropertyDefinition &definition );
 
     bool changeAttributeValue( QgsFeatureId fid, int field, const QVariant &newValue, const QVariant &oldValue = QVariant() );
 
-    QList<QgsAuxiliaryStorageField> storageFields() const;
+    QgsAuxiliaryFields auxiliaryFields() const;
 
   private:
-    QgsVectorLayer *mLayer;
     QgsVectorLayerJoinInfo mJoinInfo;
 };
 
@@ -85,9 +95,9 @@ class CORE_EXPORT QgsAuxiliaryStorage
 
     bool save() const;
 
-    QgsAuxiliaryStorageJoin *createStorageLayer( QgsVectorLayer *layer );
+    QgsAuxiliaryLayer *createAuxiliaryLayer( const QgsVectorLayer &layer );
 
-    QgsAuxiliaryStorageJoin *createStorageLayer( const QgsField &field, QgsVectorLayer *layer );
+    QgsAuxiliaryLayer *createAuxiliaryLayer( const QgsField &field, const QgsVectorLayer &layer );
 
     static QString extension();
 

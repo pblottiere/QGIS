@@ -20,8 +20,8 @@
 #include "qgsslconnect.h"
 #include "qgsvectordataprovider.h"
 #include "qgsproject.h"
+#include "qgspallabeling.h"
 
-#include <QTemporaryDir>
 #include <QVariant>
 #include <QFile>
 
@@ -31,17 +31,117 @@
 const QString AS_PKFIELD = "ROWID";
 const QString AS_JOINFIELD = "ASPK";
 const QString AS_EXTENSION = "qgd";
+const QString AS_JOINPREFIX = "auxiliary_storage_";
 
-QgsAuxiliaryStorageJoin::QgsAuxiliaryStorageJoin( const QString &pkField, const QString &filename, const QString &table, QgsVectorLayer *layer, bool exist ):
-  QgsVectorLayer( QString( "dbname='%1' table='%2' key='%3'" ).arg( filename, table, AS_PKFIELD ), QString( "%1_auxiliarystorage" ).arg( table ), "spatialite" )
-  , mLayer( layer )
+QgsAuxiliaryField::QgsAuxiliaryField( const QgsPropertyDefinition &def )
+  : QgsField()
+  , mPropertyDefinition( def )
 {
+  init( def );
+}
 
+QgsAuxiliaryField::QgsAuxiliaryField( const QgsField &f )
+{
+  QStringList parts = f.name().split( '_' );
+
+  if ( parts.size() <= 1 )
+    return;
+
+  QString target = parts[0];
+  QString propertyName = parts[1];
+  QgsPropertyDefinition def;
+
+  if ( target.compare( "pal" ) == 0 )
+  {
+    QgsPropertiesDefinition props = QgsPalLayerSettings::propertyDefinitions();
+    Q_FOREACH ( const QgsPropertyDefinition p, props.values() )
+    {
+      if ( p.name().compare( propertyName ) == 0 )
+      {
+        def = p;
+        break;
+      }
+    }
+  }
+  else if ( target.compare( "diagram" ) == 0 )
+  {
+    // TODO
+  }
+
+  if ( !def.name().isEmpty() )
+  {
+    init( def );
+    setTypeName( f.typeName() );
+    mPropertyDefinition = def;
+  }
+}
+
+void QgsAuxiliaryField::init( const QgsPropertyDefinition &def )
+{
+  if ( !def.name().isEmpty() )
+  {
+    QVariant::Type type;
+    int len( 0 ), precision( 0 );
+    switch ( def.dataType() )
+    {
+      case QgsPropertyDefinition::DataTypeString:
+        type = QVariant::String;
+        len = 50;
+        break;
+      case QgsPropertyDefinition::DataTypeNumeric:
+        type = QVariant::Double;
+        len = 0;
+        precision = 0;
+        break;
+      case QgsPropertyDefinition::DataTypeBoolean:
+        type = QVariant::Int; // sqlite does not have a bool type
+        break;
+      default:
+        break;
+    }
+
+    setType( type );
+    setName( name( def ) );
+    setLength( len );
+    setPrecision( precision );
+  }
+}
+
+QString QgsAuxiliaryField::name( const QgsPropertyDefinition &def, bool joined )
+{
+  QString target;
+  switch ( def.target() )
+  {
+    case QgsPropertyDefinition::Pal:
+      target = "pal";
+      break;
+    case QgsPropertyDefinition::Diagram:
+      target = "diagram";
+      break;
+    default:
+      break;
+  }
+
+  QString fieldName = QString( "%2_%3" ).arg( target, def.name() );
+
+  if ( joined )
+    fieldName = QString( "%1%2" ).arg( AS_JOINPREFIX, fieldName );
+
+  return fieldName;
+}
+
+//
+// QgsAuxiliaryLayer
+//
+
+QgsAuxiliaryLayer::QgsAuxiliaryLayer( const QString &pkField, const QString &filename, const QString &table, const QgsVectorLayer &vlayer, bool exist ):
+  QgsVectorLayer( QString( "dbname='%1' table='%2' key='%3'" ).arg( filename, table, AS_PKFIELD ), QString( "%1_auxiliarystorage" ).arg( table ), "spatialite" )
+{
   // add features if necessary
   if ( ! exist )
   {
     QgsFeature f;
-    QgsFeatureIterator it = layer->getFeatures();
+    QgsFeatureIterator it = vlayer.getFeatures();
 
     startEditing();
     while ( it.nextFeature( f ) )
@@ -56,7 +156,7 @@ QgsAuxiliaryStorageJoin::QgsAuxiliaryStorageJoin( const QString &pkField, const 
   }
 
   // init join info
-  mJoinInfo.setPrefix( "auxiliary_storage_" );
+  mJoinInfo.setPrefix( AS_JOINPREFIX );
   mJoinInfo.setJoinLayer( this );
   mJoinInfo.setJoinFieldName( AS_JOINFIELD );
   mJoinInfo.setTargetFieldName( pkField );
@@ -66,105 +166,57 @@ QgsAuxiliaryStorageJoin::QgsAuxiliaryStorageJoin( const QString &pkField, const 
   mJoinInfo.setAuxiliaryStorage( true );
 }
 
-QgsAuxiliaryStorageJoin::~QgsAuxiliaryStorageJoin()
+QgsAuxiliaryLayer::~QgsAuxiliaryLayer()
 {
 }
 
-QgsVectorLayerJoinInfo QgsAuxiliaryStorageJoin::joinInfo() const
+QgsPropertyDefinition QgsAuxiliaryField::propertyDefinition() const
+{
+  return mPropertyDefinition;
+}
+
+QgsVectorLayerJoinInfo QgsAuxiliaryLayer::joinInfo() const
 {
   return mJoinInfo;
 }
 
-bool QgsAuxiliaryStorageJoin::createProperty( const QgsPropertyDefinition &definition )
+bool QgsAuxiliaryLayer::addAuxiliaryField( const QgsPropertyDefinition &definition )
 {
-  if ( propertyExists( definition ) )
+  if ( definition.name().isEmpty() || exists( definition ) )
     return false;
 
-  QVariant::Type type;
-  int len( 0 ), precision( 0 );
-  switch ( definition.dataType() )
-  {
-    case QgsPropertyDefinition::DataTypeString:
-      type = QVariant::String;
-      len = 50;
-      break;
-    case QgsPropertyDefinition::DataTypeNumeric:
-      type = QVariant::Double;
-      len = 0;
-      precision = 0;
-      break;
-    case QgsPropertyDefinition::DataTypeBoolean:
-      type = QVariant::Int; // sqlite does not have a bool type
-      break;
-    default:
-      break;
-  }
-
-  QgsField field;
-  field.setType( type );
-  field.setName( propertyName( definition ) );
-  field.setLength( len );
-  field.setPrecision( precision );
-  dataProvider()->addAttributes( QList<QgsField>() << field );
+  QgsAuxiliaryField af( definition );
+  bool rc = dataProvider()->addAttributes( QList<QgsField>() << af );
   updateFields();
 
-  return true;
+  return rc;
 }
 
-bool QgsAuxiliaryStorageJoin::propertyExists( const QgsPropertyDefinition &definition ) const
+bool QgsAuxiliaryLayer::exists( const QgsPropertyDefinition &definition ) const
 {
-  return ( fields().indexOf( propertyName( definition ) ) >= 0 );
+  return ( fields().indexOf( QgsAuxiliaryField::name( definition ) ) >= 0 );
 }
 
-QString QgsAuxiliaryStorageJoin::propertyName( const QgsPropertyDefinition &definition ) const
+QgsAuxiliaryFields QgsAuxiliaryLayer::auxiliaryFields() const
 {
-  // joined field name
-  QString target;
-  switch ( definition.target() )
-  {
-    case QgsPropertyDefinition::Pal:
-      target = "pal";
-      break;
-    case QgsPropertyDefinition::Diagram:
-      target = "diagram";
-      break;
-    default:
-      break;
-  }
-
-  return QString( "%1_%2" ).arg( target, definition.name() );
-}
-
-QString QgsAuxiliaryStorageJoin::propertyFieldName( const QgsPropertyDefinition &definition ) const
-{
-  // joined field name
-  return QString( "%1%2" ).arg( mJoinInfo.prefix(), propertyName( definition ) );
-}
-
-QList<QgsAuxiliaryStorageJoin::QgsAuxiliaryStorageField> QgsAuxiliaryStorageJoin::storageFields() const
-{
-  QList<QgsAuxiliaryStorageJoin::QgsAuxiliaryStorageField> asFields;
+  QgsAuxiliaryFields afields;
 
   for ( int i = 1; i < fields().count(); i++ ) // ignore PK field
-  {
-    QgsField f = fields().field( i );
-    QString target = f.name().split( '_' )[0];
-    QString property = f.name().split( '_' )[1];
-    QString type = f.typeName();
+    afields.append( QgsAuxiliaryField( fields().field( i ) ) );
 
-    QgsAuxiliaryStorageField asField = { target, property, type };
-    asFields.append( asField );
-  }
-
-  return asFields;
+  return afields;
 }
 
-bool QgsAuxiliaryStorageJoin::changeAttributeValue( QgsFeatureId fid, int field, const QVariant &newValue, const QVariant &oldValue )
+bool QgsAuxiliaryLayer::changeAttributeValue( QgsFeatureId fid, int field, const QVariant &newValue, const QVariant &oldValue )
 {
   startEditing();
   QgsVectorLayer::changeAttributeValue( fid, field, newValue, oldValue );
   return commitChanges();
 }
+
+//
+// QgsAuxiliaryStorage
+//
 
 QgsAuxiliaryStorage::QgsAuxiliaryStorage( const QgsProject &project, bool copy )
   : mValid( false )
@@ -248,27 +300,27 @@ QString QgsAuxiliaryStorage::extension()
   return AS_EXTENSION;
 }
 
-QgsAuxiliaryStorageJoin *QgsAuxiliaryStorage::createStorageLayer( QgsVectorLayer *layer )
+QgsAuxiliaryLayer *QgsAuxiliaryStorage::createAuxiliaryLayer( const QgsVectorLayer &layer )
 {
-  QgsAuxiliaryStorageJoin *asl = nullptr;
+  QgsAuxiliaryLayer *alayer = nullptr;
 
-  QgsAttributeList pks = layer->dataProvider()->pkAttributeIndexes();
+  QgsAttributeList pks = layer.dataProvider()->pkAttributeIndexes();
   if ( !pks.isEmpty() )
   {
     // the first primary key field is used for joining
-    asl = createStorageLayer( layer->fields().field( pks[0] ), layer );
+    alayer = createAuxiliaryLayer( layer.fields().field( pks[0] ), layer );
   }
 
-  return asl;
+  return alayer;
 }
 
-QgsAuxiliaryStorageJoin *QgsAuxiliaryStorage::createStorageLayer( const QgsField &field, QgsVectorLayer *layer )
+QgsAuxiliaryLayer *QgsAuxiliaryStorage::createAuxiliaryLayer( const QgsField &field, const QgsVectorLayer &layer )
 {
-  QgsAuxiliaryStorageJoin *asl = nullptr;
+  QgsAuxiliaryLayer *alayer = nullptr;
 
   if ( mValid )
   {
-    QString table( layer->id() );
+    QString table( layer.id() );
     sqlite3 *handler = open( currentFileName() );
 
     bool exist = tableExists( table, handler );
@@ -277,15 +329,15 @@ QgsAuxiliaryStorageJoin *QgsAuxiliaryStorage::createStorageLayer( const QgsField
       if ( !createTable( field.typeName(), table, handler ) )
       {
         close( handler );
-        return asl;
+        return alayer;
       }
     }
 
-    asl = new QgsAuxiliaryStorageJoin( field.name(), currentFileName(), table, layer, exist );
+    alayer = new QgsAuxiliaryLayer( field.name(), currentFileName(), table, layer, exist );
     close( handler );
   }
 
-  return asl;
+  return alayer;
 }
 
 bool QgsAuxiliaryStorage::exec( const QString &sql, sqlite3 *handler )

@@ -1444,24 +1444,24 @@ void QgsVectorLayerProperties::showHelp()
 
 void QgsVectorLayerProperties::updateAuxiliaryStoragePage()
 {
-  const QgsAuxiliaryStorageJoin *asj = mLayer->auxiliaryStorageJoin();
+  const QgsAuxiliaryLayer *alayer = mLayer->auxiliaryLayer();
   QStandardItemModel *model = qobject_cast<QStandardItemModel *>( mAuxiliaryStorageCbBox->model() );
 
-  if ( asj )
+  if ( alayer )
   {
     // set widgets to enable state
     mAuxiliaryStorageInformationGrpBox->setEnabled( true );
     mAuxiliaryStorageFieldsGrpBox->setEnabled( true );
 
     // update key
-    mAuxiliaryStorageKeyLineEdit->setText( asj->joinInfo().targetFieldName() );
+    mAuxiliaryStorageKeyLineEdit->setText( alayer->joinInfo().targetFieldName() );
 
     // update feature count
-    int features = asj->featureCount();
+    int features = alayer->featureCount();
     mAuxiliaryStorageFeaturesLineEdit->setText( QString::number( features ) );
 
     // update fields count
-    int fields = asj->fields().count() - 1; // ignore rowid
+    int fields = alayer->fields().count() - 1; // ignore rowid
     mAuxiliaryStorageFieldsLineEdit->setText( QString::number( fields ) );
 
     // update items of combobox
@@ -1471,12 +1471,20 @@ void QgsVectorLayerProperties::updateAuxiliaryStoragePage()
     item->setFlags( item->flags() & ~Qt::ItemIsEnabled );
 
     // add fields
-    Q_FOREACH ( const QgsAuxiliaryStorageJoin::QgsAuxiliaryStorageField &field, asj->storageFields() )
+    Q_FOREACH ( const QgsAuxiliaryField &field, alayer->auxiliaryFields() )
     {
+      QgsPropertyDefinition prop = field.propertyDefinition();
       QTreeWidgetItem *item = new QTreeWidgetItem();
-      item->setText( 0, field.mTarget );
-      item->setText( 1, field.mProperty );
-      item->setText( 2, field.mType );
+
+      if ( prop.target() == QgsPropertyDefinition::Pal )
+        item->setText( 0, "Pal" );
+      else if ( prop.target() == QgsPropertyDefinition::Diagram )
+        item->setText( 0, "Diagram" );
+      else
+        item->setText( 0, "Unknown" );
+
+      item->setText( 1, prop.name() );
+      item->setText( 2, field.typeName() );
 
       mAuxiliaryStorageFieldsTree->addTopLevelItem( item );
     }

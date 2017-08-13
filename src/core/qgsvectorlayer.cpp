@@ -150,7 +150,7 @@ QgsVectorLayer::QgsVectorLayer( const QString &vectorLayerPath,
   , mExpressionFieldBuffer( nullptr )
   , mDiagramRenderer( nullptr )
   , mDiagramLayerSettings( nullptr )
-  , mAuxiliaryStorageJoin( nullptr )
+  , mAuxiliaryLayer( nullptr )
   , mValidExtent( false )
   , mLazyExtent( true )
   , mSymbolFeatureCounted( false )
@@ -4510,25 +4510,25 @@ QgsAbstractVectorLayerLabeling *QgsVectorLayer::readLabelingFromCustomProperties
   return labeling;
 }
 
-void QgsVectorLayer::setAuxiliaryStorageJoin( QgsAuxiliaryStorageJoin *join )
+void QgsVectorLayer::setAuxiliaryLayer( QgsAuxiliaryLayer *alayer )
 {
-  if ( join )
+  if ( alayer )
   {
-    if ( mAuxiliaryStorageJoin )
-      removeJoin( mAuxiliaryStorageJoin->id() );
+    if ( mAuxiliaryLayer )
+      removeJoin( mAuxiliaryLayer->id() );
 
-    addJoin( join->joinInfo() );
+    addJoin( alayer->joinInfo() );
   }
 
-  mAuxiliaryStorageJoin.reset( join );
+  mAuxiliaryLayer.reset( alayer );
 }
 
-const QgsAuxiliaryStorageJoin *QgsVectorLayer::auxiliaryStorageJoin() const
+const QgsAuxiliaryLayer *QgsVectorLayer::auxiliaryLayer() const
 {
-  return mAuxiliaryStorageJoin.get();
+  return mAuxiliaryLayer.get();
 }
 
-QgsAuxiliaryStorageJoin *QgsVectorLayer::auxiliaryStorageJoin()
+QgsAuxiliaryLayer *QgsVectorLayer::auxiliaryLayer()
 {
-  return mAuxiliaryStorageJoin.get();
+  return mAuxiliaryLayer.get();
 }

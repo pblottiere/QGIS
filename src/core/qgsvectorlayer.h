@@ -70,7 +70,7 @@ class QgsVectorLayerFeatureCounter;
 class QgsAbstractVectorLayerLabeling;
 class QgsPoint;
 class QgsFeedback;
-class QgsAuxiliaryStorageJoin;
+class QgsAuxiliaryLayer;
 
 typedef QList<int> QgsAttributeList;
 typedef QSet<int> QgsAttributeIds;
@@ -421,9 +421,9 @@ class CORE_EXPORT QgsVectorLayer : public QgsMapLayer, public QgsExpressionConte
     //! Returns a comment for the data in the layer
     QString dataComment() const;
 
-    void setAuxiliaryStorageJoin( QgsAuxiliaryStorageJoin *join = nullptr );
-    const QgsAuxiliaryStorageJoin *auxiliaryStorageJoin() const;
-    QgsAuxiliaryStorageJoin *auxiliaryStorageJoin();
+    void setAuxiliaryLayer( QgsAuxiliaryLayer *join = nullptr );
+    const QgsAuxiliaryLayer *auxiliaryLayer() const;
+    QgsAuxiliaryLayer *auxiliaryLayer();
 
     /**
      * This is a shorthand for accessing the displayExpression if it is a simple field.
@@ -2042,7 +2042,7 @@ class CORE_EXPORT QgsVectorLayer : public QgsMapLayer, public QgsExpressionConte
     //stores infos about diagram placement (placement type, priority, position distance)
     QgsDiagramLayerSettings *mDiagramLayerSettings = nullptr;
 
-    std::unique_ptr<QgsAuxiliaryStorageJoin> mAuxiliaryStorageJoin;
+    std::unique_ptr<QgsAuxiliaryLayer> mAuxiliaryLayer;
 
     mutable bool mValidExtent;
     mutable bool mLazyExtent;
