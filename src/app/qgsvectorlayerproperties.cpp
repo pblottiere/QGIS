@@ -343,10 +343,13 @@ QgsVectorLayerProperties::QgsVectorLayerProperties(
   QMenu *menu = new QMenu( this );
 
   mAuxiliaryStorageActionClear = new QAction( tr( "Clear" ) );
+  mAuxiliaryStorageActionDelete = new QAction( tr( "Delete" ) );
   menu->addAction( mAuxiliaryStorageActionClear );
+  menu->addAction( mAuxiliaryStorageActionDelete );
   mAuxiliaryStorageActions->setMenu( menu );
 
   connect( mAuxiliaryStorageActionClear, &QAction::triggered, this, &QgsVectorLayerProperties::onAuxiliaryStorageClear );
+  connect( mAuxiliaryStorageActionDelete, &QAction::triggered, this, &QgsVectorLayerProperties::onAuxiliaryStorageDelete );
 
   updateAuxiliaryStoragePage();
 } // QgsVectorLayerProperties ctor
@@ -1473,6 +1476,7 @@ void QgsVectorLayerProperties::updateAuxiliaryStoragePage()
     mAuxiliaryStorageFieldsLineEdit->setText( QString::number( fields ) );
 
     mAuxiliaryStorageActionClear->setEnabled( true );
+    mAuxiliaryStorageActionDelete->setEnabled( true );
 
     // add fields
     mAuxiliaryStorageFieldsTree->clear();
@@ -1499,11 +1503,21 @@ void QgsVectorLayerProperties::updateAuxiliaryStoragePage()
     mAuxiliaryStorageInformationGrpBox->setEnabled( false );
     mAuxiliaryStorageFieldsGrpBox->setEnabled( false );
     mAuxiliaryStorageActionClear->setEnabled( false );
+    mAuxiliaryStorageActionDelete->setEnabled( false );
+
+    mAuxiliaryStorageFieldsTree->clear();
+    mAuxiliaryStorageKeyLineEdit->setText( QString() );
+    mAuxiliaryStorageFieldsLineEdit->setText( QString() );
+    mAuxiliaryStorageFeaturesLineEdit->setText( QString() );
   }
 }
 
 void QgsVectorLayerProperties::onAuxiliaryStorageClear()
 {
+  QgsAuxiliaryLayer *alayer = mLayer->auxiliaryLayer();
+  if ( !alayer )
+    return;
+
   QString msg = tr( "Are you sure you want to clear auxiliary data for %1" ).arg( mLayer->name() );
   QMessageBox::StandardButton reply;
   reply = QMessageBox::question( this, "Clear auxiliary data", msg, QMessageBox::Yes | QMessageBox::No );
@@ -1511,13 +1525,30 @@ void QgsVectorLayerProperties::onAuxiliaryStorageClear()
   if ( reply == QMessageBox::Yes )
   {
     QApplication::setOverrideCursor( Qt::WaitCursor );
-
-    QgsAuxiliaryLayer *alayer = mLayer->auxiliaryLayer();
-    if ( alayer )
-      alayer->clear();
-
+    alayer->clear();
     QApplication::restoreOverrideCursor();
-
     updateAuxiliaryStoragePage();
+    mLayer->triggerRepaint();
+  }
+}
+
+void QgsVectorLayerProperties::onAuxiliaryStorageDelete()
+{
+  QgsAuxiliaryLayer *alayer = mLayer->auxiliaryLayer();
+  if ( !alayer )
+    return;
+
+  QString msg = tr( "Are you sure you want to delete auxiliary storage for %1" ).arg( mLayer->name() );
+  QMessageBox::StandardButton reply;
+  reply = QMessageBox::question( this, "Delete auxiliary storage", msg, QMessageBox::Yes | QMessageBox::No );
+
+  if ( reply == QMessageBox::Yes )
+  {
+    QApplication::setOverrideCursor( Qt::WaitCursor );
+    QgsAuxiliaryStorage::deleteTable( QgsDataSourceUri( alayer->source() ) );
+    mLayer->setAuxiliaryLayer(); // remove auxiliary layer
+    QApplication::restoreOverrideCursor();
+    updateAuxiliaryStoragePage();
+    mLayer->triggerRepaint();
   }
 }

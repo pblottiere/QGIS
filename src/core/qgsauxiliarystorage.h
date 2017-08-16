@@ -22,6 +22,7 @@
 #include "qgsvectorlayer.h"
 #include "qgsvectorlayerjoininfo.h"
 #include "qgsproperty.h"
+#include "qgsdatasourceuri.h"
 
 #include <QString>
 
@@ -106,12 +107,13 @@ class CORE_EXPORT QgsAuxiliaryStorage
 
     QgsAuxiliaryLayer *createAuxiliaryLayer( const QgsField &field, const QgsVectorLayer *layer );
 
+    static bool deleteTable( const QgsDataSourceUri &uri );
+
     static QString extension();
 
   private:
     sqlite3 *open( const QString &filename = QString() );
     sqlite3 *open( const QgsProject &project );
-    void close( sqlite3 *handler );
 
     QString currentFileName() const;
     void initTmpFileName();
@@ -119,6 +121,7 @@ class CORE_EXPORT QgsAuxiliaryStorage
     static QString filenameForProject( const QgsProject &project );
     static sqlite3 *createDB( const QString &filename );
     static sqlite3 *openDB( const QString &filename );
+    static void close( sqlite3 *handler );
     static bool initializeSpatialMetadata( sqlite3 *handler );
     static bool createTable( const QString &type, const QString &table, sqlite3 *handler );
     static bool tableExists( const QString &table, sqlite3 *handler );

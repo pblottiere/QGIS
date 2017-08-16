@@ -364,6 +364,25 @@ QgsAuxiliaryLayer *QgsAuxiliaryStorage::createAuxiliaryLayer( const QgsField &fi
   return alayer;
 }
 
+bool QgsAuxiliaryStorage::deleteTable( const QgsDataSourceUri &uri )
+{
+  bool rc = false;
+
+  if ( !uri.database().isEmpty() && !uri.table().isEmpty() )
+  {
+    sqlite3 *handler = openDB( uri.database() );
+
+    if ( handler )
+    {
+      QString sql = QString( "DROP TABLE %1" ).arg( uri.quotedTablename() );
+      rc = exec( sql, handler );
+      close( handler );
+    }
+  }
+
+  return rc;
+}
+
 bool QgsAuxiliaryStorage::exec( const QString &sql, sqlite3 *handler )
 {
   bool rc = false;
