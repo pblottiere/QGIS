@@ -114,6 +114,7 @@ class CORE_EXPORT QgsAuxiliaryStorage
   private:
     sqlite3 *open( const QString &filename = QString() );
     sqlite3 *open( const QgsProject &project );
+    bool addGeometryColumn( const QgsVectorLayer *layer, const QString &table, sqlite3 *handler );
 
     QString currentFileName() const;
     void initTmpFileName();

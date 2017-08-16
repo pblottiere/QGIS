@@ -211,6 +211,7 @@ bool QgsVectorLayerEditBuffer::changeGeometry( QgsFeatureId fid, const QgsGeomet
 
 bool QgsVectorLayerEditBuffer::changeAttributeValue( QgsFeatureId fid, int field, const QVariant &newValue, const QVariant &oldValue )
 {
+  std::cout << "QgsVectorLayerEditBuffer::changeAttributeValue 0 " << oldValue.toString().toStdString() << " / " << newValue.toString().toStdString() << std::endl;
   if ( FID_IS_NEW( fid ) )
   {
     if ( !mAddedFeatures.contains( fid ) )
@@ -221,11 +222,13 @@ bool QgsVectorLayerEditBuffer::changeAttributeValue( QgsFeatureId fid, int field
     return false;
   }
 
+  std::cout << "QgsVectorLayerEditBuffer::changeAttributeValue 1" << std::endl;
   if ( field < 0 || field >= L->fields().count() ||
        L->fields().fieldOrigin( field ) == QgsFields::OriginJoin ||
        L->fields().fieldOrigin( field ) == QgsFields::OriginExpression )
     return false;
 
+  std::cout << "QgsVectorLayerEditBuffer::changeAttributeValue 2" << std::endl;
   L->undoStack()->push( new QgsVectorLayerUndoCommandChangeAttribute( this, fid, field, newValue, oldValue ) );
   return true;
 }
@@ -305,6 +308,7 @@ bool QgsVectorLayerEditBuffer::commitChanges( QStringList &commitErrors )
   int cap = provider->capabilities();
   bool success = true;
 
+  std::cout << "QgsVectorLayerEditBuffer::commitChanges 0 " << success << std::endl;
   // geometry updates   attribute updates
   // yes                no                    => changeGeometryValues
   // no                 yes                   => changeAttributeValues
@@ -342,6 +346,7 @@ bool QgsVectorLayerEditBuffer::commitChanges( QStringList &commitErrors )
     }
   }
 
+  std::cout << "QgsVectorLayerEditBuffer::commitChanges 1 " << success << std::endl;
   //
   // update geometries
   //
@@ -361,6 +366,7 @@ bool QgsVectorLayerEditBuffer::commitChanges( QStringList &commitErrors )
     }
   }
 
+  std::cout << "QgsVectorLayerEditBuffer::commitChanges 2 " << success << std::endl;
   QgsFields oldFields = L->fields();
 
   //
@@ -393,6 +399,7 @@ bool QgsVectorLayerEditBuffer::commitChanges( QStringList &commitErrors )
     }
   }
 
+  std::cout << "QgsVectorLayerEditBuffer::commitChanges 3 " << success << std::endl;
   //
   // add attributes
   //
@@ -422,6 +429,7 @@ bool QgsVectorLayerEditBuffer::commitChanges( QStringList &commitErrors )
     }
   }
 
+  std::cout << "QgsVectorLayerEditBuffer::commitChanges 4 " << success << std::endl;
   // rename attributes
   if ( !mRenamedAttributes.isEmpty() )
   {
@@ -440,6 +448,7 @@ bool QgsVectorLayerEditBuffer::commitChanges( QStringList &commitErrors )
       success = false;
     }
   }
+  std::cout << "QgsVectorLayerEditBuffer::commitChanges 5 " << success << std::endl;
 
   //
   // check that addition/removal went as expected
@@ -484,6 +493,7 @@ bool QgsVectorLayerEditBuffer::commitChanges( QStringList &commitErrors )
       }
     }
   }
+  std::cout << "QgsVectorLayerEditBuffer::commitChanges 6 " << success << std::endl;
 
   if ( attributeChangesOk )
   {
@@ -642,6 +652,7 @@ bool QgsVectorLayerEditBuffer::commitChanges( QStringList &commitErrors )
     success = false;
   }
 
+  std::cout << "QgsVectorLayerEditBuffer::commitChanges 7 " << success << std::endl;
   if ( !success && provider->hasErrors() )
   {
     commitErrors << tr( "\n  Provider errors:" );

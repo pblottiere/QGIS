@@ -144,7 +144,7 @@ QString QgsAuxiliaryField::name( const QgsPropertyDefinition &def, bool joined )
 //
 
 QgsAuxiliaryLayer::QgsAuxiliaryLayer( const QString &pkField, const QString &filename, const QString &table, const QgsVectorLayer *vlayer, bool exist ):
-  QgsVectorLayer( QString( "dbname='%1' table='%2' key='%3'" ).arg( filename, table, AS_PKFIELD ), QString( "%1_auxiliarystorage" ).arg( table ), "spatialite" )
+  QgsVectorLayer( QString( "dbname='%1' table='%2'(Geometry) key='%3'" ).arg( filename, table, AS_PKFIELD ), QString( "%1_auxiliarystorage" ).arg( table ), "spatialite" )
   , mLayer( vlayer )
 {
   // init join info
@@ -233,6 +233,7 @@ void QgsAuxiliaryLayer::initFeatures()
     attrs[0] = QVariant( f.attribute( pkField ) );
     QgsFeature newf;
     newf.setAttributes( attrs );
+    newf.setGeometry( f.geometry() );
     addFeature( newf );
   }
   commitChanges();
@@ -350,7 +351,8 @@ QgsAuxiliaryLayer *QgsAuxiliaryStorage::createAuxiliaryLayer( const QgsField &fi
     bool exist = tableExists( table, handler );
     if ( !exist )
     {
-      if ( !createTable( field.typeName(), table, handler ) )
+      if ( !createTable( field.typeName(), table, handler )
+           || !addGeometryColumn( layer, table, handler ) )
       {
         close( handler );
         return alayer;
@@ -603,4 +605,52 @@ QString QgsAuxiliaryStorage::currentFileName() const
     return mTmpFileName;
   else
     return mFileName;
+}
+
+bool QgsAuxiliaryStorage::addGeometryColumn( const QgsVectorLayer *layer, const QString &table, sqlite3 *handler )
+{
+  if ( layer->isSpatial() )
+  {
+    // add geometry column
+    QString geomType = QLatin1String( "" );
+    switch ( layer->wkbType() )
+    {
+      case QgsWkbTypes::Point:
+        geomType = QStringLiteral( "POINT" );
+        break;
+      case QgsWkbTypes::MultiPoint:
+        geomType = QStringLiteral( "MULTIPOINT" );
+        break;
+      case QgsWkbTypes::LineString:
+        geomType = QStringLiteral( "LINESTRING" );
+        break;
+      case QgsWkbTypes::MultiLineString:
+        geomType = QStringLiteral( "MULTILINESTRING" );
+        break;
+      case QgsWkbTypes::Polygon:
+        geomType = QStringLiteral( "POLYGON" );
+        break;
+      case QgsWkbTypes::MultiPolygon:
+        geomType = QStringLiteral( "MULTIPOLYGON" );
+        break;
+      default:
+        QgsDebugMsg( QObject::tr( "QGIS wkbType %1 not supported" ).arg( layer->wkbType() ) );
+        break;
+    };
+
+    QString sql = QStringLiteral( "SELECT AddGeometryColumn('%1', 'Geometry', %2, '%3', 2)" )
+                  .arg( table )
+                  .arg( layer->crs().authid().startsWith( QLatin1String( "EPSG:" ), Qt::CaseInsensitive ) ? layer->crs().authid().mid( 5 ).toLong() : 0 )
+                  .arg( geomType );
+
+    if ( !exec( sql, handler ) )
+      return false;
+
+    // create spatial index
+    sql = QStringLiteral( "SELECT CreateSpatialIndex('%1', 'Geometry')" ).arg( table );
+    if ( !exec( sql, handler ) )
+      return false;
+  }
+
+  return true;
 }

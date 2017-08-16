@@ -775,6 +775,12 @@ void QgsSpatiaLiteProvider::loadFieldsAbstractInterface( gaiaVectorLayerPtr lyr 
     determineViewPrimaryKey();
   }
 
+
+  if ( mTableBased && mPrimaryKey.isEmpty() && hasRowid() )
+  {
+    mPrimaryKey = QStringLiteral( "ROWID" );
+  }
+
   updatePrimaryKeyCapabilities();
 
   sqlite3_free_table( results );

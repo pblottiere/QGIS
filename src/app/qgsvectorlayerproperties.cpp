@@ -344,12 +344,15 @@ QgsVectorLayerProperties::QgsVectorLayerProperties(
 
   mAuxiliaryStorageActionClear = new QAction( tr( "Clear" ) );
   mAuxiliaryStorageActionDelete = new QAction( tr( "Delete" ) );
+  mAuxiliaryStorageActionExport = new QAction( tr( "Export" ) );
   menu->addAction( mAuxiliaryStorageActionClear );
   menu->addAction( mAuxiliaryStorageActionDelete );
+  menu->addAction( mAuxiliaryStorageActionExport );
   mAuxiliaryStorageActions->setMenu( menu );
 
   connect( mAuxiliaryStorageActionClear, &QAction::triggered, this, &QgsVectorLayerProperties::onAuxiliaryStorageClear );
   connect( mAuxiliaryStorageActionDelete, &QAction::triggered, this, &QgsVectorLayerProperties::onAuxiliaryStorageDelete );
+  connect( mAuxiliaryStorageActionExport, &QAction::triggered, this, &QgsVectorLayerProperties::onAuxiliaryStorageExport );
 
   updateAuxiliaryStoragePage();
 } // QgsVectorLayerProperties ctor
@@ -1551,4 +1554,13 @@ void QgsVectorLayerProperties::onAuxiliaryStorageDelete()
     updateAuxiliaryStoragePage();
     mLayer->triggerRepaint();
   }
+}
+
+void QgsVectorLayerProperties::onAuxiliaryStorageExport()
+{
+  QgsAuxiliaryLayer *alayer = mLayer->auxiliaryLayer();
+  if ( !alayer )
+    return;
+
+  QgisApp::instance()->saveAsFile( alayer );
 }
