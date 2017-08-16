@@ -2223,7 +2223,7 @@ QList<QgsMapLayer *> QgsProject::addMapLayers(
   {
     if ( QgsVectorLayer *vl = qobject_cast<QgsVectorLayer *>( mlayer ) )
     {
-      QgsAuxiliaryLayer *alayer = mAuxiliaryStorage->createAuxiliaryLayer( *vl );
+      QgsAuxiliaryLayer *alayer = mAuxiliaryStorage->createAuxiliaryLayer( vl );
       vl->setAuxiliaryLayer( alayer );
     }
   }

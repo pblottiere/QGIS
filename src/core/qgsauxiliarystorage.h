@@ -32,6 +32,8 @@ class CORE_EXPORT QgsAuxiliaryField : public QgsField
 
     QgsPropertyDefinition propertyDefinition() const;
 
+    using QgsField::name;
+
     static QString name( const QgsPropertyDefinition &def, bool joined = false );
 
   private:
@@ -51,7 +53,7 @@ class CORE_EXPORT QgsAuxiliaryLayer : public QgsVectorLayer
     Q_OBJECT
 
   public:
-    QgsAuxiliaryLayer( const QString &pkField, const QString &filename, const QString &table, const QgsVectorLayer &vlayer, bool exist = false );
+    QgsAuxiliaryLayer( const QString &pkField, const QString &filename, const QString &table, const QgsVectorLayer *vlayer, bool exist = false );
 
     virtual ~QgsAuxiliaryLayer();
 
@@ -60,6 +62,8 @@ class CORE_EXPORT QgsAuxiliaryLayer : public QgsVectorLayer
 
     //! QgsAuxiliaryStorage cannot be copied.
     QgsAuxiliaryLayer &operator=( QgsAuxiliaryLayer const &rhs ) = delete;
+
+    bool clear();
 
     QgsVectorLayerJoinInfo joinInfo() const;
 
@@ -72,7 +76,10 @@ class CORE_EXPORT QgsAuxiliaryLayer : public QgsVectorLayer
     QgsAuxiliaryFields auxiliaryFields() const;
 
   private:
+    void initFeatures();
+
     QgsVectorLayerJoinInfo mJoinInfo;
+    const QgsVectorLayer *mLayer;
 };
 
 class CORE_EXPORT QgsAuxiliaryStorage
@@ -95,9 +102,9 @@ class CORE_EXPORT QgsAuxiliaryStorage
 
     bool save() const;
 
-    QgsAuxiliaryLayer *createAuxiliaryLayer( const QgsVectorLayer &layer );
+    QgsAuxiliaryLayer *createAuxiliaryLayer( const QgsVectorLayer *layer );
 
-    QgsAuxiliaryLayer *createAuxiliaryLayer( const QgsField &field, const QgsVectorLayer &layer );
+    QgsAuxiliaryLayer *createAuxiliaryLayer( const QgsField &field, const QgsVectorLayer *layer );
 
     static QString extension();
 

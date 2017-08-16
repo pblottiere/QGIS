@@ -143,27 +143,10 @@ QString QgsAuxiliaryField::name( const QgsPropertyDefinition &def, bool joined )
 // QgsAuxiliaryLayer
 //
 
-QgsAuxiliaryLayer::QgsAuxiliaryLayer( const QString &pkField, const QString &filename, const QString &table, const QgsVectorLayer &vlayer, bool exist ):
+QgsAuxiliaryLayer::QgsAuxiliaryLayer( const QString &pkField, const QString &filename, const QString &table, const QgsVectorLayer *vlayer, bool exist ):
   QgsVectorLayer( QString( "dbname='%1' table='%2' key='%3'" ).arg( filename, table, AS_PKFIELD ), QString( "%1_auxiliarystorage" ).arg( table ), "spatialite" )
+  , mLayer( vlayer )
 {
-  // add features if necessary
-  if ( ! exist )
-  {
-    QgsFeature f;
-    QgsFeatureIterator it = vlayer.getFeatures();
-
-    startEditing();
-    while ( it.nextFeature( f ) )
-    {
-      QgsAttributes attrs( 1 );
-      attrs[0] = QVariant( f.attribute( pkField ) );
-      QgsFeature newf;
-      newf.setAttributes( attrs );
-      addFeature( newf );
-    }
-    commitChanges();
-  }
-
   // init join info
   mJoinInfo.setPrefix( AS_JOINPREFIX );
   mJoinInfo.setJoinLayer( this );
@@ -173,6 +156,9 @@ QgsAuxiliaryLayer::QgsAuxiliaryLayer( const QString &pkField, const QString &fil
   mJoinInfo.setUpsertOnEdit( true );
   mJoinInfo.setCascadedDelete( true );
   mJoinInfo.setAuxiliaryStorage( true );
+
+  if ( !exist )
+    initFeatures();
 }
 
 QgsAuxiliaryLayer::~QgsAuxiliaryLayer()
@@ -216,11 +202,40 @@ QgsAuxiliaryFields QgsAuxiliaryLayer::auxiliaryFields() const
   return afields;
 }
 
+bool QgsAuxiliaryLayer::clear()
+{
+  bool rc = dataProvider()->truncate();
+  initFeatures();
+  return rc;
+}
+
 bool QgsAuxiliaryLayer::changeAttributeValue( QgsFeatureId fid, int field, const QVariant &newValue, const QVariant &oldValue )
 {
   startEditing();
   QgsVectorLayer::changeAttributeValue( fid, field, newValue, oldValue );
   return commitChanges();
+}
+
+void QgsAuxiliaryLayer::initFeatures()
+{
+  QString pkField = mJoinInfo.targetFieldName();
+  QgsFeature f;
+  QgsFeatureIterator it = mLayer->getFeatures();
+
+  int count = fields().count();
+  if ( count == 0 )
+    count = 1; // at least primary key field
+
+  startEditing();
+  while ( it.nextFeature( f ) )
+  {
+    QgsAttributes attrs( count );
+    attrs[0] = QVariant( f.attribute( pkField ) );
+    QgsFeature newf;
+    newf.setAttributes( attrs );
+    addFeature( newf );
+  }
+  commitChanges();
 }
 
 //
@@ -309,27 +324,27 @@ QString QgsAuxiliaryStorage::extension()
   return AS_EXTENSION;
 }
 
-QgsAuxiliaryLayer *QgsAuxiliaryStorage::createAuxiliaryLayer( const QgsVectorLayer &layer )
+QgsAuxiliaryLayer *QgsAuxiliaryStorage::createAuxiliaryLayer( const QgsVectorLayer *layer )
 {
   QgsAuxiliaryLayer *alayer = nullptr;
 
-  QgsAttributeList pks = layer.dataProvider()->pkAttributeIndexes();
+  QgsAttributeList pks = layer->dataProvider()->pkAttributeIndexes();
   if ( !pks.isEmpty() )
   {
     // the first primary key field is used for joining
-    alayer = createAuxiliaryLayer( layer.fields().field( pks[0] ), layer );
+    alayer = createAuxiliaryLayer( layer->fields().field( pks[0] ), layer );
   }
 
   return alayer;
 }
 
-QgsAuxiliaryLayer *QgsAuxiliaryStorage::createAuxiliaryLayer( const QgsField &field, const QgsVectorLayer &layer )
+QgsAuxiliaryLayer *QgsAuxiliaryStorage::createAuxiliaryLayer( const QgsField &field, const QgsVectorLayer *layer )
 {
   QgsAuxiliaryLayer *alayer = nullptr;
 
   if ( mValid )
   {
-    QString table( layer.id() );
+    QString table( layer->id() );
     sqlite3 *handler = open( currentFileName() );
 
     bool exist = tableExists( table, handler );

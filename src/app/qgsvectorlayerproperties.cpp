@@ -339,6 +339,15 @@ QgsVectorLayerProperties::QgsVectorLayerProperties(
 
   connect( mRefreshLayerCheckBox, &QCheckBox::toggled, mRefreshLayerIntervalSpinBox, &QDoubleSpinBox::setEnabled );
 
+  // auxiliary storage
+  QMenu *menu = new QMenu( this );
+
+  mAuxiliaryStorageActionClear = new QAction( tr( "Clear" ) );
+  menu->addAction( mAuxiliaryStorageActionClear );
+  mAuxiliaryStorageActions->setMenu( menu );
+
+  connect( mAuxiliaryStorageActionClear, &QAction::triggered, this, &QgsVectorLayerProperties::onAuxiliaryStorageClear );
+
   updateAuxiliaryStoragePage();
 } // QgsVectorLayerProperties ctor
 
@@ -1445,7 +1454,6 @@ void QgsVectorLayerProperties::showHelp()
 void QgsVectorLayerProperties::updateAuxiliaryStoragePage()
 {
   const QgsAuxiliaryLayer *alayer = mLayer->auxiliaryLayer();
-  QStandardItemModel *model = qobject_cast<QStandardItemModel *>( mAuxiliaryStorageCbBox->model() );
 
   if ( alayer )
   {
@@ -1464,13 +1472,10 @@ void QgsVectorLayerProperties::updateAuxiliaryStoragePage()
     int fields = alayer->fields().count() - 1; // ignore rowid
     mAuxiliaryStorageFieldsLineEdit->setText( QString::number( fields ) );
 
-    // update items of combobox
-    mAuxiliaryStorageCbBox->setCurrentIndex( 1 ); // clear
-
-    QStandardItem *item = model->item( 0 ); // new
-    item->setFlags( item->flags() & ~Qt::ItemIsEnabled );
+    mAuxiliaryStorageActionClear->setEnabled( true );
 
     // add fields
+    mAuxiliaryStorageFieldsTree->clear();
     Q_FOREACH ( const QgsAuxiliaryField &field, alayer->auxiliaryFields() )
     {
       QgsPropertyDefinition prop = field.propertyDefinition();
@@ -1493,14 +1498,26 @@ void QgsVectorLayerProperties::updateAuxiliaryStoragePage()
   {
     mAuxiliaryStorageInformationGrpBox->setEnabled( false );
     mAuxiliaryStorageFieldsGrpBox->setEnabled( false );
+    mAuxiliaryStorageActionClear->setEnabled( false );
+  }
+}
 
-    QStandardItem *item = model->item( 1 ); // clear
-    item->setFlags( item->flags() & ~Qt::ItemIsEnabled );
+void QgsVectorLayerProperties::onAuxiliaryStorageClear()
+{
+  QString msg = tr( "Are you sure you want to clear auxiliary data for %1" ).arg( mLayer->name() );
+  QMessageBox::StandardButton reply;
+  reply = QMessageBox::question( this, "Clear auxiliary data", msg, QMessageBox::Yes | QMessageBox::No );
 
-    item = model->item( 2 ); // delete
-    item->setFlags( item->flags() & ~Qt::ItemIsEnabled );
+  if ( reply == QMessageBox::Yes )
+  {
+    QApplication::setOverrideCursor( Qt::WaitCursor );
 
-    item = model->item( 3 ); // export
-    item->setFlags( item->flags() & ~Qt::ItemIsEnabled );
+    QgsAuxiliaryLayer *alayer = mLayer->auxiliaryLayer();
+    if ( alayer )
+      alayer->clear();
+
+    QApplication::restoreOverrideCursor();
+
+    updateAuxiliaryStoragePage();
   }
 }

@@ -142,6 +142,8 @@ class APP_EXPORT QgsVectorLayerProperties : public QgsOptionsDialogBase, private
      */
     void updateFieldsPropertiesDialog();
 
+    void onAuxiliaryStorageClear();
+
   private:
 
     void saveStyleAs( StyleType styleType );
@@ -201,6 +203,7 @@ class APP_EXPORT QgsVectorLayerProperties : public QgsOptionsDialogBase, private
     std::unique_ptr<QgsLayerTreeModel> mLayersDependenciesTreeModel;
 
     void showHelp();
+    QAction *mAuxiliaryStorageActionClear;
 
   private slots:
     void openPanel( QgsPanelWidget *panel );
