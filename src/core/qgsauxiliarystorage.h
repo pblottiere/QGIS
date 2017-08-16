@@ -97,6 +97,8 @@ class CORE_EXPORT QgsAuxiliaryStorage
 
     QString fileName() const;
 
+    QString currentFileName() const;
+
     bool saveAs( const QString &filename ) const;
 
     bool saveAs( const QgsProject &project ) const;
@@ -116,7 +118,6 @@ class CORE_EXPORT QgsAuxiliaryStorage
     sqlite3 *open( const QgsProject &project );
     bool addGeometryColumn( const QgsVectorLayer *layer, const QString &table, sqlite3 *handler );
 
-    QString currentFileName() const;
     void initTmpFileName();
 
     static QString filenameForProject( const QgsProject &project );

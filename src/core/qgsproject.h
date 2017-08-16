@@ -756,6 +756,9 @@ class CORE_EXPORT QgsProject : public QObject, public QgsExpressionContextGenera
      */
     QgsCoordinateReferenceSystem defaultCrsForNewLayers() const;
 
+    const QgsAuxiliaryStorage *auxiliaryStorage() const;
+
+    QgsAuxiliaryStorage *auxiliaryStorage();
 
   signals:
     //! emitted when project is being read

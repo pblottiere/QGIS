@@ -768,6 +768,9 @@ class CORE_EXPORT QgsVectorLayer : public QgsMapLayer, public QgsExpressionConte
      */
     virtual QString loadNamedStyle( const QString &theURI, bool &resultFlag SIP_OUT ) override;
 
+
+    void loadAuxiliaryLayerFromDatabase( const QString &filename );
+
     /** Read the symbology for the current layer from the Dom node supplied.
      * \param layerNode node that will contain the symbology definition for this layer.
      * \param errorMessage reference to string that will be updated with any error messages
@@ -2043,6 +2046,7 @@ class CORE_EXPORT QgsVectorLayer : public QgsMapLayer, public QgsExpressionConte
     QgsDiagramLayerSettings *mDiagramLayerSettings = nullptr;
 
     std::unique_ptr<QgsAuxiliaryLayer> mAuxiliaryLayer;
+    QString mAuxiliaryLayerKey;
 
     mutable bool mValidExtent;
     mutable bool mLazyExtent;

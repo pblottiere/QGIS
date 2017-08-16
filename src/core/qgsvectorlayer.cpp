@@ -151,6 +151,7 @@ QgsVectorLayer::QgsVectorLayer( const QString &vectorLayerPath,
   , mDiagramRenderer( nullptr )
   , mDiagramLayerSettings( nullptr )
   , mAuxiliaryLayer( nullptr )
+  , mAuxiliaryLayerKey( QString() )
   , mValidExtent( false )
   , mLazyExtent( true )
   , mSymbolFeatureCounted( false )
@@ -1429,6 +1430,14 @@ bool QgsVectorLayer::readXml( const QDomNode &layer_node, const QgsReadWriteCont
 
   setLegend( QgsMapLayerLegend::defaultVectorLegend( this ) );
 
+  // auxiliary storage
+  QDomNode asNode = layer_node.namedItem( QStringLiteral( "auxiliaryStorage" ) );
+  QDomElement asElem = asNode.toElement();
+  if ( !asElem.isNull() )
+  {
+    mAuxiliaryLayerKey = asElem.attribute( QStringLiteral( "key" ) );
+  }
+
   return mValid;               // should be true if read successfully
 
 } // void QgsVectorLayer::readXml
@@ -1628,6 +1637,15 @@ bool QgsVectorLayer::writeXml( QDomNode &layer_node,
   mExpressionFieldBuffer->writeXml( layer_node, document );
 
   writeStyleManager( layer_node, document );
+
+  // auxiliary storage
+  QDomElement asElem = document.createElement( QStringLiteral( "auxiliaryStorage" ) );
+  if ( mAuxiliaryLayer )
+  {
+    QString pkField = mAuxiliaryLayer->joinInfo().targetFieldName();
+    asElem.setAttribute( QStringLiteral( "key" ), pkField );
+  }
+  layer_node.appendChild( asElem );
 
   // renderer specific settings
   QString errorMsg;
@@ -4521,6 +4539,7 @@ void QgsVectorLayer::setAuxiliaryLayer( QgsAuxiliaryLayer *alayer )
   }
 
   mAuxiliaryLayer.reset( alayer );
+  updateFields();
 }
 
 const QgsAuxiliaryLayer *QgsVectorLayer::auxiliaryLayer() const
@@ -4531,4 +4550,29 @@ const QgsAuxiliaryLayer *QgsVectorLayer::auxiliaryLayer() const
 QgsAuxiliaryLayer *QgsVectorLayer::auxiliaryLayer()
 {
   return mAuxiliaryLayer.get();
+}
+
+void QgsVectorLayer::loadAuxiliaryLayerFromDatabase( const QString &filename )
+{
+  QgsAuxiliaryStorage storage( filename, false );
+  if ( storage.isValid() )
+  {
+    QgsAuxiliaryLayer *alayer = nullptr;
+
+    if ( mAuxiliaryLayerKey.isEmpty() )
+    {
+      alayer = storage.createAuxiliaryLayer( this );
+    }
+    else
+    {
+      int idx = fields().lookupField( mAuxiliaryLayerKey );
+
+      if ( idx >= 0 )
+      {
+        alayer = storage.createAuxiliaryLayer( fields().field( idx ), this );
+      }
+    }
+
+    setAuxiliaryLayer( alayer );
+  }
 }

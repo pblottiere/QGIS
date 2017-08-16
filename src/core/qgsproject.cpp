@@ -2223,8 +2223,10 @@ QList<QgsMapLayer *> QgsProject::addMapLayers(
   {
     if ( QgsVectorLayer *vl = qobject_cast<QgsVectorLayer *>( mlayer ) )
     {
-      QgsAuxiliaryLayer *alayer = mAuxiliaryStorage->createAuxiliaryLayer( vl );
-      vl->setAuxiliaryLayer( alayer );
+      if ( mAuxiliaryStorage )
+      {
+        vl->loadAuxiliaryLayerFromDatabase( mAuxiliaryStorage->currentFileName() );
+      }
     }
   }
 
@@ -2325,4 +2327,13 @@ void QgsProject::reloadAuxiliaryStorageLayers()
       vl->setAuxiliaryStorageJoin( asl );
     }
   }
+
+const QgsAuxiliaryStorage *QgsProject::auxiliaryStorage() const
+{
+  return mAuxiliaryStorage.get();
+}
+
+QgsAuxiliaryStorage *QgsProject::auxiliaryStorage()
+{
+  return mAuxiliaryStorage.get();
 }

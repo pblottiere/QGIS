@@ -345,14 +345,17 @@ QgsVectorLayerProperties::QgsVectorLayerProperties(
   mAuxiliaryStorageActionClear = new QAction( tr( "Clear" ) );
   mAuxiliaryStorageActionDelete = new QAction( tr( "Delete" ) );
   mAuxiliaryStorageActionExport = new QAction( tr( "Export" ) );
+  mAuxiliaryStorageActionNew = new QAction( tr( "New" ) );
   menu->addAction( mAuxiliaryStorageActionClear );
   menu->addAction( mAuxiliaryStorageActionDelete );
   menu->addAction( mAuxiliaryStorageActionExport );
+  menu->addAction( mAuxiliaryStorageActionNew );
   mAuxiliaryStorageActions->setMenu( menu );
 
   connect( mAuxiliaryStorageActionClear, &QAction::triggered, this, &QgsVectorLayerProperties::onAuxiliaryStorageClear );
   connect( mAuxiliaryStorageActionDelete, &QAction::triggered, this, &QgsVectorLayerProperties::onAuxiliaryStorageDelete );
   connect( mAuxiliaryStorageActionExport, &QAction::triggered, this, &QgsVectorLayerProperties::onAuxiliaryStorageExport );
+  connect( mAuxiliaryStorageActionNew, &QAction::triggered, this, &QgsVectorLayerProperties::onAuxiliaryStorageNew );
 
   updateAuxiliaryStoragePage();
 } // QgsVectorLayerProperties ctor
@@ -567,6 +570,7 @@ void QgsVectorLayerProperties::apply()
   mLayer->setName( mLayerOrigNameLineEdit->text() );
 
   // Apply fields settings
+  mFieldsPropertiesDialog->loadRows();
   mFieldsPropertiesDialog->apply();
 
   if ( mLayer->renderer() )
@@ -1480,6 +1484,8 @@ void QgsVectorLayerProperties::updateAuxiliaryStoragePage()
 
     mAuxiliaryStorageActionClear->setEnabled( true );
     mAuxiliaryStorageActionDelete->setEnabled( true );
+    mAuxiliaryStorageActionExport->setEnabled( true );
+    mAuxiliaryStorageActionNew->setEnabled( false );
 
     // add fields
     mAuxiliaryStorageFieldsTree->clear();
@@ -1507,6 +1513,8 @@ void QgsVectorLayerProperties::updateAuxiliaryStoragePage()
     mAuxiliaryStorageFieldsGrpBox->setEnabled( false );
     mAuxiliaryStorageActionClear->setEnabled( false );
     mAuxiliaryStorageActionDelete->setEnabled( false );
+    mAuxiliaryStorageActionExport->setEnabled( false );
+    mAuxiliaryStorageActionNew->setEnabled( true );
 
     mAuxiliaryStorageFieldsTree->clear();
     mAuxiliaryStorageKeyLineEdit->setText( QString() );
@@ -1548,8 +1556,9 @@ void QgsVectorLayerProperties::onAuxiliaryStorageDelete()
   if ( reply == QMessageBox::Yes )
   {
     QApplication::setOverrideCursor( Qt::WaitCursor );
-    QgsAuxiliaryStorage::deleteTable( QgsDataSourceUri( alayer->source() ) );
+    QgsDataSourceUri uri( alayer->source() );
     mLayer->setAuxiliaryLayer(); // remove auxiliary layer
+    QgsAuxiliaryStorage::deleteTable( uri );
     QApplication::restoreOverrideCursor();
     updateAuxiliaryStoragePage();
     mLayer->triggerRepaint();
@@ -1563,4 +1572,47 @@ void QgsVectorLayerProperties::onAuxiliaryStorageExport()
     return;
 
   QgisApp::instance()->saveAsFile( alayer );
+}
+
+void QgsVectorLayerProperties::onAuxiliaryStorageNew()
+{
+  QgsAuxiliaryLayer *alayer = mLayer->auxiliaryLayer();
+
+  if ( alayer )
+    return;
+
+  QDialog dlg( this );
+  dlg.setWindowTitle( tr( "Select auxiliary key" ) );
+  dlg.setLayout( new QVBoxLayout() );
+  dlg.layout()->addWidget( new QLabel( tr( "Select the auxiliary key to use for joining" ) ) );
+
+  QComboBox boxFields( &dlg );
+  Q_FOREACH ( const QgsField &field, mLayer->fields() )
+    boxFields.addItem( field.name() );
+
+  dlg.layout()->addWidget( &boxFields );
+
+  QDialogButtonBox bbox( QDialogButtonBox::Cancel | QDialogButtonBox::Ok, Qt::Horizontal );
+
+  dlg.layout()->addWidget( &bbox );
+
+  connect( &bbox, &QDialogButtonBox::accepted, &dlg, &QDialog::accept );
+  connect( &bbox, &QDialogButtonBox::rejected, &dlg, &QDialog::reject );
+
+  if ( dlg.exec() == QDialog::Accepted )
+  {
+    int idx = mLayer->fields().lookupField( boxFields.currentText() );
+
+    if ( idx >= 0 )
+    {
+      QgsField field = mLayer->fields().field( idx );
+      QgsAuxiliaryLayer *alayer = QgsProject::instance()->auxiliaryStorage()->createAuxiliaryLayer( field, mLayer );
+
+      if ( alayer )
+      {
+        mLayer->setAuxiliaryLayer( alayer );
+        updateAuxiliaryStoragePage();
+      }
+    }
+  }
 }

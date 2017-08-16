@@ -376,8 +376,21 @@ bool QgsAuxiliaryStorage::deleteTable( const QgsDataSourceUri &uri )
 
     if ( handler )
     {
-      QString sql = QString( "DROP TABLE %1" ).arg( uri.quotedTablename() );
+      QString sql = QString( "SELECT DiscardGeometryColumn(%1, 'Geometry')" ).arg( uri.quotedTablename() );
+      exec( sql, handler );
+
+      sql = QString( "SELECT DisableSpatialIndex(%1, 'Geometry')" ).arg( uri.quotedTablename() );
+      exec( sql, handler );
+
+      sql = QString( "DROP TABLE idx_%1_Geometry" ).arg( uri.table() );
+      exec( sql, handler );
+
+      sql = QString( "DROP TABLE %1" ).arg( uri.quotedTablename() );
       rc = exec( sql, handler );
+
+      sql = QString( "VACUUM" );
+      rc = exec( sql, handler );
+
       close( handler );
     }
   }
