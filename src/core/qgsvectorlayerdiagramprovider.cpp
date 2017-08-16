@@ -255,7 +255,7 @@ QgsLabelFeature *QgsVectorLayerDiagramProvider::registerDiagram( QgsFeature &fea
   alwaysShow = mSettings.dataDefinedProperties().valueAsBool( QgsDiagramLayerSettings::AlwaysShow, context.expressionContext(), alwaysShow );
 
   // new style data defined position
-  bool ddPos = false;
+  bool ddPos, ddXPos, ddYPos = false;
   double ddPosX = 0.0;
   double ddPosY = 0.0;
   if ( mSettings.dataDefinedProperties().hasProperty( QgsDiagramLayerSettings::PositionX )
@@ -263,22 +263,31 @@ QgsLabelFeature *QgsVectorLayerDiagramProvider::registerDiagram( QgsFeature &fea
        && mSettings.dataDefinedProperties().hasProperty( QgsDiagramLayerSettings::PositionY )
        && mSettings.dataDefinedProperties().property( QgsDiagramLayerSettings::PositionY ).isActive() )
   {
-    ddPosX = mSettings.dataDefinedProperties().valueAsDouble( QgsDiagramLayerSettings::PositionX, context.expressionContext(), std::numeric_limits<double>::quiet_NaN() );
-    ddPosY = mSettings.dataDefinedProperties().valueAsDouble( QgsDiagramLayerSettings::PositionY, context.expressionContext(), std::numeric_limits<double>::quiet_NaN() );
+    QVariant posX = mSettings.dataDefinedProperties().value( QgsDiagramLayerSettings::PositionX, context.expressionContext(), std::numeric_limits<double>::quiet_NaN() );
+    QVariant posY = mSettings.dataDefinedProperties().value( QgsDiagramLayerSettings::PositionY, context.expressionContext(), std::numeric_limits<double>::quiet_NaN() );
 
-    ddPos = !qIsNaN( ddPosX ) && !qIsNaN( ddPosY );
-
-    if ( ddPos )
+    if ( !posX.isNull() && !posY.isNull() )
     {
-      QgsCoordinateTransform ct = mSettings.coordinateTransform();
-      if ( ct.isValid() && !ct.isShortCircuited() )
+      ddPosX = posX.toDouble( &ddXPos );
+      ddPosY = posY.toDouble( &ddYPos );
+
+      if ( ddXPos && ddYPos )
       {
-        double z = 0;
-        ct.transformInPlace( ddPosX, ddPosY, z );
+        ddPos = !qIsNaN( ddPosX ) && !qIsNaN( ddPosY );
+
+        if ( ddPos )
+        {
+          QgsCoordinateTransform ct = mSettings.coordinateTransform();
+          if ( ct.isValid() && !ct.isShortCircuited() )
+          {
+            double z = 0;
+            ct.transformInPlace( ddPosX, ddPosY, z );
+          }
+          //data defined diagram position is always centered
+          ddPosX -= diagramWidth / 2.0;
+          ddPosY -= diagramHeight / 2.0;
+        }
       }
-      //data defined diagram position is always centered
-      ddPosX -= diagramWidth / 2.0;
-      ddPosY -= diagramHeight / 2.0;
     }
   }
 

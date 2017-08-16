@@ -21,6 +21,7 @@
 #include "qgsvectordataprovider.h"
 #include "qgsproject.h"
 #include "qgspallabeling.h"
+#include "qgsdiagramrenderer.h"
 
 #include <QVariant>
 #include <QFile>
@@ -65,7 +66,15 @@ QgsAuxiliaryField::QgsAuxiliaryField( const QgsField &f )
   }
   else if ( target.compare( "diagram" ) == 0 )
   {
-    // TODO
+    QgsPropertiesDefinition props = QgsDiagramLayerSettings::propertyDefinitions();
+    Q_FOREACH ( const QgsPropertyDefinition p, props.values() )
+    {
+      if ( p.name().compare( propertyName ) == 0 )
+      {
+        def = p;
+        break;
+      }
+    }
   }
 
   if ( !def.name().isEmpty() )

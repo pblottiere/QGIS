@@ -47,7 +47,7 @@ void QgsMapToolMoveLabel::canvasPressEvent( QgsMapMouseEvent *e )
   mCurrentLabel = LabelDetails( labelPos );
 
   QgsVectorLayer *vlayer = mCurrentLabel.layer;
-  if ( !vlayer || !labelMoveable( vlayer ) )
+  if ( !vlayer )
   {
     return;
   }
@@ -95,7 +95,7 @@ void QgsMapToolMoveLabel::canvasReleaseEvent( QgsMapMouseEvent *e )
   deleteRubberBands();
 
   QgsVectorLayer *vlayer = mCurrentLabel.layer;
-  if ( !vlayer || !labelMoveable( vlayer ) )
+  if ( !vlayer || ( !labelMoveable( vlayer ) && !diagramMoveable( vlayer ) ) )
   {
     return;
   }

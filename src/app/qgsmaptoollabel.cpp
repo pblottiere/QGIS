@@ -23,7 +23,6 @@
 #include "qgsrubberband.h"
 #include "qgsvectorlayer.h"
 #include "qgsvectorlayerlabeling.h"
-#include "qgsdiagramrenderer.h"
 #include "qgssettings.h"
 #include "qgsauxiliarystorage.h"
 #include "qgsvectorlayerjoinbuffer.h"
@@ -583,6 +582,12 @@ bool QgsMapToolLabel::dataDefinedShowHide( QgsVectorLayer *vlayer, QgsFeatureId 
   return true;
 }
 
+bool QgsMapToolLabel::diagramMoveable( QgsVectorLayer *vlayer ) const
+{
+  int x, y;
+  return diagramMoveable( vlayer, x, y );
+}
+
 bool QgsMapToolLabel::diagramMoveable( QgsVectorLayer *vlayer, int &xCol, int &yCol ) const
 {
   if ( vlayer && vlayer->diagramsEnabled() )
@@ -598,6 +603,11 @@ bool QgsMapToolLabel::diagramMoveable( QgsVectorLayer *vlayer, int &xCol, int &y
           xCol = vlayer->fields().lookupField( ddX.field() );
         }
       }
+      else if ( autocreate( vlayer, QgsDiagramLayerSettings::PositionX ) )
+      {
+        xCol = vlayer->fields().lookupField( ddX.field() );
+      }
+
       yCol = -1;
       if ( QgsProperty ddY = dls->dataDefinedProperties().property( QgsDiagramLayerSettings::PositionY ) )
       {
@@ -605,6 +615,10 @@ bool QgsMapToolLabel::diagramMoveable( QgsVectorLayer *vlayer, int &xCol, int &y
         {
           yCol = vlayer->fields().lookupField( ddY.field() );
         }
+      }
+      else if ( autocreate( vlayer, QgsDiagramLayerSettings::PositionY ) )
+      {
+        yCol = vlayer->fields().lookupField( ddY.field() );
       }
       return xCol >= 0 && yCol >= 0;
     }
@@ -739,14 +753,17 @@ QgsMapToolLabel::LabelDetails::LabelDetails( const QgsLabelPosition &p )
   , pos( p )
 {
   layer = qobject_cast<QgsVectorLayer *>( QgsProject::instance()->mapLayer( pos.layerID ) );
-  if ( layer && layer->labeling() )
+  if ( layer )
   {
-    settings = layer->labeling()->settings( pos.providerID );
-
-    if ( p.isDiagram )
-      valid = layer->diagramsEnabled();
-    else
+    if ( !p.isDiagram && layer->labeling() )
+    {
+      settings = layer->labeling()->settings( pos.providerID );
       valid = true;
+    }
+    else if ( p.isDiagram && layer->diagramRenderer() )
+    {
+      valid = layer->diagramsEnabled();
+    }
   }
 
   if ( !valid )
@@ -782,6 +799,38 @@ bool QgsMapToolLabel::autocreate( QgsVectorLayer *layer, const QgsPalLayerSettin
       settings->setDataDefinedProperties( c );
 
       layer->labeling()->setSettings( settings );
+    }
+  }
+
+  return rc;
+}
+
+bool QgsMapToolLabel::autocreate( QgsVectorLayer *layer, const QgsDiagramLayerSettings::Property &p ) const
+{
+  bool rc = false;
+
+  if ( layer && layer->diagramLayerSettings() )
+  {
+    QgsAuxiliaryLayer *alayer = layer->auxiliaryLayer();
+
+    if ( !alayer )
+      return rc;
+
+    const QgsPropertyDefinition def = layer->diagramLayerSettings()->propertyDefinitions()[p];
+    rc = alayer->addAuxiliaryField( def );
+
+    if ( rc )
+    {
+      const QString fieldName = QgsAuxiliaryField::name( def, true );
+      const QgsProperty prop = QgsProperty::fromField( fieldName );
+
+      QgsDiagramLayerSettings settings( *layer->diagramLayerSettings() );
+
+      QgsPropertyCollection c = settings.dataDefinedProperties();
+      c.setProperty( p, prop );
+      settings.setDataDefinedProperties( c );
+
+      layer->setDiagramLayerSettings( settings );
     }
   }
 

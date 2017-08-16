@@ -11011,7 +11011,7 @@ void QgisApp::updateLabelToolButtons()
       enableMove ||
       ( qobject_cast<QgsMapToolMoveLabel *>( mMapTools.mMoveLabel ) &&
         ( qobject_cast<QgsMapToolMoveLabel *>( mMapTools.mMoveLabel )->labelMoveable( vlayer )
-          || qobject_cast<QgsMapToolMoveLabel *>( mMapTools.mMoveLabel )->diagramMoveable( vlayer, colX, colY ) ) );
+          || qobject_cast<QgsMapToolMoveLabel *>( mMapTools.mMoveLabel )->diagramMoveable( vlayer ) ) );
 
     enableRotate =
       enableRotate ||

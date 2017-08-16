@@ -20,6 +20,7 @@
 
 #include "qgsmaptool.h"
 #include "qgspallabeling.h"
+#include "qgsdiagramrenderer.h"
 #include "qgis_app.h"
 
 class QgsRubberBand;
@@ -45,6 +46,7 @@ class APP_EXPORT QgsMapToolLabel: public QgsMapTool
         \param xCol out: index of the attribute for data defined x coordinate
         \param yCol out: index of the attribute for data defined y coordinate
         \returns true if labels of layer can be moved*/
+    bool diagramMoveable( QgsVectorLayer *vlayer ) const;
     bool diagramMoveable( QgsVectorLayer *vlayer, int &xCol, int &yCol ) const;
 
     /** Returns true if layer has attribute fields set up
@@ -87,6 +89,7 @@ class APP_EXPORT QgsMapToolLabel: public QgsMapTool
     LabelDetails mCurrentLabel;
 
     bool autocreate( QgsVectorLayer *layer, const QgsPalLayerSettings::Property &p ) const;
+    bool autocreate( QgsVectorLayer *layer, const QgsDiagramLayerSettings::Property &p ) const;
 
     /** Returns label position for mouse click location
       \param e mouse event

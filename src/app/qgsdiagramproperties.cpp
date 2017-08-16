@@ -39,6 +39,7 @@
 #include "qgslogger.h"
 #include "qgisapp.h"
 #include "qgssettings.h"
+#include "qgsauxiliarystorage.h"
 
 #include <QList>
 #include <QMessageBox>
@@ -429,6 +430,7 @@ void QgsDiagramProperties::registerDataDefinedButton( QgsPropertyOverrideButton 
 {
   button->init( key, mDataDefinedProperties, QgsDiagramLayerSettings::propertyDefinitions(), mLayer );
   connect( button, &QgsPropertyOverrideButton::changed, this, &QgsDiagramProperties::updateProperty );
+  connect( button, &QgsPropertyOverrideButton::autocreated, this, &QgsDiagramProperties::autocreateProperty );
   button->registerExpressionContextGenerator( this );
 }
 
@@ -955,4 +957,22 @@ void QgsDiagramProperties::showSizeLegendDialog()
   dlg.layout()->addWidget( buttonBox );
   if ( dlg.exec() )
     mSizeLegend.reset( panel->dataDefinedSizeLegend() );
+}
+
+void QgsDiagramProperties::autocreateProperty()
+{
+  QgsPropertyOverrideButton *button = qobject_cast<QgsPropertyOverrideButton *>( sender() );
+  QgsDiagramLayerSettings::Property key = static_cast< QgsDiagramLayerSettings::Property >( button->propertyKey() );
+  QgsPropertyDefinition def = QgsDiagramLayerSettings::propertyDefinitions()[key];
+
+  // create property in auxiliary storage
+  mLayer->auxiliaryLayer()->addAuxiliaryField( def );
+
+  // update property with join field name from auxiliary storage
+  QgsProperty property = button->toProperty();
+  property.setField( QgsAuxiliaryField::name( def, true ) );
+  property.setActive( true );
+  button->updateFieldLists();
+  button->setToProperty( property );
+  mDataDefinedProperties.setProperty( key, button->toProperty() );
 }
