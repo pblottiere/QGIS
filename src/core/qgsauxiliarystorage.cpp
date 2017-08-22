@@ -236,41 +236,6 @@ bool QgsAuxiliaryLayer::clear()
   return deleteFeatures( allFeatureIds() );
 }
 
-bool QgsAuxiliaryLayer::changeAttributeValue( QgsFeatureId fid, int field, const QVariant &newValue, const QVariant &oldValue )
-{
-  startEditing();
-  QgsVectorLayer::changeAttributeValue( fid, field, newValue, oldValue );
-  return commitChanges();
-}
-
-bool QgsAuxiliaryLayer::addFeatures( QgsFeatureList &features, QgsFeatureSink::Flags flags )
-{
-  startEditing();
-  QgsVectorLayer::addFeatures( features, flags );
-  return commitChanges();
-}
-
-bool QgsAuxiliaryLayer::addFeature( QgsFeature &feature, QgsFeatureSink::Flags flags )
-{
-  startEditing();
-  QgsVectorLayer::addFeature( feature, flags );
-  return commitChanges();
-}
-
-bool QgsAuxiliaryLayer::deleteFeature( QgsFeatureId fid )
-{
-  startEditing();
-  QgsVectorLayer::deleteFeature( fid );
-  return commitChanges();
-}
-
-bool QgsAuxiliaryLayer::deleteFeatures( const QgsFeatureIds &fids )
-{
-  startEditing();
-  QgsVectorLayer::deleteFeatures( fids );
-  return commitChanges();
-}
-
 //
 // QgsAuxiliaryStorage
 //

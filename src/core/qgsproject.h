@@ -1046,6 +1046,8 @@ class CORE_EXPORT QgsProject : public QObject, public QgsExpressionContextGenera
     //! Zip project
     bool zip( const QString &filename );
 
+    bool saveAuxiliaryStorage( const QString &filename = QString() );
+
     std::unique_ptr< QgsMapLayerStore > mLayerStore;
 
     QString mErrorMessage;

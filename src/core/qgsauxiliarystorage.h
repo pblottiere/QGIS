@@ -74,16 +74,6 @@ class CORE_EXPORT QgsAuxiliaryLayer : public QgsVectorLayer
 
     bool addAuxiliaryField( const QgsPropertyDefinition &definition );
 
-    bool changeAttributeValue( QgsFeatureId fid, int field, const QVariant &newValue, const QVariant &oldValue = QVariant() ) override;
-
-    bool addFeatures( QgsFeatureList &features, QgsFeatureSink::Flags flags = 0 ) override;
-
-    bool addFeature( QgsFeature &feature, QgsFeatureSink::Flags flags = 0 ) override;
-
-    bool deleteFeature( QgsFeatureId fid ) override;
-
-    bool deleteFeatures( const QgsFeatureIds &fids ) override;
-
     QgsAuxiliaryFields auxiliaryFields() const;
 
   private:

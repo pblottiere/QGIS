@@ -1257,10 +1257,7 @@ bool QgsProject::write()
   }
   else
   {
-    if ( mAuxiliaryStorage->fileName().isEmpty() ) // new project
-      mAuxiliaryStorage->saveAs( *this );
-    else
-      mAuxiliaryStorage->save();
+    saveAuxiliaryStorage();
 
     return writeProjectFile( mFile.fileName() );
   }
@@ -2181,7 +2178,7 @@ bool QgsProject::zip( const QString &filename )
   QFileInfo info( qgsFile );
   QString asFileName = info.path() + QDir::separator() + info.completeBaseName() + "." + QgsAuxiliaryStorage::extension();
 
-  if ( ! mAuxiliaryStorage->saveAs( asFileName ) )
+  if ( ! saveAuxiliaryStorage( asFileName ) )
   {
     setError( tr( "Unable to copy auxiliary storage" ) );
     return false;
@@ -2226,6 +2223,9 @@ QList<QgsMapLayer *> QgsProject::addMapLayers(
       if ( mAuxiliaryStorage )
       {
         vl->loadAuxiliaryLayerFromDatabase( mAuxiliaryStorage->currentFileName() );
+
+        if ( vl->auxiliaryLayer() )
+          vl->auxiliaryLayer()->startEditing();
       }
     }
   }
@@ -2317,4 +2317,31 @@ const QgsAuxiliaryStorage *QgsProject::auxiliaryStorage() const
 QgsAuxiliaryStorage *QgsProject::auxiliaryStorage()
 {
   return mAuxiliaryStorage.get();
+}
+
+bool QgsProject::saveAuxiliaryStorage( const QString &filename )
+{
+  Q_FOREACH ( QgsMapLayer *l, mapLayers().values() )
+  {
+    QgsVectorLayer *vl = qobject_cast<QgsVectorLayer *>( l );
+
+    if ( vl && vl->auxiliaryLayer() )
+    {
+      vl->auxiliaryLayer()->commitChanges();
+      vl->auxiliaryLayer()->startEditing();
+    }
+  }
+
+  if ( !filename.isEmpty() )
+  {
+    return mAuxiliaryStorage->saveAs( filename );
+  }
+  else if ( mAuxiliaryStorage->fileName().isEmpty() )
+  {
+    return mAuxiliaryStorage->saveAs( *this );
+  }
+  else
+  {
+    return mAuxiliaryStorage->save();
+  }
 }
