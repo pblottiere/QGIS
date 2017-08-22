@@ -2699,7 +2699,7 @@ bool QgsVectorLayer::addFeaturesToJoinedLayers( QgsFeatureList &features, Flags 
   {
     QgsVectorLayer *joinLayer = info.joinLayer();
 
-    if ( joinLayer && joinLayer->isEditable() && info.isEditable() && info.hasUpsertOnEdit() )
+    if ( joinLayer && info.isEditable() && info.hasUpsertOnEdit() )
     {
       QgsFeatureList joinFeatures;
 

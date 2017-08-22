@@ -22,6 +22,7 @@
 #include "qgsproject.h"
 #include "qgspallabeling.h"
 #include "qgsdiagramrenderer.h"
+#include "qgsmemoryproviderutils.h"
 
 #include <QVariant>
 #include <QFile>
@@ -143,8 +144,8 @@ QString QgsAuxiliaryField::name( const QgsPropertyDefinition &def, bool joined )
 // QgsAuxiliaryLayer
 //
 
-QgsAuxiliaryLayer::QgsAuxiliaryLayer( const QString &pkField, const QString &filename, const QString &table, const QgsVectorLayer *vlayer, bool exist ):
-  QgsVectorLayer( QString( "dbname='%1' table='%2'(Geometry) key='%3'" ).arg( filename, table, AS_PKFIELD ), QString( "%1_auxiliarystorage" ).arg( table ), "spatialite" )
+QgsAuxiliaryLayer::QgsAuxiliaryLayer( const QString &pkField, const QString &filename, const QString &table, const QgsVectorLayer *vlayer ):
+  QgsVectorLayer( QString( "dbname='%1' table='%2' key='%3'" ).arg( filename, table, AS_PKFIELD ), QString( "%1_auxiliarystorage" ).arg( table ), "spatialite" )
   , mLayer( vlayer )
 {
   // init join info
@@ -156,13 +157,41 @@ QgsAuxiliaryLayer::QgsAuxiliaryLayer( const QString &pkField, const QString &fil
   mJoinInfo.setUpsertOnEdit( true );
   mJoinInfo.setCascadedDelete( true );
   mJoinInfo.setAuxiliaryStorage( true );
-
-  if ( !exist )
-    initFeatures();
 }
 
 QgsAuxiliaryLayer::~QgsAuxiliaryLayer()
 {
+}
+
+QgsVectorLayer *QgsAuxiliaryLayer::toSpatialLayer() const
+{
+  QgsVectorLayer *layer = QgsMemoryProviderUtils::createMemoryLayer( QStringLiteral( "auxiliary_layer" ), fields(), mLayer->wkbType(), mLayer->crs() );
+
+  QString pkField = mJoinInfo.targetFieldName();
+  QgsFeature joinFeature;
+  QgsFeature targetFeature;
+  QgsFeatureIterator it = getFeatures();
+
+  layer->startEditing();
+  while ( it.nextFeature( joinFeature ) )
+  {
+    QString filter = QgsExpression::createFieldEqualityExpression( pkField, joinFeature.attribute( AS_JOINFIELD ) );
+
+    QgsFeatureRequest request;
+    request.setFilterExpression( filter );
+
+    mLayer->getFeatures( request ).nextFeature( targetFeature );
+
+    if ( targetFeature.isValid() )
+    {
+      QgsFeature newFeature( joinFeature );
+      newFeature.setGeometry( targetFeature.geometry() );
+      layer->addFeature( newFeature );
+    }
+  }
+  layer->commitChanges();
+
+  return layer;
 }
 
 QgsPropertyDefinition QgsAuxiliaryField::propertyDefinition() const
@@ -204,9 +233,7 @@ QgsAuxiliaryFields QgsAuxiliaryLayer::auxiliaryFields() const
 
 bool QgsAuxiliaryLayer::clear()
 {
-  bool rc = dataProvider()->truncate();
-  initFeatures();
-  return rc;
+  return deleteFeatures( allFeatureIds() );
 }
 
 bool QgsAuxiliaryLayer::changeAttributeValue( QgsFeatureId fid, int field, const QVariant &newValue, const QVariant &oldValue )
@@ -216,27 +243,32 @@ bool QgsAuxiliaryLayer::changeAttributeValue( QgsFeatureId fid, int field, const
   return commitChanges();
 }
 
-void QgsAuxiliaryLayer::initFeatures()
+bool QgsAuxiliaryLayer::addFeatures( QgsFeatureList &features, QgsFeatureSink::Flags flags )
 {
-  QString pkField = mJoinInfo.targetFieldName();
-  QgsFeature f;
-  QgsFeatureIterator it = mLayer->getFeatures();
-
-  int count = fields().count();
-  if ( count == 0 )
-    count = 1; // at least primary key field
-
   startEditing();
-  while ( it.nextFeature( f ) )
-  {
-    QgsAttributes attrs( count );
-    attrs[0] = QVariant( f.attribute( pkField ) );
-    QgsFeature newf;
-    newf.setAttributes( attrs );
-    newf.setGeometry( f.geometry() );
-    addFeature( newf );
-  }
-  commitChanges();
+  QgsVectorLayer::addFeatures( features, flags );
+  return commitChanges();
+}
+
+bool QgsAuxiliaryLayer::addFeature( QgsFeature &feature, QgsFeatureSink::Flags flags )
+{
+  startEditing();
+  QgsVectorLayer::addFeature( feature, flags );
+  return commitChanges();
+}
+
+bool QgsAuxiliaryLayer::deleteFeature( QgsFeatureId fid )
+{
+  startEditing();
+  QgsVectorLayer::deleteFeature( fid );
+  return commitChanges();
+}
+
+bool QgsAuxiliaryLayer::deleteFeatures( const QgsFeatureIds &fids )
+{
+  startEditing();
+  QgsVectorLayer::deleteFeatures( fids );
+  return commitChanges();
 }
 
 //
@@ -348,18 +380,16 @@ QgsAuxiliaryLayer *QgsAuxiliaryStorage::createAuxiliaryLayer( const QgsField &fi
     QString table( layer->id() );
     sqlite3 *handler = open( currentFileName() );
 
-    bool exist = tableExists( table, handler );
-    if ( !exist )
+    if ( !tableExists( table, handler ) )
     {
-      if ( !createTable( field.typeName(), table, handler )
-           || !addGeometryColumn( layer, table, handler ) )
+      if ( !createTable( field.typeName(), table, handler ) )
       {
         close( handler );
         return alayer;
       }
     }
 
-    alayer = new QgsAuxiliaryLayer( field.name(), currentFileName(), table, layer, exist );
+    alayer = new QgsAuxiliaryLayer( field.name(), currentFileName(), table, layer );
     close( handler );
   }
 
@@ -376,16 +406,7 @@ bool QgsAuxiliaryStorage::deleteTable( const QgsDataSourceUri &uri )
 
     if ( handler )
     {
-      QString sql = QString( "SELECT DiscardGeometryColumn(%1, 'Geometry')" ).arg( uri.quotedTablename() );
-      exec( sql, handler );
-
-      sql = QString( "SELECT DisableSpatialIndex(%1, 'Geometry')" ).arg( uri.quotedTablename() );
-      exec( sql, handler );
-
-      sql = QString( "DROP TABLE idx_%1_Geometry" ).arg( uri.table() );
-      exec( sql, handler );
-
-      sql = QString( "DROP TABLE %1" ).arg( uri.quotedTablename() );
+      QString sql = QString( "DROP TABLE %1" ).arg( uri.quotedTablename() );
       rc = exec( sql, handler );
 
       sql = QString( "VACUUM" );
@@ -618,52 +639,4 @@ QString QgsAuxiliaryStorage::currentFileName() const
     return mTmpFileName;
   else
     return mFileName;
-}
-
-bool QgsAuxiliaryStorage::addGeometryColumn( const QgsVectorLayer *layer, const QString &table, sqlite3 *handler )
-{
-  if ( layer->isSpatial() )
-  {
-    // add geometry column
-    QString geomType = QLatin1String( "" );
-    switch ( layer->wkbType() )
-    {
-      case QgsWkbTypes::Point:
-        geomType = QStringLiteral( "POINT" );
-        break;
-      case QgsWkbTypes::MultiPoint:
-        geomType = QStringLiteral( "MULTIPOINT" );
-        break;
-      case QgsWkbTypes::LineString:
-        geomType = QStringLiteral( "LINESTRING" );
-        break;
-      case QgsWkbTypes::MultiLineString:
-        geomType = QStringLiteral( "MULTILINESTRING" );
-        break;
-      case QgsWkbTypes::Polygon:
-        geomType = QStringLiteral( "POLYGON" );
-        break;
-      case QgsWkbTypes::MultiPolygon:
-        geomType = QStringLiteral( "MULTIPOLYGON" );
-        break;
-      default:
-        QgsDebugMsg( QObject::tr( "QGIS wkbType %1 not supported" ).arg( layer->wkbType() ) );
-        break;
-    };
-
-    QString sql = QStringLiteral( "SELECT AddGeometryColumn('%1', 'Geometry', %2, '%3', 2)" )
-                  .arg( table )
-                  .arg( layer->crs().authid().startsWith( QLatin1String( "EPSG:" ), Qt::CaseInsensitive ) ? layer->crs().authid().mid( 5 ).toLong() : 0 )
-                  .arg( geomType );
-
-    if ( !exec( sql, handler ) )
-      return false;
-
-    // create spatial index
-    sql = QStringLiteral( "SELECT CreateSpatialIndex('%1', 'Geometry')" ).arg( table );
-    if ( !exec( sql, handler ) )
-      return false;
-  }
-
-  return true;
 }

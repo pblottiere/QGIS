@@ -1571,7 +1571,10 @@ void QgsVectorLayerProperties::onAuxiliaryStorageExport()
   if ( !alayer )
     return;
 
-  QgisApp::instance()->saveAsFile( alayer );
+  std::unique_ptr<QgsVectorLayer> clone;
+  clone.reset( alayer->toSpatialLayer() );
+
+  QgisApp::instance()->saveAsFile( clone.get() );
 }
 
 void QgsVectorLayerProperties::onAuxiliaryStorageNew()

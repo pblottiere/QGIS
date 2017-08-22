@@ -906,7 +906,7 @@ class CORE_EXPORT QgsVectorLayer : public QgsMapLayer, public QgsExpressionConte
       return getFeatures( QgsFeatureRequest( rectangle ) );
     }
 
-    bool addFeature( QgsFeature &feature, QgsFeatureSink::Flags flags = 0 ) override;
+    virtual bool addFeature( QgsFeature &feature, QgsFeatureSink::Flags flags = 0 ) override;
 
     /** Updates an existing feature. This method needs to query the datasource
         on every call. Consider using changeAttributeValue() or
@@ -1230,10 +1230,10 @@ class CORE_EXPORT QgsVectorLayer : public QgsMapLayer, public QgsExpressionConte
      */
     bool deleteAttributes( QList<int> attrs );
 
-    bool addFeatures( QgsFeatureList &features, QgsFeatureSink::Flags flags = 0 ) override;
+    virtual bool addFeatures( QgsFeatureList &features, QgsFeatureSink::Flags flags = 0 ) override;
 
     //! Delete a feature from the layer (but does not commit it)
-    bool deleteFeature( QgsFeatureId fid );
+    virtual bool deleteFeature( QgsFeatureId fid );
 
     /**
      * Deletes a set of features from the layer (but does not commit it)
@@ -1242,7 +1242,7 @@ class CORE_EXPORT QgsVectorLayer : public QgsMapLayer, public QgsExpressionConte
      * \returns false if the layer is not in edit mode or does not support deleting
      *         in case of an active transaction depends on the provider implementation
      */
-    bool deleteFeatures( const QgsFeatureIds &fids );
+    virtual bool deleteFeatures( const QgsFeatureIds &fids );
 
     /**
      * Attempts to commit any changes to disk.  Returns the result of the attempt.

@@ -54,7 +54,7 @@ class CORE_EXPORT QgsAuxiliaryLayer : public QgsVectorLayer
     Q_OBJECT
 
   public:
-    QgsAuxiliaryLayer( const QString &pkField, const QString &filename, const QString &table, const QgsVectorLayer *vlayer, bool exist = false );
+    QgsAuxiliaryLayer( const QString &pkField, const QString &filename, const QString &table, const QgsVectorLayer *vlayer );
 
     virtual ~QgsAuxiliaryLayer();
 
@@ -64,6 +64,8 @@ class CORE_EXPORT QgsAuxiliaryLayer : public QgsVectorLayer
     //! QgsAuxiliaryStorage cannot be copied.
     QgsAuxiliaryLayer &operator=( QgsAuxiliaryLayer const &rhs ) = delete;
 
+    QgsVectorLayer *toSpatialLayer() const;
+
     bool clear();
 
     QgsVectorLayerJoinInfo joinInfo() const;
@@ -72,13 +74,19 @@ class CORE_EXPORT QgsAuxiliaryLayer : public QgsVectorLayer
 
     bool addAuxiliaryField( const QgsPropertyDefinition &definition );
 
-    bool changeAttributeValue( QgsFeatureId fid, int field, const QVariant &newValue, const QVariant &oldValue = QVariant() );
+    bool changeAttributeValue( QgsFeatureId fid, int field, const QVariant &newValue, const QVariant &oldValue = QVariant() ) override;
+
+    bool addFeatures( QgsFeatureList &features, QgsFeatureSink::Flags flags = 0 ) override;
+
+    bool addFeature( QgsFeature &feature, QgsFeatureSink::Flags flags = 0 ) override;
+
+    bool deleteFeature( QgsFeatureId fid ) override;
+
+    bool deleteFeatures( const QgsFeatureIds &fids ) override;
 
     QgsAuxiliaryFields auxiliaryFields() const;
 
   private:
-    void initFeatures();
-
     QgsVectorLayerJoinInfo mJoinInfo;
     const QgsVectorLayer *mLayer;
 };
@@ -116,7 +124,6 @@ class CORE_EXPORT QgsAuxiliaryStorage
   private:
     sqlite3 *open( const QString &filename = QString() );
     sqlite3 *open( const QgsProject &project );
-    bool addGeometryColumn( const QgsVectorLayer *layer, const QString &table, sqlite3 *handler );
 
     void initTmpFileName();
 

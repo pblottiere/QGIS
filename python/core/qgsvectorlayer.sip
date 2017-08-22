@@ -926,7 +926,6 @@ Return the provider type for this layer
 
     virtual bool addFeature( QgsFeature &feature, QgsFeatureSink::Flags flags = 0 );
 
-
     bool updateFeature( QgsFeature &f );
 %Docstring
  Updates an existing feature. This method needs to query the datasource
@@ -1058,10 +1057,8 @@ changeGeometry() instead.
  :rtype: int
 %End
 
-    const QgsAbstractVectorLayerLabeling *labeling() const;
+    QgsAbstractVectorLayerLabeling *labeling();
 %Docstring
- Access to labeling configuration. May be null if labeling is not used.
-.. versionadded:: 3.0
  :rtype: QgsAbstractVectorLayerLabeling
 %End
 
@@ -1180,7 +1177,7 @@ Change feature's geometry
  :rtype: bool
 %End
 
-    bool changeAttributeValue( QgsFeatureId fid, int field, const QVariant &newValue, const QVariant &oldValue = QVariant() );
+    virtual bool changeAttributeValue( QgsFeatureId fid, int field, const QVariant &newValue, const QVariant &oldValue = QVariant() );
 %Docstring
  Changes an attribute value (but does not commit it)
 
@@ -1283,14 +1280,13 @@ Delete an attribute field (but does not commit it)
 
     virtual bool addFeatures( QgsFeatureList &features, QgsFeatureSink::Flags flags = 0 );
 
-
-    bool deleteFeature( QgsFeatureId fid );
+    virtual bool deleteFeature( QgsFeatureId fid );
 %Docstring
 Delete a feature from the layer (but does not commit it)
  :rtype: bool
 %End
 
-    bool deleteFeatures( const QgsFeatureIds &fids );
+    virtual bool deleteFeatures( const QgsFeatureIds &fids );
 %Docstring
  Deletes a set of features from the layer (but does not commit it)
  \param fids The feature ids to delete
