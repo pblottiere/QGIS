@@ -2288,15 +2288,6 @@ QMap<QString, QgsMapLayer *> QgsProject::mapLayers() const
   return mLayerStore->mapLayers();
 }
 
-void QgsProject::removeAuxiliaryStorageLayers()
-{
-  Q_FOREACH ( QgsMapLayer *mlayer, mLayerStore->mapLayers() )
-  {
-    if ( QgsVectorLayer *vl = qobject_cast<QgsVectorLayer *>( mlayer ) )
-      vl->setAuxiliaryStorageJoin();
-  }
-}
-
 QgsCoordinateReferenceSystem QgsProject::defaultCrsForNewLayers() const
 {
   QgsSettings settings;
@@ -2316,17 +2307,7 @@ QgsCoordinateReferenceSystem QgsProject::defaultCrsForNewLayers() const
   }
 
   return defaultCrs;
-
-void QgsProject::reloadAuxiliaryStorageLayers()
-{
-  Q_FOREACH ( QgsMapLayer *mlayer, mLayerStore->mapLayers() )
-  {
-    if ( QgsVectorLayer *vl = qobject_cast<QgsVectorLayer *>( mlayer ) )
-    {
-      QgsAuxiliaryStorageJoin *asl = mAuxiliaryStorage->createStorageLayer( vl );
-      vl->setAuxiliaryStorageJoin( asl );
-    }
-  }
+}
 
 const QgsAuxiliaryStorage *QgsProject::auxiliaryStorage() const
 {
