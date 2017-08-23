@@ -410,7 +410,7 @@
                  <property name="title">
                   <string>Description</string>
                  </property>
-                 <property name="syncGroup" stdset="0">
+                 <property name="syncGroup">
                   <string notr="true">vectormeta</string>
                  </property>
                  <layout class="QGridLayout" name="gridLayout_5">
@@ -589,7 +589,7 @@ border-radius: 2px;</string>
                  <property name="title">
                   <string>Attribution</string>
                  </property>
-                 <property name="syncGroup" stdset="0">
+                 <property name="syncGroup">
                   <string notr="true">vectormeta</string>
                  </property>
                  <layout class="QGridLayout" name="gridLayout_7">
@@ -635,7 +635,7 @@ border-radius: 2px;</string>
                  <property name="title">
                   <string>MetadataUrl</string>
                  </property>
-                 <property name="syncGroup" stdset="0">
+                 <property name="syncGroup">
                   <string notr="true">vectormeta</string>
                  </property>
                  <layout class="QGridLayout" name="gridLayout_9">
@@ -840,7 +840,7 @@ border-radius: 2px;</string>
                 <x>0</x>
                 <y>0</y>
                 <width>268</width>
-                <height>321</height>
+                <height>334</height>
                </rect>
               </property>
               <layout class="QVBoxLayout" name="verticalLayout_9">
@@ -929,7 +929,7 @@ border-radius: 2px;</string>
                  <property name="checkable">
                   <bool>false</bool>
                  </property>
-                 <property name="syncGroup" stdset="0">
+                 <property name="syncGroup">
                   <string notr="true">vectorgeneral</string>
                  </property>
                  <layout class="QVBoxLayout" name="verticalLayout_28">
@@ -944,7 +944,7 @@ border-radius: 2px;</string>
                    </widget>
                   </item>
                   <item>
-                   <widget class="QgsProjectionSelectionWidget" name="mCrsSelector" native="true">
+                   <widget class="QgsProjectionSelectionWidget" name="mCrsSelector">
                     <property name="focusPolicy">
                      <enum>Qt::StrongFocus</enum>
                     </property>
@@ -1239,7 +1239,7 @@ border-radius: 2px;</string>
                 <x>0</x>
                 <y>0</y>
                 <width>632</width>
-                <height>276</height>
+                <height>360</height>
                </rect>
               </property>
               <layout class="QVBoxLayout" name="verticalLayout_32">
@@ -1265,7 +1265,7 @@ border-radius: 2px;</string>
                  </property>
                  <layout class="QGridLayout" name="gridLayout_6">
                   <item row="0" column="0">
-                   <widget class="QgsScaleRangeWidget" name="mScaleRangeWidget" native="true">
+                   <widget class="QgsScaleRangeWidget" name="mScaleRangeWidget">
                     <property name="focusPolicy">
                      <enum>Qt::StrongFocus</enum>
                     </property>
@@ -1503,7 +1503,7 @@ border-radius: 2px;</string>
                </widget>
               </item>
               <item row="0" column="1">
-               <widget class="QgsFieldExpressionWidget" name="mDisplayExpressionWidget" native="true">
+               <widget class="QgsFieldExpressionWidget" name="mDisplayExpressionWidget">
                 <property name="focusPolicy">
                  <enum>Qt::StrongFocus</enum>
                 </property>
@@ -1554,7 +1554,7 @@ border-radius: 2px;</string>
                   </widget>
                  </item>
                  <item row="1" column="0" colspan="2">
-                  <widget class="QgsFieldExpressionWidget" name="mMapTipExpressionFieldWidget" native="true">
+                  <widget class="QgsFieldExpressionWidget" name="mMapTipExpressionFieldWidget">
                    <property name="focusPolicy">
                     <enum>Qt::StrongFocus</enum>
                    </property>
@@ -1939,7 +1939,7 @@ border-radius: 2px;</string>
               <property name="checkable">
                <bool>false</bool>
               </property>
-              <property name="syncGroup" stdset="0">
+              <property name="syncGroup">
                <string notr="true">vectormeta</string>
               </property>
               <layout class="QGridLayout" name="gridLayout_11">
@@ -1948,6 +1948,9 @@ border-radius: 2px;</string>
                </property>
                <item row="2" column="1">
                 <widget class="QLineEdit" name="mAuxiliaryStorageFeaturesLineEdit">
+                 <property name="enabled">
+                  <bool>false</bool>
+                 </property>
                  <property name="readOnly">
                   <bool>true</bool>
                  </property>
@@ -1969,6 +1972,9 @@ border-radius: 2px;</string>
                </item>
                <item row="3" column="1">
                 <widget class="QLineEdit" name="mAuxiliaryStorageFieldsLineEdit">
+                 <property name="enabled">
+                  <bool>false</bool>
+                 </property>
                  <property name="toolTip">
                   <string>A name used to identify the layer. The short name is a text string used for machine-to-machine communication.</string>
                  </property>
@@ -1995,6 +2001,9 @@ border-radius: 2px;</string>
                </item>
                <item row="1" column="1">
                 <widget class="QLineEdit" name="mAuxiliaryStorageKeyLineEdit">
+                 <property name="enabled">
+                  <bool>false</bool>
+                 </property>
                  <property name="readOnly">
                   <bool>true</bool>
                  </property>
