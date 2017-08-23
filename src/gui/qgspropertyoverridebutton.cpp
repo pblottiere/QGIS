@@ -67,7 +67,7 @@ QgsPropertyOverrideButton::QgsPropertyOverrideButton( QWidget *parent,
 
   mActionDescription = new QAction( tr( "Description..." ), this );
 
-  mActionAutocreate = new QAction( tr( "Autocreate" ), this );
+  mActionAutocreate = new QAction( tr( "Store data in the project" ), this );
 
   mActionExpDialog = new QAction( tr( "Edit..." ), this );
   mActionExpression = nullptr;
