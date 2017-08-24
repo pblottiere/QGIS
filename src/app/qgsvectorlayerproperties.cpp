@@ -1479,7 +1479,7 @@ void QgsVectorLayerProperties::updateAuxiliaryStoragePage()
     mAuxiliaryStorageFeaturesLineEdit->setText( QString::number( features ) );
 
     // update fields count
-    int fields = alayer->fields().count() - 1; // ignore rowid
+    int fields = alayer->auxiliaryFields().count();
     mAuxiliaryStorageFieldsLineEdit->setText( QString::number( fields ) );
 
     mAuxiliaryStorageActionClear->setEnabled( true );
