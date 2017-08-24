@@ -342,10 +342,10 @@ QgsVectorLayerProperties::QgsVectorLayerProperties(
   // auxiliary storage
   QMenu *menu = new QMenu( this );
 
-  mAuxiliaryStorageActionClear = new QAction( tr( "Clear" ) );
-  mAuxiliaryStorageActionDelete = new QAction( tr( "Delete" ) );
-  mAuxiliaryStorageActionExport = new QAction( tr( "Export" ) );
-  mAuxiliaryStorageActionNew = new QAction( tr( "New" ) );
+  mAuxiliaryStorageActionClear = new QAction( tr( "Clear" ), this );
+  mAuxiliaryStorageActionDelete = new QAction( tr( "Delete" ), this );
+  mAuxiliaryStorageActionExport = new QAction( tr( "Export" ), this );
+  mAuxiliaryStorageActionNew = new QAction( tr( "New" ), this );
   menu->addAction( mAuxiliaryStorageActionClear );
   menu->addAction( mAuxiliaryStorageActionDelete );
   menu->addAction( mAuxiliaryStorageActionExport );
