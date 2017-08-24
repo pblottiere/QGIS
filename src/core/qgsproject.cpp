@@ -498,6 +498,7 @@ void QgsProject::clear()
 
   mLabelingEngineSettings->clear();
 
+  mAuxiliaryStorage.reset( new QgsAuxiliaryStorage() );
   mArchive->clear();
 
   emit labelingEngineSettingsChanged();
@@ -854,7 +855,10 @@ bool QgsProject::readProjectFile( const QString &filename )
 
   // start new project, just keep the file name
   QString fileName = mFile.fileName();
+  std::unique_ptr<QgsAuxiliaryStorage> aStorage;
+  aStorage.reset( mAuxiliaryStorage.release() );
   clear();
+  mAuxiliaryStorage.reset( aStorage.release() );
   mFile.setFileName( fileName );
 
   // now get any properties
