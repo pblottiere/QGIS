@@ -4558,7 +4558,7 @@ QgsAuxiliaryLayer *QgsVectorLayer::auxiliaryLayer()
 void QgsVectorLayer::loadAuxiliaryLayerFromDatabase( const QString &filename )
 {
   QgsAuxiliaryStorage storage( filename, false );
-  if ( storage.isValid() )
+  if ( isSpatial() && storage.isValid() )
   {
     QgsAuxiliaryLayer *alayer = nullptr;
 

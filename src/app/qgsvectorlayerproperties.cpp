@@ -1514,7 +1514,9 @@ void QgsVectorLayerProperties::updateAuxiliaryStoragePage()
     mAuxiliaryStorageActionClear->setEnabled( false );
     mAuxiliaryStorageActionDelete->setEnabled( false );
     mAuxiliaryStorageActionExport->setEnabled( false );
-    mAuxiliaryStorageActionNew->setEnabled( true );
+
+    if ( mLayer->isSpatial() )
+      mAuxiliaryStorageActionNew->setEnabled( true );
 
     mAuxiliaryStorageFieldsTree->clear();
     mAuxiliaryStorageKeyLineEdit->setText( QString() );
@@ -1581,7 +1583,7 @@ void QgsVectorLayerProperties::onAuxiliaryStorageNew()
 {
   QgsAuxiliaryLayer *alayer = mLayer->auxiliaryLayer();
 
-  if ( alayer )
+  if ( alayer || !mLayer->isSpatial() )
     return;
 
   QDialog dlg( this );
