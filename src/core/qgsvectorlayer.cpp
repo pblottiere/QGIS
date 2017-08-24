@@ -4536,6 +4536,9 @@ void QgsVectorLayer::setAuxiliaryLayer( QgsAuxiliaryLayer *alayer )
       removeJoin( mAuxiliaryLayer->id() );
 
     addJoin( alayer->joinInfo() );
+
+    if ( !alayer->isEditable() )
+      alayer->startEditing();
   }
 
   mAuxiliaryLayer.reset( alayer );
