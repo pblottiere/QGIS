@@ -422,6 +422,9 @@ QString QgsMapToolLabel::dataDefinedColumnName( QgsPalLayerSettings::Property p,
 
 QString QgsMapToolLabel::dataDefinedColumnName( QgsVectorLayer *layer, QgsPalLayerSettings::Property p, const QString &providerId, bool &auxiliaryStorage ) const
 {
+  if ( !layer || !layer->labeling() )
+    return QString();
+
   return dataDefinedColumnName( layer, p, layer->labeling()->settings( providerId ), auxiliaryStorage );
 }
 
@@ -627,6 +630,7 @@ bool QgsMapToolLabel::diagramMoveable( QgsVectorLayer *vlayer, int &xCol, int &y
       }
       else if ( autocreate( vlayer, QgsDiagramLayerSettings::PositionX ) )
       {
+        ddX = vlayer->diagramLayerSettings()->dataDefinedProperties().property( QgsDiagramLayerSettings::PositionX );
         xCol = vlayer->fields().lookupField( ddX.field() );
       }
 
@@ -640,6 +644,7 @@ bool QgsMapToolLabel::diagramMoveable( QgsVectorLayer *vlayer, int &xCol, int &y
       }
       else if ( autocreate( vlayer, QgsDiagramLayerSettings::PositionY ) )
       {
+        ddY = vlayer->diagramLayerSettings()->dataDefinedProperties().property( QgsDiagramLayerSettings::PositionY );
         yCol = vlayer->fields().lookupField( ddY.field() );
       }
       return xCol >= 0 && yCol >= 0;
@@ -787,6 +792,7 @@ bool QgsMapToolLabel::diagramCanShowHide( QgsVectorLayer *vlayer, int &showCol )
       }
       else if ( autocreate( vlayer, QgsDiagramLayerSettings::Show ) )
       {
+        ddShow = vlayer->diagramLayerSettings()->dataDefinedProperties().property( QgsDiagramLayerSettings::Show );
         showCol = vlayer->fields().lookupField( ddShow.field() );
       }
     }

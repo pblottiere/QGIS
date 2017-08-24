@@ -10997,14 +10997,7 @@ void QgisApp::updateLabelToolButtons()
     if ( !vlayer || ( !vlayer->diagramsEnabled() && !vlayer->labelsEnabled() ) )
       continue;
 
-    int colX, colY;
-    enablePin =
-      enablePin ||
-      ( qobject_cast<QgsMapToolPinLabels *>( mMapTools.mPinLabels ) &&
-        ( qobject_cast<QgsMapToolPinLabels *>( mMapTools.mPinLabels )->labelMoveable( vlayer, colX, colY )
-          || qobject_cast<QgsMapToolPinLabels *>( mMapTools.mPinLabels )->diagramMoveable( vlayer, colX, colY ) ) );
-
-    if ( QgsMapToolLabel *mtl = qobject_cast<QgsMapToolShowHideLabels *>( mMapTools.mShowHideLabels ) )
+    if ( QgsMapToolLabel *mtl = qobject_cast<QgsMapToolLabel *>( mMapTools.mShowHideLabels ) )
     {
       bool enableLabel = mtl->labelCanShowHide( vlayer );
       bool enableDiagram = mtl->diagramCanShowHide( vlayer );
@@ -11013,6 +11006,7 @@ void QgisApp::updateLabelToolButtons()
       enableLabel = mtl->labelMoveable( vlayer );
       enableDiagram = mtl->diagramMoveable( vlayer );
       enableMove = enableLabel || enableDiagram;
+      enablePin = enableMove;
 
       enableRotate = mtl->layerIsRotatable( vlayer );
     }
