@@ -1585,9 +1585,9 @@ void QgsVectorLayerProperties::onAuxiliaryStorageNew()
     return;
 
   QDialog dlg( this );
-  dlg.setWindowTitle( tr( "Select auxiliary key" ) );
+  dlg.setWindowTitle( tr( "Select primary key" ) );
   dlg.setLayout( new QVBoxLayout() );
-  dlg.layout()->addWidget( new QLabel( tr( "Select the auxiliary key to use for joining" ) ) );
+  dlg.layout()->addWidget( new QLabel( tr( "Select the primary key to use for joining" ) ) );
 
   QComboBox boxFields( &dlg );
   Q_FOREACH ( const QgsField &field, mLayer->fields() )
