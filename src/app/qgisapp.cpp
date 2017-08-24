@@ -10998,7 +10998,7 @@ void QgisApp::updateLabelToolButtons()
          ( !vlayer->diagramsEnabled() && !vlayer->labelsEnabled() ) )
       continue;
 
-    int colX, colY, colShow, colAng;
+    int colX, colY, colShow;
     enablePin =
       enablePin ||
       ( qobject_cast<QgsMapToolPinLabels *>( mMapTools.mPinLabels ) &&
@@ -11020,7 +11020,7 @@ void QgisApp::updateLabelToolButtons()
     enableRotate =
       enableRotate ||
       ( qobject_cast<QgsMapToolRotateLabel *>( mMapTools.mRotateLabel ) &&
-        qobject_cast<QgsMapToolRotateLabel *>( mMapTools.mRotateLabel )->layerIsRotatable( vlayer, colAng ) );
+        qobject_cast<QgsMapToolRotateLabel *>( mMapTools.mRotateLabel )->layerIsRotatable( vlayer ) );
 
     enableChange = true;
 

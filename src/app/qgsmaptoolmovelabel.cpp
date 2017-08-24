@@ -53,7 +53,7 @@ void QgsMapToolMoveLabel::canvasPressEvent( QgsMapMouseEvent *e )
   }
 
   int xCol, yCol;
-  if ( labelMoveable( vlayer, mCurrentLabel.settings, xCol, yCol ) ||
+  if ( labelMoveable( vlayer, mCurrentLabel.pos.providerID, xCol, yCol ) ||
        diagramMoveable( vlayer, xCol, yCol ) )
   {
     mStartPointMapCoords = toMapCoordinates( e->pos() );

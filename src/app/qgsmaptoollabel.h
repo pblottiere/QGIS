@@ -40,7 +40,7 @@ class APP_EXPORT QgsMapToolLabel: public QgsMapTool
         \returns true if labels of layer can be moved*/
     bool labelMoveable( QgsVectorLayer *vlayer ) const;
     bool labelMoveable( QgsVectorLayer *vlayer, int &xCol, int &yCol ) const;
-    bool labelMoveable( QgsVectorLayer *vlayer, const QgsPalLayerSettings &settings, int &xCol, int &yCol ) const;
+    bool labelMoveable( QgsVectorLayer *vlayer, const QString &providerId, int &xCol, int &yCol ) const;
 
     /** Returns true if diagram move can be applied to a layer
         \param xCol out: index of the attribute for data defined x coordinate
@@ -66,8 +66,9 @@ class APP_EXPORT QgsMapToolLabel: public QgsMapTool
 
     /** Checks if labels in a layer can be rotated
       \param rotationCol out: attribute column for data defined label rotation*/
+    bool layerIsRotatable( QgsVectorLayer *layer ) const;
     bool layerIsRotatable( QgsVectorLayer *layer, int &rotationCol ) const;
-    bool labelIsRotatable( QgsVectorLayer *layer, const QgsPalLayerSettings &settings, int &rotationCol ) const;
+    bool labelIsRotatable( QgsVectorLayer *layer, const QString &providerId, int &rotationCol ) const;
 
   protected:
     QgsRubberBand *mLabelRubberBand = nullptr;
@@ -88,7 +89,7 @@ class APP_EXPORT QgsMapToolLabel: public QgsMapTool
     //! Currently dragged label position
     LabelDetails mCurrentLabel;
 
-    bool autocreate( QgsVectorLayer *layer, const QgsPalLayerSettings::Property &p ) const;
+    bool autocreate( QgsVectorLayer *layer, const QgsPalLayerSettings::Property &p, const QString &providerId = QString() ) const;
     bool autocreate( QgsVectorLayer *layer, const QgsDiagramLayerSettings::Property &p ) const;
 
     /** Returns label position for mouse click location
@@ -125,6 +126,7 @@ class APP_EXPORT QgsMapToolLabel: public QgsMapTool
     QString dataDefinedColumnName( QgsPalLayerSettings::Property p, const QgsPalLayerSettings &labelSettings ) const;
 
     QString dataDefinedColumnName( QgsVectorLayer *layer, QgsPalLayerSettings::Property p, const QgsPalLayerSettings &labelSettings, bool &auxiliaryStorage ) const;
+    QString dataDefinedColumnName( QgsVectorLayer *layer, QgsPalLayerSettings::Property p, const QString &providerId, bool &auxiliaryStorage ) const;
 
     /** Returns a data defined attribute column index
       \returns -1 if column does not exist or an expression is used instead */

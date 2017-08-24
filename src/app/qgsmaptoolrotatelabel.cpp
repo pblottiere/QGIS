@@ -158,7 +158,7 @@ void QgsMapToolRotateLabel::canvasReleaseEvent( QgsMapMouseEvent *e )
   }
 
   int rotationCol;
-  if ( !labelIsRotatable( vlayer, mCurrentLabel.settings, rotationCol ) )
+  if ( !labelIsRotatable( vlayer, mCurrentLabel.pos.providerID, rotationCol ) )
   {
     return;
   }
