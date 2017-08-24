@@ -59,10 +59,12 @@ class APP_EXPORT QgsMapToolLabel: public QgsMapTool
       \param showCol out: attribute column for data defined diagram showing
       \since QGIS 2.16 */
     bool diagramCanShowHide( QgsVectorLayer *vlayer, int &showCol ) const;
+    bool diagramCanShowHide( QgsVectorLayer *vlayer ) const;
 
     /** Returns true if layer has attribute field set up
       \param showCol out: attribute column for data defined label showing*/
     bool labelCanShowHide( QgsVectorLayer *vlayer, int &showCol ) const;
+    bool labelCanShowHide( QgsVectorLayer *vlayer ) const;
 
     /** Checks if labels in a layer can be rotated
       \param rotationCol out: attribute column for data defined label rotation*/

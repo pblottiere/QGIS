@@ -114,9 +114,9 @@ void QgsMapToolShowHideLabels::showHideLabels( QMouseEvent *e )
     QgsDebugMsg( "Failed to cast label layer to vector layer" );
     return;
   }
-  if ( !vlayer->isEditable() )
+  if ( !labelCanShowHide( vlayer ) && !diagramCanShowHide( vlayer ) )
   {
-    QgsDebugMsg( "Vector layer not editable, skipping label" );
+    QgsDebugMsg( "Vector layer label cannot be show/hide, skipping label" );
     return;
   }
 

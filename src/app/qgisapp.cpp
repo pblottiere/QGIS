@@ -10994,33 +10994,28 @@ void QgisApp::updateLabelToolButtons()
   for ( QMap<QString, QgsMapLayer *>::iterator it = layers.begin(); it != layers.end(); ++it )
   {
     QgsVectorLayer *vlayer = qobject_cast<QgsVectorLayer *>( it.value() );
-    if ( !vlayer || // !vlayer->isEditable() ||
-         ( !vlayer->diagramsEnabled() && !vlayer->labelsEnabled() ) )
+    if ( !vlayer || ( !vlayer->diagramsEnabled() && !vlayer->labelsEnabled() ) )
       continue;
 
-    int colX, colY, colShow;
+    int colX, colY;
     enablePin =
       enablePin ||
       ( qobject_cast<QgsMapToolPinLabels *>( mMapTools.mPinLabels ) &&
         ( qobject_cast<QgsMapToolPinLabels *>( mMapTools.mPinLabels )->labelMoveable( vlayer, colX, colY )
           || qobject_cast<QgsMapToolPinLabels *>( mMapTools.mPinLabels )->diagramMoveable( vlayer, colX, colY ) ) );
 
-    enableShowHide =
-      enableShowHide ||
-      ( qobject_cast<QgsMapToolShowHideLabels *>( mMapTools.mShowHideLabels ) &&
-        ( qobject_cast<QgsMapToolShowHideLabels *>( mMapTools.mShowHideLabels )->labelCanShowHide( vlayer, colShow )
-          || qobject_cast<QgsMapToolShowHideLabels *>( mMapTools.mShowHideLabels )->diagramCanShowHide( vlayer, colShow ) ) );
+    if ( QgsMapToolLabel *mtl = qobject_cast<QgsMapToolShowHideLabels *>( mMapTools.mShowHideLabels ) )
+    {
+      bool enableLabel = mtl->labelCanShowHide( vlayer );
+      bool enableDiagram = mtl->diagramCanShowHide( vlayer );
+      enableShowHide = enableLabel || enableDiagram;
 
-    enableMove =
-      enableMove ||
-      ( qobject_cast<QgsMapToolMoveLabel *>( mMapTools.mMoveLabel ) &&
-        ( qobject_cast<QgsMapToolMoveLabel *>( mMapTools.mMoveLabel )->labelMoveable( vlayer )
-          || qobject_cast<QgsMapToolMoveLabel *>( mMapTools.mMoveLabel )->diagramMoveable( vlayer ) ) );
+      enableLabel = mtl->labelMoveable( vlayer );
+      enableDiagram = mtl->diagramMoveable( vlayer );
+      enableMove = enableLabel || enableDiagram;
 
-    enableRotate =
-      enableRotate ||
-      ( qobject_cast<QgsMapToolRotateLabel *>( mMapTools.mRotateLabel ) &&
-        qobject_cast<QgsMapToolRotateLabel *>( mMapTools.mRotateLabel )->layerIsRotatable( vlayer ) );
+      enableRotate = mtl->layerIsRotatable( vlayer );
+    }
 
     enableChange = true;
 

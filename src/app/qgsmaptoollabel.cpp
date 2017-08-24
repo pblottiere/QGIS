@@ -705,18 +705,34 @@ bool QgsMapToolLabel::layerCanPin( QgsVectorLayer *vlayer, int &xCol, int &yCol 
   return canPin;
 }
 
+bool QgsMapToolLabel::labelCanShowHide( QgsVectorLayer *vlayer ) const
+{
+  int showCol;
+  return labelCanShowHide( vlayer, showCol );
+}
+
 bool QgsMapToolLabel::labelCanShowHide( QgsVectorLayer *vlayer, int &showCol ) const
 {
-  if ( !vlayer || !vlayer->isEditable() || !vlayer->labeling() )
+  if ( !vlayer || !vlayer->labeling() )
   {
     return false;
   }
 
   Q_FOREACH ( const QString &providerId, vlayer->labeling()->subProviders() )
   {
-    QString fieldname = dataDefinedColumnName( QgsPalLayerSettings::Show,
-                        vlayer->labeling()->settings( providerId ) );
-    showCol = vlayer->fields().lookupField( fieldname );
+    bool auxiliaryStorage = false;
+    QString fieldName = dataDefinedColumnName( vlayer, QgsPalLayerSettings::Show, providerId, auxiliaryStorage );
+
+    if ( fieldName.isEmpty() )
+    {
+      autocreate( vlayer, QgsPalLayerSettings::Show, providerId );
+      fieldName = dataDefinedColumnName( vlayer, QgsPalLayerSettings::Show, providerId, auxiliaryStorage );
+    }
+
+    if ( !auxiliaryStorage && !vlayer->isEditable() )
+      return false;
+
+    showCol = vlayer->fields().lookupField( fieldName );
     if ( showCol != -1 )
       return true;
   }
@@ -747,13 +763,20 @@ bool QgsMapToolLabel::isPinned()
   return rc;
 }
 
+bool QgsMapToolLabel::diagramCanShowHide( QgsVectorLayer *vlayer ) const
+{
+  int showCol;
+  return diagramCanShowHide( vlayer, showCol );
+}
+
 bool QgsMapToolLabel::diagramCanShowHide( QgsVectorLayer *vlayer, int &showCol ) const
 {
   showCol = -1;
 
-  if ( vlayer && vlayer->isEditable() && vlayer->diagramsEnabled() )
+  if ( vlayer && vlayer->diagramsEnabled() )
   {
-    if ( const QgsDiagramLayerSettings *dls = vlayer->diagramLayerSettings() )
+    const QgsDiagramLayerSettings *dls = vlayer->diagramLayerSettings();
+    if ( dls )
     {
       if ( QgsProperty ddShow = dls->dataDefinedProperties().property( QgsDiagramLayerSettings::Show ) )
       {
@@ -761,6 +784,10 @@ bool QgsMapToolLabel::diagramCanShowHide( QgsVectorLayer *vlayer, int &showCol )
         {
           showCol = vlayer->fields().lookupField( ddShow.field() );
         }
+      }
+      else if ( autocreate( vlayer, QgsDiagramLayerSettings::Show ) )
+      {
+        showCol = vlayer->fields().lookupField( ddShow.field() );
       }
     }
   }
