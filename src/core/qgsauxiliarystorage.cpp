@@ -313,6 +313,9 @@ bool QgsAuxiliaryStorage::save() const
 
 bool QgsAuxiliaryStorage::saveAs( const QString &filename ) const
 {
+  if ( QFile::exists( filename ) )
+    QFile::remove( filename );
+
   return  QFile::copy( currentFileName(), filename );
 }
 
