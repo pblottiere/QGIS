@@ -255,7 +255,7 @@ QgsLabelFeature *QgsVectorLayerDiagramProvider::registerDiagram( QgsFeature &fea
   alwaysShow = mSettings.dataDefinedProperties().valueAsBool( QgsDiagramLayerSettings::AlwaysShow, context.expressionContext(), alwaysShow );
 
   // new style data defined position
-  bool ddPos, ddXPos, ddYPos = false;
+  bool ddPos = false, ddXPos = false, ddYPos = false;
   double ddPosX = 0.0;
   double ddPosY = 0.0;
   if ( mSettings.dataDefinedProperties().hasProperty( QgsDiagramLayerSettings::PositionX )
