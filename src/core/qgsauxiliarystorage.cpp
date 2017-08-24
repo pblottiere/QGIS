@@ -53,24 +53,24 @@ QgsAuxiliaryField::QgsAuxiliaryField( const QgsField &f )
   QString propertyName = parts[1];
   QgsPropertyDefinition def;
 
-  if ( target.compare( "pal" ) == 0 )
+  if ( target.compare( "pal", Qt::CaseInsensitive ) == 0 )
   {
     QgsPropertiesDefinition props = QgsPalLayerSettings::propertyDefinitions();
     Q_FOREACH ( const QgsPropertyDefinition p, props.values() )
     {
-      if ( p.name().compare( propertyName ) == 0 )
+      if ( p.name().compare( propertyName, Qt::CaseInsensitive ) == 0 )
       {
         def = p;
         break;
       }
     }
   }
-  else if ( target.compare( "diagram" ) == 0 )
+  else if ( target.compare( "diagram", Qt::CaseInsensitive ) == 0 )
   {
     QgsPropertiesDefinition props = QgsDiagramLayerSettings::propertyDefinitions();
     Q_FOREACH ( const QgsPropertyDefinition p, props.values() )
     {
-      if ( p.name().compare( propertyName ) == 0 )
+      if ( p.name().compare( propertyName, Qt::CaseInsensitive ) == 0 )
       {
         def = p;
         break;
@@ -132,7 +132,7 @@ QString QgsAuxiliaryField::name( const QgsPropertyDefinition &def, bool joined )
       break;
   }
 
-  QString fieldName = QString( "%2_%3" ).arg( target, def.name() );
+  QString fieldName = QString( "%2_%3" ).arg( target, def.name().toLower() );
 
   if ( joined )
     fieldName = QString( "%1%2" ).arg( AS_JOINPREFIX, fieldName );
@@ -145,7 +145,7 @@ QString QgsAuxiliaryField::name( const QgsPropertyDefinition &def, bool joined )
 //
 
 QgsAuxiliaryLayer::QgsAuxiliaryLayer( const QString &pkField, const QString &filename, const QString &table, const QgsVectorLayer *vlayer ):
-  QgsVectorLayer( QString( "dbname='%1' table='%2' key='%3'" ).arg( filename, table, AS_PKFIELD ), QString( "%1_auxiliarystorage" ).arg( table ), "spatialite" )
+  QgsVectorLayer( QString( "%1|layername=%2" ).arg( filename, table, AS_PKFIELD ), QString( "%1_auxiliarystorage" ).arg( table ), "ogr" )
   , mLayer( vlayer )
 {
   // init join info
@@ -210,7 +210,7 @@ bool QgsAuxiliaryLayer::addAuxiliaryField( const QgsPropertyDefinition &definiti
     return false;
 
   QgsAuxiliaryField af( definition );
-  bool rc = dataProvider()->addAttributes( QList<QgsField>() << af );
+  bool rc = addAttribute( af );
   updateFields();
 
   return rc;
@@ -225,7 +225,7 @@ QgsAuxiliaryFields QgsAuxiliaryLayer::auxiliaryFields() const
 {
   QgsAuxiliaryFields afields;
 
-  for ( int i = 1; i < fields().count(); i++ ) // ignore PK field
+  for ( int i = 2; i < fields().count(); i++ ) // ignore rowid and PK field
     afields.append( QgsAuxiliaryField( fields().field( i ) ) );
 
   return afields;
@@ -440,77 +440,7 @@ sqlite3 *QgsAuxiliaryStorage::createDB( const QString &filename )
   if ( !exec( "PRAGMA foreign_keys = 1", handler ) )
     return handler;
 
-  // init spatial metadata
-  rc = initializeSpatialMetadata( handler );
-  if ( !rc )
-    return handler;
-
   return handler;
-}
-
-bool QgsAuxiliaryStorage::initializeSpatialMetadata( sqlite3 *handler )
-{
-  char **res = nullptr;
-  int rows, cols;
-  bool above41 = false;
-  int rc;
-  int count = 0;
-
-  // count
-  QString sql = "select count(*) from sqlite_master";
-  rc = sqlite3_get_table( handler, sql.toStdString().c_str(), &res, &rows, &cols, nullptr );
-  if ( rc != SQLITE_OK )
-  {
-    debugMsg( sql, handler );
-    return false;
-  }
-
-  if ( rows >= 1 )
-  {
-    for ( int i = 1; i <= rows; i++ )
-      count = atoi( res[( i * cols ) + 0] );
-  }
-
-  sqlite3_free_table( res );
-
-  if ( count > 0 )
-  {
-    QgsDebugMsg( QObject::tr( "Invalid count" ) );
-    return false;
-  }
-
-  // select spatialite version
-  sql = "select spatialite_version()";
-  rc = sqlite3_get_table( handler, sql.toStdString().c_str(), &res, &rows, &cols, nullptr );
-  if ( rc == SQLITE_OK && rows == 1 && cols == 1 )
-  {
-    QString version = QString::fromUtf8( res[1] );
-    QStringList parts = version.split( ' ', QString::SkipEmptyParts );
-    if ( parts.size() >= 1 )
-    {
-      QStringList verparts = parts[0].split( '.', QString::SkipEmptyParts );
-      above41 = verparts.size() >= 2 && ( verparts[0].toInt() > 4 || ( verparts[0].toInt() == 4 && verparts[1].toInt() >= 1 ) );
-    }
-  }
-  else
-  {
-    debugMsg( sql, handler );
-    return false;
-  }
-
-  sqlite3_free_table( res );
-
-  // init spatial metadata according to the current spatialite version
-  sql = "SELECT InitSpatialMetadata()";
-  if ( above41 )
-    sql = "SELECT InitSpatialMetadata(1)" ;
-
-  if ( !exec( sql, handler ) )
-    return false;
-
-  spatial_ref_sys_init( handler, 0 );
-
-  return true;
 }
 
 bool QgsAuxiliaryStorage::createTable( const QString &type, const QString &table, sqlite3 *handler )

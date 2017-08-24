@@ -121,7 +121,6 @@ class CORE_EXPORT QgsAuxiliaryStorage
     static sqlite3 *createDB( const QString &filename );
     static sqlite3 *openDB( const QString &filename );
     static void close( sqlite3 *handler );
-    static bool initializeSpatialMetadata( sqlite3 *handler );
     static bool createTable( const QString &type, const QString &table, sqlite3 *handler );
     static bool tableExists( const QString &table, sqlite3 *handler );
 
