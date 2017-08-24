@@ -345,7 +345,7 @@ QgsVectorLayerProperties::QgsVectorLayerProperties(
   mAuxiliaryStorageActionClear = new QAction( tr( "Clear" ), this );
   mAuxiliaryStorageActionDelete = new QAction( tr( "Delete" ), this );
   mAuxiliaryStorageActionExport = new QAction( tr( "Export" ), this );
-  mAuxiliaryStorageActionNew = new QAction( tr( "New" ), this );
+  mAuxiliaryStorageActionNew = new QAction( tr( "Create" ), this );
   menu->addAction( mAuxiliaryStorageActionClear );
   menu->addAction( mAuxiliaryStorageActionDelete );
   menu->addAction( mAuxiliaryStorageActionExport );
