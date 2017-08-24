@@ -166,6 +166,12 @@ Returns whether values from the joined layer should be cached in memory to speed
  :rtype: QgsFeature
 %End
 
+    void setAuxiliaryStorage( bool auxiliaryStorage );
+    bool auxiliaryStorage() const;
+%Docstring
+ :rtype: bool
+%End
+
     bool operator==( const QgsVectorLayerJoinInfo &other ) const;
 
     void setJoinFieldNamesSubset( QStringList *fieldNamesSubset /Transfer/ );
@@ -181,7 +187,25 @@ Returns whether values from the joined layer should be cached in memory to speed
  :rtype: list of str
 %End
 
+    void setJoinFieldNamesBlackList( const QStringList &blackList );
+
+    QStringList joinFieldNamesBlackList() const;
+%Docstring
+ :rtype: list of str
+%End
+
+    bool hasSubset( bool blacklisted = true ) const;
+%Docstring
+ :rtype: bool
+%End
+
+    static QStringList joinFieldNamesSubset( const QgsVectorLayerJoinInfo &info, bool blacklisted = true );
+%Docstring
+ :rtype: list of str
+%End
+
   protected:
+
 
 
 

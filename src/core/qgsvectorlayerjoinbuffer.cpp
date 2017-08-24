@@ -139,11 +139,11 @@ void QgsVectorLayerJoinBuffer::cacheJoinLayer( QgsVectorLayerJoinInfo &joinInfo 
 
     // maybe user requested just a subset of layer's attributes
     // so we do not have to cache everything
-    bool hasSubset = joinInfo.joinFieldNamesSubset();
     QVector<int> subsetIndices;
-    if ( hasSubset )
+    if ( joinInfo.hasSubset() )
     {
-      subsetIndices = joinSubsetIndices( cacheLayer, *joinInfo.joinFieldNamesSubset() );
+      QStringList subsetNames = QgsVectorLayerJoinInfo::joinFieldNamesSubset( joinInfo );
+      subsetIndices = joinSubsetIndices( cacheLayer, subsetNames );
 
       // we need just subset of attributes - but make sure to include join field name
       QgsAttributeList cacheLayerAttrs = subsetIndices.toList();
@@ -158,7 +158,7 @@ void QgsVectorLayerJoinBuffer::cacheJoinLayer( QgsVectorLayerJoinInfo &joinInfo 
     {
       QgsAttributes attrs = f.attributes();
       QString key = attrs.at( joinFieldIndex ).toString();
-      if ( hasSubset )
+      if ( joinInfo.hasSubset() )
       {
         QgsAttributes subsetAttrs( subsetIndices.count() );
         for ( int i = 0; i < subsetIndices.count(); ++i )
@@ -215,11 +215,10 @@ void QgsVectorLayerJoinBuffer::updateFields( QgsFields &fields )
     QString joinFieldName = joinIt->joinFieldName();
 
     QSet<QString> subset;
-    bool hasSubset = false;
-    if ( joinIt->joinFieldNamesSubset() )
+    if ( joinIt->hasSubset() )
     {
-      hasSubset = true;
-      subset = QSet<QString>::fromList( *joinIt->joinFieldNamesSubset() );
+      QStringList subsetNames = QgsVectorLayerJoinInfo::joinFieldNamesSubset( *joinIt );
+      subset = QSet<QString>::fromList( subsetNames );
     }
 
     if ( joinIt->prefix().isNull() )
@@ -234,12 +233,12 @@ void QgsVectorLayerJoinBuffer::updateFields( QgsFields &fields )
     for ( int idx = 0; idx < joinFields.count(); ++idx )
     {
       // if using just a subset of fields, filter some of them out
-      if ( hasSubset && !subset.contains( joinFields.at( idx ).name() ) )
+      if ( joinIt->hasSubset() && !subset.contains( joinFields.at( idx ).name() ) )
         continue;
 
       //skip the join field to avoid double field names (fields often have the same name)
       // when using subset of field, use all the selected fields
-      if ( hasSubset || joinFields.at( idx ).name() != joinFieldName )
+      if ( joinIt->hasSubset() || joinFields.at( idx ).name() != joinFieldName )
       {
         QgsField f = joinFields.at( idx );
         f.setName( prefix + f.name() );
@@ -287,10 +286,13 @@ void QgsVectorLayerJoinBuffer::writeXml( QDomNode &layer_node, QDomDocument &doc
     joinElem.setAttribute( QStringLiteral( "cascadedDelete" ), joinIt->hasCascadedDelete() );
     joinElem.setAttribute( QStringLiteral( "auxiliaryStorage" ), joinIt->auxiliaryStorage() );
 
-    if ( joinIt->joinFieldNamesSubset() )
+    if ( joinIt->hasSubset() )
     {
       QDomElement subsetElem = document.createElement( QStringLiteral( "joinFieldsSubset" ) );
-      Q_FOREACH ( const QString &fieldName, *joinIt->joinFieldNamesSubset() )
+
+      QStringList subsetNames = QgsVectorLayerJoinInfo::joinFieldNamesSubset( *joinIt );
+
+      Q_FOREACH ( const QString &fieldName, subsetNames )
       {
         QDomElement fieldElem = document.createElement( QStringLiteral( "field" ) );
         fieldElem.setAttribute( QStringLiteral( "name" ), fieldName );

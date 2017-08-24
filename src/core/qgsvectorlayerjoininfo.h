@@ -152,7 +152,16 @@ class CORE_EXPORT QgsVectorLayerJoinInfo
       \since QGIS 2.6 */
     QStringList *joinFieldNamesSubset() const { return mJoinFieldsSubset.get(); }
 
+    void setJoinFieldNamesBlackList( const QStringList &blackList ) { mBlackList = blackList; }
+
+    QStringList joinFieldNamesBlackList() const { return mBlackList; }
+
+    bool hasSubset( bool blacklisted = true ) const;
+
+    static QStringList joinFieldNamesSubset( const QgsVectorLayerJoinInfo &info, bool blacklisted = true );
+
   protected:
+    QStringList mBlackList;
     //! Join field in the target layer
     QString mTargetFieldName;
     //! Weak reference to the joined layer

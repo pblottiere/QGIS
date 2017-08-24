@@ -2722,10 +2722,10 @@ bool QgsVectorLayer::addFeaturesToJoinedLayers( QgsFeatureList &features, Flags 
 
         if ( existingFeature.isValid() )
         {
-          const QStringList *subsetFields = info.joinFieldNamesSubset();
-          if ( subsetFields )
+          if ( info.hasSubset() )
           {
-            Q_FOREACH ( const QString &field, *subsetFields )
+            QStringList subsetNames = QgsVectorLayerJoinInfo::joinFieldNamesSubset( info );
+            Q_FOREACH ( const QString &field, subsetNames )
               existingFeature.setAttribute( field, joinFeature.attribute( field ) );
           }
           else
