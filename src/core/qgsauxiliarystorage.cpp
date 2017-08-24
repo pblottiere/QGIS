@@ -234,7 +234,10 @@ QgsAuxiliaryFields QgsAuxiliaryLayer::auxiliaryFields() const
 
 bool QgsAuxiliaryLayer::clear()
 {
-  return deleteFeatures( allFeatureIds() );
+  bool rc = deleteFeatures( allFeatureIds() );
+  commitChanges();
+  startEditing();
+  return rc;
 }
 
 //
@@ -366,13 +369,29 @@ bool QgsAuxiliaryStorage::deleteTable( const QgsDataSourceUri &uri )
 {
   bool rc = false;
 
-  if ( !uri.database().isEmpty() && !uri.table().isEmpty() )
+  // parsing for ogr style uri :
+  // " filePath|layername='tableName' table="" sql="
+  QStringList uriParts = uri.uri().split( '|' );
+  if ( uriParts.count() < 2 )
+    return false;
+
+  QString databasePath = uriParts[0].replace( ' ', "" );
+
+  QString table = uriParts[1];
+  QStringList tableParts = table.split( ' ' );
+
+  if ( tableParts.count() < 1 )
+    return false;
+
+  QString tableName = tableParts[0].replace( "layername=", "" );
+
+  if ( !databasePath.isEmpty() && !tableName.isEmpty() )
   {
-    sqlite3 *handler = openDB( uri.database() );
+    sqlite3 *handler = openDB( databasePath );
 
     if ( handler )
     {
-      QString sql = QString( "DROP TABLE %1" ).arg( uri.quotedTablename() );
+      QString sql = QString( "DROP TABLE %1" ).arg( tableName );
       rc = exec( sql, handler );
 
       sql = QString( "VACUUM" );
