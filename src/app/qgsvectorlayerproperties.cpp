@@ -356,6 +356,7 @@ QgsVectorLayerProperties::QgsVectorLayerProperties(
   connect( mAuxiliaryStorageActionDelete, &QAction::triggered, this, &QgsVectorLayerProperties::onAuxiliaryStorageDelete );
   connect( mAuxiliaryStorageActionExport, &QAction::triggered, this, &QgsVectorLayerProperties::onAuxiliaryStorageExport );
   connect( mAuxiliaryStorageActionNew, &QAction::triggered, this, &QgsVectorLayerProperties::onAuxiliaryStorageNew );
+  connect( mAuxiliaryStorageFieldsDeleteBtn, &QPushButton::clicked, this, &QgsVectorLayerProperties::onAuxiliaryStorageDeleteFields );
 
   updateAuxiliaryStoragePage();
 } // QgsVectorLayerProperties ctor
@@ -1621,3 +1622,47 @@ void QgsVectorLayerProperties::onAuxiliaryStorageNew()
     }
   }
 }
+
+void QgsVectorLayerProperties::onAuxiliaryStorageDeleteFields()
+{
+  QgsAuxiliaryLayer *alayer = mLayer->auxiliaryLayer();
+  if ( !alayer )
+    return;
+
+  QList<QTreeWidgetItem *> items = mAuxiliaryStorageFieldsTree->selectedItems();
+  if ( items.count() < 1 )
+    return;
+
+  // get auxiliary field name and index from item
+  QTreeWidgetItem *item = items[0];
+  QgsPropertyDefinition def;
+
+  if ( item->text( 0 ).compare( "pal", Qt::CaseInsensitive ) == 0 )
+    def.setTarget( QgsPropertyDefinition::Pal );
+  else
+    def.setTarget( QgsPropertyDefinition::Diagram );
+
+  def.setName( item->text( 1 ) );
+
+  QString fieldName = QgsAuxiliaryField::name( def );
+
+  int index = mLayer->auxiliaryLayer()->fields().indexOf( fieldName );
+  if ( index < 0 )
+    return;
+
+  // should be only 1 field
+  QString msg = tr( "Are you sure you want to delete auxiliary field %1 for %2" ).arg( item->text( 1 ), item->text( 0 ) );
+
+  QMessageBox::StandardButton reply;
+  reply = QMessageBox::question( this, "Delete auxiliary field", msg, QMessageBox::Yes | QMessageBox::No );
+
+  if ( reply == QMessageBox::Yes )
+  {
+    QApplication::setOverrideCursor( Qt::WaitCursor );
+    mLayer->auxiliaryLayer()->deleteAttribute( index );
+    QApplication::restoreOverrideCursor();
+    updateAuxiliaryStoragePage();
+    mLayer->triggerRepaint();
+  }
+}
+

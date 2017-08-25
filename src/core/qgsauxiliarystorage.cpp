@@ -240,6 +240,14 @@ bool QgsAuxiliaryLayer::clear()
   return rc;
 }
 
+bool QgsAuxiliaryLayer::deleteAttribute( int attr )
+{
+  QgsVectorLayer::deleteAttribute( attr );
+  bool rc = commitChanges();
+  startEditing();
+  return rc;
+}
+
 //
 // QgsAuxiliaryStorage
 //

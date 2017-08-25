@@ -139,7 +139,11 @@ class CORE_EXPORT QgsPropertyDefinition
      */
     QString name() const { return mName; }
 
+    void setName( const QString &name ) { mName = name; }
+
     Target target() const { return mTarget; }
+
+    void setTarget( Target target ) { mTarget = target; }
 
     /**
      * Descriptive name of the property.

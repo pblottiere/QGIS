@@ -76,6 +76,8 @@ class CORE_EXPORT QgsAuxiliaryLayer : public QgsVectorLayer
 
     QgsAuxiliaryFields auxiliaryFields() const;
 
+    virtual bool deleteAttribute( int attr ) override;
+
   private:
     QgsVectorLayerJoinInfo mJoinInfo;
     const QgsVectorLayer *mLayer;

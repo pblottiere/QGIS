@@ -150,6 +150,8 @@ class APP_EXPORT QgsVectorLayerProperties : public QgsOptionsDialogBase, private
 
     void onAuxiliaryStorageNew();
 
+    void onAuxiliaryStorageDeleteFields();
+
   private:
 
     void saveStyleAs( StyleType styleType );
