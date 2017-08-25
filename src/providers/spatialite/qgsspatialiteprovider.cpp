@@ -598,6 +598,11 @@ QgsSpatiaLiteProvider::QgsSpatiaLiteProvider( QString const &uri )
     return;
   }
 
+  if ( mTableBased && hasRowid() )
+  {
+    mPrimaryKey = QStringLiteral( "ROWID" );
+  }
+
   // retrieve version information
   spatialiteVersion();
 
@@ -773,12 +778,6 @@ void QgsSpatiaLiteProvider::loadFieldsAbstractInterface( gaiaVectorLayerPtr lyr 
   if ( mViewBased && mPrimaryKey.isEmpty() )
   {
     determineViewPrimaryKey();
-  }
-
-
-  if ( mTableBased && mPrimaryKey.isEmpty() && hasRowid() )
-  {
-    mPrimaryKey = QStringLiteral( "ROWID" );
   }
 
   updatePrimaryKeyCapabilities();
@@ -1062,11 +1061,6 @@ void QgsSpatiaLiteProvider::loadFields()
   {
     // setting the Primary Key column name
     mPrimaryKey = pkName;
-  }
-
-  if ( mTableBased && mPrimaryKey.isEmpty() && hasRowid() )
-  {
-    mPrimaryKey = QStringLiteral( "ROWID" );
   }
 
   updatePrimaryKeyCapabilities();
@@ -4183,22 +4177,14 @@ bool QgsSpatiaLiteProvider::addAttributes( const QList<QgsField> &attributes )
 
   for ( QList<QgsField>::const_iterator iter = attributes.begin(); iter != attributes.end(); ++iter )
   {
-    QgsField f = *iter;
-    if ( convertField( f ) )
+    sql = QStringLiteral( "ALTER TABLE \"%1\" ADD COLUMN \"%2\" %3" )
+          .arg( mTableName,
+                iter->name(),
+                iter->typeName() );
+    ret = sqlite3_exec( mSqliteHandle, sql.toUtf8().constData(), nullptr, nullptr, &errMsg );
+    if ( ret != SQLITE_OK )
     {
-      sql = QStringLiteral( "ALTER TABLE \"%1\" ADD COLUMN \"%2\" %3" )
-            .arg( mTableName,
-                  f.name(),
-                  f.typeName() );
-      ret = sqlite3_exec( mSqliteHandle, sql.toUtf8().constData(), nullptr, nullptr, &errMsg );
-      if ( ret != SQLITE_OK )
-      {
-        handleError( sql, errMsg, true );
-        return false;
-      }
-    }
-    else
-    {
+      handleError( sql, errMsg, true );
       return false;
     }
   }
