@@ -67,12 +67,18 @@ class QgsPropertyDefinition
       DataTypeBoolean,
     };
 
+    enum Target
+    {
+      Diagram,
+      Pal
+    };
+
     QgsPropertyDefinition();
 %Docstring
  Constructs an empty property.
 %End
 
-    QgsPropertyDefinition( const QString &name, const QString &description, StandardPropertyTemplate type );
+    QgsPropertyDefinition( const QString &name, const QString &description, StandardPropertyTemplate type, Target target = QgsPropertyDefinition::Pal );
 %Docstring
  Constructor for QgsPropertyDefinition, using a standard property template.
  \param name is used internally and should be a unique, alphanumeric string.
@@ -80,7 +86,7 @@ class QgsPropertyDefinition
  \param type one of the predefined standard property template
 %End
 
-    QgsPropertyDefinition( const QString &name, DataType dataType, const QString &description, const QString &helpText );
+    QgsPropertyDefinition( const QString &name, DataType dataType, const QString &description, const QString &helpText, Target target = QgsPropertyDefinition::Pal );
 %Docstring
  Constructor for custom QgsPropertyDefinitions.
  \param name is used internally and should be a unique, alphanumeric string.
@@ -95,6 +101,15 @@ class QgsPropertyDefinition
  Returns the name of the property. This is used internally and should be a unique, alphanumeric string.
  :rtype: str
 %End
+
+    void setName( const QString &name );
+
+    Target target() const;
+%Docstring
+ :rtype: Target
+%End
+
+    void setTarget( Target target );
 
     QString description() const;
 %Docstring

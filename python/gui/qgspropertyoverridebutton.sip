@@ -173,6 +173,8 @@ class QgsPropertyOverrideButton: QToolButton
 %End
 
 
+    void updateFieldLists();
+
   public slots:
 
     void setActive( bool active );
@@ -186,6 +188,8 @@ class QgsPropertyOverrideButton: QToolButton
 %Docstring
 Emitted when property definition changes
 %End
+
+    void autocreated();
 
     void activated( bool isActive );
 %Docstring

@@ -756,7 +756,7 @@ class CORE_EXPORT QgsProject : public QObject, public QgsExpressionContextGenera
      */
     QgsCoordinateReferenceSystem defaultCrsForNewLayers() const;
 
-    const QgsAuxiliaryStorage *auxiliaryStorage() const;
+    const QgsAuxiliaryStorage *auxiliaryStorage() const SIP_SKIP;
 
     QgsAuxiliaryStorage *auxiliaryStorage();
 

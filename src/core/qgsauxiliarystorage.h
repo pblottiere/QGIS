@@ -33,7 +33,7 @@ class CORE_EXPORT QgsAuxiliaryField : public QgsField
 
     QgsPropertyDefinition propertyDefinition() const;
 
-    using QgsField::name;
+    using QgsField::name SIP_SKIP;
 
     static QString name( const QgsPropertyDefinition &def, bool joined = false );
 

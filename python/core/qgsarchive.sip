@@ -124,6 +124,11 @@ class QgsProjectArchive : QgsArchive
  :return: true if the file is well removed, false otherwise
  :rtype: bool
 %End
+
+    QString auxiliaryStorageFile() const;
+%Docstring
+ :rtype: str
+%End
 };
 
 /************************************************************************

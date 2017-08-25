@@ -363,6 +363,12 @@ Returns a comment for the data in the layer
  :rtype: str
 %End
 
+    void setAuxiliaryLayer( QgsAuxiliaryLayer *join = 0 );
+    QgsAuxiliaryLayer *auxiliaryLayer();
+%Docstring
+ :rtype: QgsAuxiliaryLayer
+%End
+
     QString displayField() const;
 %Docstring
  This is a shorthand for accessing the displayExpression if it is a simple field.
@@ -776,6 +782,9 @@ Return the provider type for this layer
  Retained for backward compatibility
  :rtype: str
 %End
+
+
+    void loadAuxiliaryLayerFromDatabase( const QString &filename );
 
     virtual bool readSymbology( const QDomNode &layerNode, QString &errorMessage, const QgsReadWriteContext &context );
 

@@ -422,7 +422,7 @@ class CORE_EXPORT QgsVectorLayer : public QgsMapLayer, public QgsExpressionConte
     QString dataComment() const;
 
     void setAuxiliaryLayer( QgsAuxiliaryLayer *join = nullptr );
-    const QgsAuxiliaryLayer *auxiliaryLayer() const;
+    const QgsAuxiliaryLayer *auxiliaryLayer() const SIP_SKIP;
     QgsAuxiliaryLayer *auxiliaryLayer();
 
     /**

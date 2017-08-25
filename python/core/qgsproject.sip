@@ -786,6 +786,11 @@ Returns the number of registered layers.
 %End
 
 
+    QgsAuxiliaryStorage *auxiliaryStorage();
+%Docstring
+ :rtype: QgsAuxiliaryStorage
+%End
+
   signals:
     void readProject( const QDomDocument & );
 %Docstring
