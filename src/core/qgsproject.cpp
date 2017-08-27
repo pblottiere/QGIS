@@ -428,8 +428,6 @@ void QgsProject::setFileName( const QString &name )
   if ( newHomePath != oldHomePath )
     emit homePathChanged();
 
-  mArchive->clear();
-
   setDirty( true );
 }
 
@@ -1261,9 +1259,16 @@ bool QgsProject::write()
   }
   else
   {
-    saveAuxiliaryStorage();
+    // write project file even if the auxiliary storage is not correctly
+    // saved
+    bool asOk = saveAuxiliaryStorage();
+    bool writeOk = writeProjectFile( mFile.fileName() );
 
-    return writeProjectFile( mFile.fileName() );
+    // errors raised during writing project file are more important
+    if ( !asOk && writeOk )
+      setError( tr( "Unable to save auxiliary storage" ) );
+
+    return asOk && writeOk;
   }
 }
 
@@ -2340,12 +2345,8 @@ bool QgsProject::saveAuxiliaryStorage( const QString &filename )
   {
     return mAuxiliaryStorage->saveAs( filename );
   }
-  else if ( mAuxiliaryStorage->fileName().isEmpty() )
-  {
-    return mAuxiliaryStorage->saveAs( *this );
-  }
   else
   {
-    return mAuxiliaryStorage->save();
+    return mAuxiliaryStorage->saveAs( *this );
   }
 }
