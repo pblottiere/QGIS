@@ -160,10 +160,6 @@ QgsAuxiliaryLayer::QgsAuxiliaryLayer( const QString &pkField, const QString &fil
   mJoinInfo.setJoinFieldNamesBlackList( QStringList() << "rowid" ); // introduced by ogr provider
 }
 
-QgsAuxiliaryLayer::~QgsAuxiliaryLayer()
-{
-}
-
 QgsVectorLayer *QgsAuxiliaryLayer::toSpatialLayer() const
 {
   QgsVectorLayer *layer = QgsMemoryProviderUtils::createMemoryLayer( QStringLiteral( "auxiliary_layer" ), fields(), mLayer->wkbType(), mLayer->crs() );
