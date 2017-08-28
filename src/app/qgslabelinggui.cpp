@@ -632,4 +632,6 @@ void QgsLabelingGui::autocreateProperty()
   button->updateFieldLists();
   button->setToProperty( property );
   mDataDefinedProperties.setProperty( key, button->toProperty() );
+
+  emit autocreated();
 }

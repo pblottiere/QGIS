@@ -142,6 +142,7 @@ QgsVectorLayerProperties::QgsVectorLayerProperties(
     layout->setMargin( 0 );
     labelingDialog = new QgsLabelingWidget( mLayer, QgisApp::instance()->mapCanvas(), labelingFrame );
     labelingDialog->layout()->setContentsMargins( -1, 0, -1, 0 );
+    connect( labelingDialog, &QgsLabelingWidget::autocreated, this, &QgsVectorLayerProperties::updateAuxiliaryStoragePage );
     layout->addWidget( labelingDialog );
     labelingFrame->setLayout( layout );
   }

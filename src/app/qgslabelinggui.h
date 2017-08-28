@@ -43,6 +43,10 @@ class APP_EXPORT QgsLabelingGui : public QgsTextFormatWidget, private QgsExpress
 
     void setLayer( QgsMapLayer *layer );
 
+  signals:
+
+    void autocreated();
+
   public slots:
 
     void updateUi();

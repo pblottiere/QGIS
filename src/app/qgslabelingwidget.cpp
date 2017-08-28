@@ -162,6 +162,7 @@ void QgsLabelingWidget::labelModeChanged( int index )
     QgsLabelingGui *simpleWidget = new QgsLabelingGui( mLayer, mCanvas, *mSimpleSettings, this );
     simpleWidget->setDockMode( dockMode() );
     connect( simpleWidget, &QgsTextFormatWidget::widgetChanged, this, &QgsLabelingWidget::widgetChanged );
+    connect( simpleWidget, &QgsLabelingGui::autocreated, this, &QgsLabelingWidget::autocreated );
 
     if ( index == 3 )
       simpleWidget->setLabelMode( QgsLabelingGui::ObstaclesOnly );
