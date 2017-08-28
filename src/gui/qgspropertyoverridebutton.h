@@ -189,6 +189,8 @@ class GUI_EXPORT QgsPropertyOverrideButton: public QToolButton
 
     void updateFieldLists();
 
+    void updateGui();
+
   public slots:
 
     /**
@@ -214,7 +216,6 @@ class GUI_EXPORT QgsPropertyOverrideButton: public QToolButton
     void showDescriptionDialog();
     void showExpressionDialog();
     void showAssistant();
-    void updateGui();
 
     /**
      * Sets the active status, emitting the activated signal where necessary (but never emitting the changed signal!).

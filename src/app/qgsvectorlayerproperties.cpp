@@ -1524,6 +1524,8 @@ void QgsVectorLayerProperties::updateAuxiliaryStoragePage()
     mAuxiliaryStorageFieldsLineEdit->setText( QString() );
     mAuxiliaryStorageFeaturesLineEdit->setText( QString() );
   }
+
+  labelingDialog->resetSettings(); // update data defined buttons
 }
 
 void QgsVectorLayerProperties::onAuxiliaryStorageClear()

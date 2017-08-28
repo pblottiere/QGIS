@@ -96,6 +96,12 @@ void QgsLabelingWidget::adaptToLayer()
   {
     mLabelModeComboBox->setCurrentIndex( 0 );
   }
+
+  QgsLabelingGui *lg = qobject_cast<QgsLabelingGui *>( mWidget );
+  if ( lg )
+  {
+    lg->updateUi();
+  }
 }
 
 void QgsLabelingWidget::writeSettingsToLayer()

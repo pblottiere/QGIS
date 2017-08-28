@@ -340,6 +340,10 @@ void QgsPropertyOverrideButton::aboutToShowMenu()
   {
     mActionAutocreate->setEnabled( false );
   }
+  else
+  {
+    mActionAutocreate->setEnabled( true );
+  }
 
   mDefineMenu->addSeparator();
 
@@ -639,6 +643,8 @@ void QgsPropertyOverrideButton::showAssistant()
 
 void QgsPropertyOverrideButton::updateGui()
 {
+  updateFieldLists();
+
   bool hasExp = !mExpressionString.isEmpty();
   bool hasField = !mFieldName.isEmpty();
 

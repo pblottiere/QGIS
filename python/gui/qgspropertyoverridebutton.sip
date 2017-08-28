@@ -175,6 +175,8 @@ class QgsPropertyOverrideButton: QToolButton
 
     void updateFieldLists();
 
+    void updateGui();
+
   public slots:
 
     void setActive( bool active );

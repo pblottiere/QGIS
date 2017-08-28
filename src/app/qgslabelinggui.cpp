@@ -601,6 +601,10 @@ void QgsLabelingGui::updateUi()
   syncDefinedCheckboxFrame( mScaleBasedVisibilityDDBtn, mScaleBasedVisibilityChkBx, mScaleBasedVisibilityFrame );
   syncDefinedCheckboxFrame( mFontLimitPixelDDBtn, mFontLimitPixelChkBox, mFontLimitPixelFrame );
 
+  mCoordXDDBtn->updateGui();
+  mCoordYDDBtn->updateGui();
+  mCoordRotationDDBtn->updateGui();
+
   chkMergeLines->setEnabled( !mDirectSymbChkBx->isChecked() );
   if ( mDirectSymbChkBx->isChecked() )
   {
