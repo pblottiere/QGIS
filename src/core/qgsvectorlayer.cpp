@@ -4562,11 +4562,11 @@ void QgsVectorLayer::loadAuxiliaryLayerFromDatabase( const QString &filename )
   {
     QgsAuxiliaryLayer *alayer = nullptr;
 
-    if ( mAuxiliaryLayerKey.isEmpty() )
-    {
+    /*{
       alayer = storage.createAuxiliaryLayer( this );
     }
-    else
+    else */
+    if ( !mAuxiliaryLayerKey.isEmpty() )
     {
       int idx = fields().lookupField( mAuxiliaryLayerKey );
 

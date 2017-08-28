@@ -91,8 +91,8 @@ class APP_EXPORT QgsMapToolLabel: public QgsMapTool
     //! Currently dragged label position
     LabelDetails mCurrentLabel;
 
-    bool autocreate( QgsVectorLayer *layer, const QgsPalLayerSettings::Property &p, const QString &providerId = QString() ) const;
-    bool autocreate( QgsVectorLayer *layer, const QgsDiagramLayerSettings::Property &p ) const;
+//   bool autocreate( QgsVectorLayer *layer, const QgsPalLayerSettings::Property &p, const QString &providerId = QString() ) const;
+//   bool autocreate( QgsVectorLayer *layer, const QgsDiagramLayerSettings::Property &p ) const;
 
     /** Returns label position for mouse click location
       \param e mouse event

@@ -519,12 +519,12 @@ bool QgsMapToolLabel::labelIsRotatable( QgsVectorLayer *layer, const QString &pr
   bool auxiliaryStorage = false;
   QString rColName = dataDefinedColumnName( layer, QgsPalLayerSettings::LabelRotation, providerId, auxiliaryStorage );
 
-  if ( rColName.isEmpty() )
-  {
-    autocreate( layer, QgsPalLayerSettings::LabelRotation, providerId );
+  /* if ( rColName.isEmpty() )
+   {
+     autocreate( layer, QgsPalLayerSettings::LabelRotation, providerId );
 
-    rColName = dataDefinedColumnName( layer, QgsPalLayerSettings::LabelRotation, providerId, auxiliaryStorage );
-  }
+     rColName = dataDefinedColumnName( layer, QgsPalLayerSettings::LabelRotation, providerId, auxiliaryStorage );
+   } */
 
   if ( !auxiliaryStorage && !layer->isEditable() )
     return false;
@@ -628,11 +628,11 @@ bool QgsMapToolLabel::diagramMoveable( QgsVectorLayer *vlayer, int &xCol, int &y
           xCol = vlayer->fields().lookupField( ddX.field() );
         }
       }
-      else if ( autocreate( vlayer, QgsDiagramLayerSettings::PositionX ) )
-      {
-        ddX = vlayer->diagramLayerSettings()->dataDefinedProperties().property( QgsDiagramLayerSettings::PositionX );
-        xCol = vlayer->fields().lookupField( ddX.field() );
-      }
+      /*     else if ( autocreate( vlayer, QgsDiagramLayerSettings::PositionX ) )
+           {
+             ddX = vlayer->diagramLayerSettings()->dataDefinedProperties().property( QgsDiagramLayerSettings::PositionX );
+             xCol = vlayer->fields().lookupField( ddX.field() );
+           } */
 
       yCol = -1;
       if ( QgsProperty ddY = dls->dataDefinedProperties().property( QgsDiagramLayerSettings::PositionY ) )
@@ -642,11 +642,11 @@ bool QgsMapToolLabel::diagramMoveable( QgsVectorLayer *vlayer, int &xCol, int &y
           yCol = vlayer->fields().lookupField( ddY.field() );
         }
       }
-      else if ( autocreate( vlayer, QgsDiagramLayerSettings::PositionY ) )
-      {
-        ddY = vlayer->diagramLayerSettings()->dataDefinedProperties().property( QgsDiagramLayerSettings::PositionY );
-        yCol = vlayer->fields().lookupField( ddY.field() );
-      }
+      /*     else if ( autocreate( vlayer, QgsDiagramLayerSettings::PositionY ) )
+           {
+             ddY = vlayer->diagramLayerSettings()->dataDefinedProperties().property( QgsDiagramLayerSettings::PositionY );
+             yCol = vlayer->fields().lookupField( ddY.field() );
+           } */
       return xCol >= 0 && yCol >= 0;
     }
   }
@@ -682,17 +682,17 @@ bool QgsMapToolLabel::labelMoveable( QgsVectorLayer *vlayer, const QString &prov
   QString xColName = dataDefinedColumnName( vlayer, QgsPalLayerSettings::PositionX, providerId, auxiliaryStorageX );
   QString yColName = dataDefinedColumnName( vlayer, QgsPalLayerSettings::PositionY, providerId, auxiliaryStorageY );
 
-  if ( xColName.isEmpty() )
-  {
-    autocreate( vlayer, QgsPalLayerSettings::PositionX, providerId );
-    xColName = dataDefinedColumnName( vlayer, QgsPalLayerSettings::PositionX, providerId, auxiliaryStorageX );
-  }
+  /* if ( xColName.isEmpty() )
+   {
+     autocreate( vlayer, QgsPalLayerSettings::PositionX, providerId );
+     xColName = dataDefinedColumnName( vlayer, QgsPalLayerSettings::PositionX, providerId, auxiliaryStorageX );
+   } */
 
-  if ( yColName.isEmpty() )
-  {
-    autocreate( vlayer, QgsPalLayerSettings::PositionY, providerId );
-    yColName = dataDefinedColumnName( vlayer, QgsPalLayerSettings::PositionY, providerId, auxiliaryStorageY );
-  }
+  /* if ( yColName.isEmpty() )
+   {
+     autocreate( vlayer, QgsPalLayerSettings::PositionY, providerId );
+     yColName = dataDefinedColumnName( vlayer, QgsPalLayerSettings::PositionY, providerId, auxiliaryStorageY );
+   } */
 
   if ( ( !auxiliaryStorageX || !auxiliaryStorageY ) && !vlayer->isEditable() )
     return false;
@@ -728,11 +728,11 @@ bool QgsMapToolLabel::labelCanShowHide( QgsVectorLayer *vlayer, int &showCol ) c
     bool auxiliaryStorage = false;
     QString fieldName = dataDefinedColumnName( vlayer, QgsPalLayerSettings::Show, providerId, auxiliaryStorage );
 
-    if ( fieldName.isEmpty() )
-    {
-      autocreate( vlayer, QgsPalLayerSettings::Show, providerId );
-      fieldName = dataDefinedColumnName( vlayer, QgsPalLayerSettings::Show, providerId, auxiliaryStorage );
-    }
+    /*   if ( fieldName.isEmpty() )
+       {
+         autocreate( vlayer, QgsPalLayerSettings::Show, providerId );
+         fieldName = dataDefinedColumnName( vlayer, QgsPalLayerSettings::Show, providerId, auxiliaryStorage );
+       } */
 
     if ( !auxiliaryStorage && !vlayer->isEditable() )
       return false;
@@ -790,11 +790,11 @@ bool QgsMapToolLabel::diagramCanShowHide( QgsVectorLayer *vlayer, int &showCol )
           showCol = vlayer->fields().lookupField( ddShow.field() );
         }
       }
-      else if ( autocreate( vlayer, QgsDiagramLayerSettings::Show ) )
-      {
-        ddShow = vlayer->diagramLayerSettings()->dataDefinedProperties().property( QgsDiagramLayerSettings::Show );
-        showCol = vlayer->fields().lookupField( ddShow.field() );
-      }
+      /*     else if ( autocreate( vlayer, QgsDiagramLayerSettings::Show ) )
+           {
+             ddShow = vlayer->diagramLayerSettings()->dataDefinedProperties().property( QgsDiagramLayerSettings::Show );
+             showCol = vlayer->fields().lookupField( ddShow.field() );
+           } */
     }
   }
 
@@ -827,7 +827,7 @@ QgsMapToolLabel::LabelDetails::LabelDetails( const QgsLabelPosition &p )
     settings = QgsPalLayerSettings();
   }
 }
-
+/*
 bool QgsMapToolLabel::autocreate( QgsVectorLayer *layer, const QgsPalLayerSettings::Property &p, const QString &providerId ) const
 {
   bool rc = false;
@@ -890,4 +890,4 @@ bool QgsMapToolLabel::autocreate( QgsVectorLayer *layer, const QgsDiagramLayerSe
   }
 
   return rc;
-}
+} */
