@@ -10997,19 +10997,29 @@ void QgisApp::updateLabelToolButtons()
     if ( !vlayer || ( !vlayer->diagramsEnabled() && !vlayer->labelsEnabled() ) )
       continue;
 
-    if ( QgsMapToolLabel *mtl = qobject_cast<QgsMapToolLabel *>( mMapTools.mShowHideLabels ) )
-    {
-      bool enableLabel = mtl->labelCanShowHide( vlayer );
-      bool enableDiagram = mtl->diagramCanShowHide( vlayer );
-      enableShowHide = enableLabel || enableDiagram;
+    int colX, colY, colShow, colAng;
+    enablePin =
+      enablePin ||
+      ( qobject_cast<QgsMapToolPinLabels *>( mMapTools.mPinLabels ) &&
+        ( qobject_cast<QgsMapToolPinLabels *>( mMapTools.mPinLabels )->labelMoveable( vlayer, colX, colY )
+          || qobject_cast<QgsMapToolPinLabels *>( mMapTools.mPinLabels )->diagramMoveable( vlayer, colX, colY ) ) );
 
-      enableLabel = mtl->labelMoveable( vlayer );
-      enableDiagram = mtl->diagramMoveable( vlayer );
-      enableMove = enableLabel || enableDiagram;
-      enablePin = enableMove;
+    enableShowHide =
+      enableShowHide ||
+      ( qobject_cast<QgsMapToolShowHideLabels *>( mMapTools.mShowHideLabels ) &&
+        ( qobject_cast<QgsMapToolShowHideLabels *>( mMapTools.mShowHideLabels )->labelCanShowHide( vlayer, colShow )
+          || qobject_cast<QgsMapToolShowHideLabels *>( mMapTools.mShowHideLabels )->diagramCanShowHide( vlayer, colShow ) ) );
 
-      enableRotate = mtl->layerIsRotatable( vlayer );
-    }
+    enableMove =
+      enableMove ||
+      ( qobject_cast<QgsMapToolMoveLabel *>( mMapTools.mMoveLabel ) &&
+        ( qobject_cast<QgsMapToolMoveLabel *>( mMapTools.mMoveLabel )->labelMoveable( vlayer, colX, colY )
+          || qobject_cast<QgsMapToolMoveLabel *>( mMapTools.mMoveLabel )->diagramMoveable( vlayer, colX, colY ) ) );
+
+    enableRotate =
+      enableRotate ||
+      ( qobject_cast<QgsMapToolRotateLabel *>( mMapTools.mRotateLabel ) &&
+        qobject_cast<QgsMapToolRotateLabel *>( mMapTools.mRotateLabel )->layerIsRotatable( vlayer, colAng ) );
 
     enableChange = true;
 
