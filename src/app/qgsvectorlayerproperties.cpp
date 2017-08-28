@@ -142,7 +142,7 @@ QgsVectorLayerProperties::QgsVectorLayerProperties(
     layout->setMargin( 0 );
     labelingDialog = new QgsLabelingWidget( mLayer, QgisApp::instance()->mapCanvas(), labelingFrame );
     labelingDialog->layout()->setContentsMargins( -1, 0, -1, 0 );
-    connect( labelingDialog, &QgsLabelingWidget::autocreated, this, &QgsVectorLayerProperties::updateAuxiliaryStoragePage );
+    connect( labelingDialog, &QgsLabelingWidget::autocreated, this, &QgsVectorLayerProperties::updateAuxiliaryFields );
     layout->addWidget( labelingDialog );
     labelingFrame->setLayout( layout );
   }
@@ -1480,14 +1480,44 @@ void QgsVectorLayerProperties::updateAuxiliaryStoragePage()
     int features = alayer->featureCount();
     mAuxiliaryStorageFeaturesLineEdit->setText( QString::number( features ) );
 
-    // update fields count
-    int fields = alayer->auxiliaryFields().count();
-    mAuxiliaryStorageFieldsLineEdit->setText( QString::number( fields ) );
-
+    // update actions
     mAuxiliaryStorageActionClear->setEnabled( true );
     mAuxiliaryStorageActionDelete->setEnabled( true );
     mAuxiliaryStorageActionExport->setEnabled( true );
     mAuxiliaryStorageActionNew->setEnabled( false );
+
+    updateAuxiliaryFields();
+  }
+  else
+  {
+    mAuxiliaryStorageInformationGrpBox->setEnabled( false );
+    mAuxiliaryStorageFieldsGrpBox->setEnabled( false );
+    mAuxiliaryStorageActionClear->setEnabled( false );
+    mAuxiliaryStorageActionDelete->setEnabled( false );
+    mAuxiliaryStorageActionExport->setEnabled( false );
+
+    if ( mLayer->isSpatial() )
+      mAuxiliaryStorageActionNew->setEnabled( true );
+
+    mAuxiliaryStorageFieldsTree->clear();
+    mAuxiliaryStorageKeyLineEdit->setText( QString() );
+    mAuxiliaryStorageFieldsLineEdit->setText( QString() );
+    mAuxiliaryStorageFeaturesLineEdit->setText( QString() );
+  }
+
+  if ( labelingDialog )
+  {
+    labelingDialog->resetSettings(); // update data defined buttons
+  }
+}
+
+void QgsVectorLayerProperties::updateAuxiliaryFields()
+{
+  const QgsAuxiliaryLayer *alayer = mLayer->auxiliaryLayer();
+  if ( alayer )
+  {
+    int fields = alayer->auxiliaryFields().count();
+    mAuxiliaryStorageFieldsLineEdit->setText( QString::number( fields ) );
 
     // add fields
     mAuxiliaryStorageFieldsTree->clear();
@@ -1509,24 +1539,6 @@ void QgsVectorLayerProperties::updateAuxiliaryStoragePage()
       mAuxiliaryStorageFieldsTree->addTopLevelItem( item );
     }
   }
-  else
-  {
-    mAuxiliaryStorageInformationGrpBox->setEnabled( false );
-    mAuxiliaryStorageFieldsGrpBox->setEnabled( false );
-    mAuxiliaryStorageActionClear->setEnabled( false );
-    mAuxiliaryStorageActionDelete->setEnabled( false );
-    mAuxiliaryStorageActionExport->setEnabled( false );
-
-    if ( mLayer->isSpatial() )
-      mAuxiliaryStorageActionNew->setEnabled( true );
-
-    mAuxiliaryStorageFieldsTree->clear();
-    mAuxiliaryStorageKeyLineEdit->setText( QString() );
-    mAuxiliaryStorageFieldsLineEdit->setText( QString() );
-    mAuxiliaryStorageFeaturesLineEdit->setText( QString() );
-  }
-
-  labelingDialog->resetSettings(); // update data defined buttons
 }
 
 void QgsVectorLayerProperties::onAuxiliaryStorageClear()

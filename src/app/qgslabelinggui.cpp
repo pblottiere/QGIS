@@ -618,6 +618,9 @@ void QgsLabelingGui::updateUi()
 
 void QgsLabelingGui::autocreateProperty()
 {
+  if ( !mLayer->auxiliaryLayer() )
+    return;
+
   QgsPropertyOverrideButton *button = qobject_cast<QgsPropertyOverrideButton *>( sender() );
   QgsPalLayerSettings::Property key = static_cast< QgsPalLayerSettings::Property >( button->propertyKey() );
   QgsPropertyDefinition def = QgsPalLayerSettings::propertyDefinitions()[key];

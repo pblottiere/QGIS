@@ -202,6 +202,7 @@ class APP_EXPORT QgsVectorLayerProperties : public QgsOptionsDialogBase, private
     void addJoinToTreeWidget( const QgsVectorLayerJoinInfo &join, const int insertIndex = -1 );
 
     void updateAuxiliaryStoragePage();
+    void updateAuxiliaryFields();
 
     QgsExpressionContext mContext;
 
