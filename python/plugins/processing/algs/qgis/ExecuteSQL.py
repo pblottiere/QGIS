@@ -28,6 +28,9 @@ __revision__ = '$Format:%H$'
 from qgis.core import (QgsVirtualLayerDefinition,
                        QgsVectorLayer,
                        QgsWkbTypes,
+                       QgsExpressionContext,
+                       QgsExpression,
+                       QgsProcessingParameterDefinition,
                        QgsProcessingParameterMultipleLayers,
                        QgsProcessingParameterString,
                        QgsProcessingParameterEnum,
@@ -39,6 +42,21 @@ from qgis.core import (QgsVirtualLayerDefinition,
 from processing.algs.qgis.QgisAlgorithm import QgisAlgorithm
 
 
+class ParameterExecuteSql(QgsProcessingParameterDefinition):
+
+    def __init__(self, name='', description=''):
+        super().__init__(name, description)
+        self.setMetadata({
+            'widget_wrapper': 'processing.algs.qgis.ui.ExecuteSQLWidget.ExecuteSQLWidgetWrapper'
+        })
+
+    def type(self):
+        return 'execute_sql'
+
+    def clone(self):
+        return ParameterExecuteSql(self.name(), self.description())
+
+
 class ExecuteSQL(QgisAlgorithm):
 
     """ This algorithm allows executing an SQL query on a set of input
@@ -47,6 +65,7 @@ class ExecuteSQL(QgisAlgorithm):
 
     INPUT_DATASOURCES = 'INPUT_DATASOURCES'
     INPUT_QUERY = 'INPUT_QUERY'
+    INPUT_PARAMETERS = 'INPUT_PARAMETERS'
     INPUT_UID_FIELD = 'INPUT_UID_FIELD'
     INPUT_GEOMETRY_FIELD = 'INPUT_GEOMETRY_FIELD'
     INPUT_GEOMETRY_TYPE = 'INPUT_GEOMETRY_TYPE'
@@ -67,6 +86,8 @@ class ExecuteSQL(QgisAlgorithm):
         self.addParameter(QgsProcessingParameterString(name=self.INPUT_QUERY,
                                                        description=self.tr('SQL query'),
                                                        multiLine=True))
+
+        self.addParameter(ParameterExecuteSql(name=self.INPUT_PARAMETERS, description=self.tr('SQL parameters')))
 
         self.addParameter(QgsProcessingParameterString(name=self.INPUT_UID_FIELD,
                                                        description=self.tr('Unique identifier field'), optional=True))
@@ -104,6 +125,7 @@ class ExecuteSQL(QgisAlgorithm):
         geometry_field = self.parameterAsString(parameters, self.INPUT_GEOMETRY_FIELD, context)
         geometry_type = self.parameterAsEnum(parameters, self.INPUT_GEOMETRY_TYPE, context)
         geometry_crs = self.parameterAsCrs(parameters, self.INPUT_GEOMETRY_CRS, context)
+        scope = parameters[self.INPUT_PARAMETERS]
 
         df = QgsVirtualLayerDefinition()
         for layerIdx, layer in enumerate(layers):
@@ -113,7 +135,10 @@ class ExecuteSQL(QgisAlgorithm):
             raise QgsProcessingException(
                 self.tr('Empty SQL. Please enter valid SQL expression and try again.'))
         else:
-            df.setQuery(query)
+            localContext = QgsExpressionContext()
+            localContext.appendScope(scope)
+            expandedQuery = QgsExpression.replaceExpressionText(query, localContext)
+            df.setQuery(expandedQuery)
 
         if uid_field:
             df.setUid(uid_field)
