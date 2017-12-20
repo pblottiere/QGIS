@@ -77,7 +77,7 @@ class ExecuteSql(GdalAlgorithm):
         return 'executesql'
 
     def displayName(self):
-        return self.tr('Execute SQL and returns a OGR SQL layer')
+        return self.tr('Execute SQL and return a OGR SQL layer')
 
     def group(self):
         return self.tr('Vector miscellaneous')

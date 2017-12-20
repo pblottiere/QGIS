@@ -116,7 +116,7 @@ class ExecuteSQL(QgisAlgorithm):
         return 'executesql'
 
     def displayName(self):
-        return self.tr('Execute SQL and returns a QGIS virtual layer')
+        return self.tr('Execute SQL and return a dynamic QGIS virtual layer')
 
     def processAlgorithm(self, parameters, context, feedback):
         layers = self.parameterAsLayerList(parameters, self.INPUT_DATASOURCES, context)
