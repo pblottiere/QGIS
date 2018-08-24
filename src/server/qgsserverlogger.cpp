@@ -77,3 +77,63 @@ void QgsServerLogger::logMessage( const QString &message, const QString &tag, Qg
                    + QTime::currentTime().toString() + "] " + message + "\n" );
   mTextStream.flush();
 }
+
+QgsServerLoggerBis *QgsServerLoggerBis::sInstance = nullptr;
+
+QgsServerLoggerBis *QgsServerLoggerBis::instance()
+{
+  if ( !sInstance )
+  {
+    sInstance = new QgsServerLoggerBis();
+  }
+  return sInstance;
+}
+
+QgsServerLoggerBis::QgsServerLoggerBis()
+  : QgsMessageLogConsole()
+{
+}
+
+void QgsServerLoggerBis::logMessage( const QString &message, const QString &tag, Qgis::MessageLevel level )
+{
+  if ( mLogLevel > level )
+  {
+    return;
+  }
+
+  if ( mLogFile.isOpen() )
+  {
+    const QString pid = QString::number( QCoreApplication::applicationPid() );
+    const QString time = QTime::currentTime().toString();
+    mTextStream << QString( "[%1][%2] %3" ).arg( pid, time, message );
+    mTextStream.flush();
+  }
+  else
+  {
+    // log to std::cerr by default
+    QgsMessageLogConsole::logMessage( message, tag, level );
+  }
+}
+
+void QgsServerLoggerBis::setLogLevel( const Qgis::MessageLevel level )
+{
+  mLogLevel = level;
+}
+
+bool QgsServerLoggerBis::setLogFile( const QString &filename )
+{
+  mTextStream.flush();
+  mLogFile.close();
+  mLogFile.setFileName( "" );
+
+  if ( QFile( filename ).exists() )
+  {
+    mLogFile.setFileName( filename );
+    if ( mLogFile.open( QIODevice::Append ) )
+    {
+      mTextStream.setDevice( &mLogFile );
+    }
+  }
+
+  return ( ( mTextStream.device() == 0 ) ? false : true );
+}

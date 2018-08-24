@@ -84,4 +84,29 @@ class QgsServerLogger: public QObject
     Qgis::MessageLevel mLogLevel = Qgis::None;
 };
 
+class QgsServerLoggerBis: public QgsMessageLogConsole
+{
+    Q_OBJECT
+
+  public:
+    static QgsServerLoggerBis *instance();
+
+    bool setLogFile( const QString &filename );
+
+    void setLogLevel( Qgis::MessageLevel level );
+
+  public slots:
+    void logMessage( const QString &message, const QString &tag, Qgis::MessageLevel level );
+
+  protected:
+    QgsServerLoggerBis();
+
+  private:
+    static QgsServerLoggerBis *sInstance;
+
+    QFile mLogFile;
+    QTextStream mTextStream;
+    Qgis::MessageLevel mLogLevel = Qgis::None;
+};
+
 #endif // QGSSERVERLOGGER_H
