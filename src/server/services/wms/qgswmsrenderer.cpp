@@ -103,6 +103,8 @@
 #include <QUrl>
 #include <QPaintEngine>
 
+#include <ctime>
+
 namespace QgsWms
 {
 
@@ -646,6 +648,8 @@ namespace QgsWms
 
   QImage *QgsRenderer::getMap( QgsMapSettings &mapSettings, HitTest *hitTest )
   {
+    std::clock_t start = std::clock();
+
     // check size
     if ( !checkMaximumWidthHeight() )
     {
@@ -728,6 +732,8 @@ namespace QgsWms
     QImage *scaledImage = scaleImage( image.get() );
     if ( scaledImage )
       image.reset( scaledImage );
+
+    std::cout << "QgsWmsRenderer::getMap time: " << ( std::clock() - start ) / ( double )( CLOCKS_PER_SEC / 1000 ) << " ms" << std::endl;
 
     // return
     return image.release();

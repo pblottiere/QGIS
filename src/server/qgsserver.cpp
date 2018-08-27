@@ -49,6 +49,7 @@
 // TODO: remove, it's only needed by a single debug message
 #include <fcgi_stdio.h>
 #include <cstdlib>
+#include <ctime>
 
 
 
@@ -267,6 +268,8 @@ void QgsServer::handleRequest( QgsServerRequest &request, QgsServerResponse &res
   Qgis::MessageLevel logLevel = QgsServerLogger::instance()->logLevel();
   QTime time; //used for measuring request time if loglevel < 1
 
+  std::clock_t start = std::clock();
+
   qApp->processEvents();
 
   if ( logLevel == Qgis::Info )
@@ -364,6 +367,8 @@ void QgsServer::handleRequest( QgsServerRequest &request, QgsServerResponse &res
   {
     QgsMessageLog::logMessage( "Request finished in " + QString::number( time.elapsed() ) + " ms", QStringLiteral( "Server" ), Qgis::Info );
   }
+
+  std::cout << "QgsServer::handleRequest time: " << ( std::clock() - start ) / ( double )( CLOCKS_PER_SEC / 1000 ) << " ms" << std::endl;
 }
 
 

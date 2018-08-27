@@ -33,6 +33,8 @@
 #include "qgswmsgetlegendgraphics.h"
 #include "qgswmsparameters.h"
 
+#include <ctime>
+
 #define QSTR_COMPARE( str, lit )\
   (str.compare( QStringLiteral( lit ), Qt::CaseInsensitive ) == 0)
 
@@ -70,6 +72,8 @@ namespace QgsWms
       void executeRequest( const QgsServerRequest &request, QgsServerResponse &response,
                            const QgsProject *project ) override
       {
+        std::clock_t start = std::clock();
+
         const QgsWmsParameters parameters( QUrlQuery( request.url() ) );
 
         QString version = parameters.version();
@@ -156,6 +160,8 @@ namespace QgsWms
           throw QgsServiceException( QStringLiteral( "OperationNotSupported" ),
                                      QString( "Request %1 is not supported" ).arg( req ) );
         }
+
+        std::cout << "QgsService::executeRequest time: " << ( std::clock() - start ) / ( double )( CLOCKS_PER_SEC / 1000 ) << " ms" << std::endl;
       }
 
     private:
