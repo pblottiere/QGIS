@@ -67,7 +67,10 @@ namespace QgsWms
 #ifdef HAVE_SERVER_PYTHON_PLUGINS
       renderJob.setFeatureFilterProvider( mFeatureFilterProvider );
 #endif
+      QTime time;
+      time.start();
       renderJob.renderSynchronously();
+      std::cout << "QgsWmsServer rendering time: " << time.elapsed() << std::endl;
     }
   }
 
