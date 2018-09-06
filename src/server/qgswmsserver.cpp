@@ -1461,7 +1461,10 @@ QImage* QgsWMSServer::getMap( HitTest* hitTest )
     runHitTest( &thePainter, *hitTest );
   else
   {
+    QTime time;
+    time.start();
     mMapRenderer->render( &thePainter );
+    std::cout << "QgsWmsServer rendering time: " << time.elapsed() << std::endl;
   }
 
   if ( mConfigParser )
