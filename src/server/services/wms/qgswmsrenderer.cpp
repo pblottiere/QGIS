@@ -130,11 +130,140 @@ namespace QgsWms
     initNicknameLayers();
   }
 
+  QgsRenderer::QgsRenderer( QgsServerInterface *serverIface,
+                            const QgsProject *project )
+    :
+#ifdef HAVE_SERVER_PYTHON_PLUGINS
+    mAccessControl( serverIface->accessControls() ),
+#endif
+    mSettings( *serverIface->serverSettings() )
+    , mProject( project )
+  {
+  }
+
   QgsRenderer::~QgsRenderer()
   {
     removeTemporaryLayers();
   }
 
+  void QgsRenderer::setParameters( const QgsWmsParameters &parameters,
+                                   const bool useScaleDenominator )
+  {
+    mWmsParameters = parameters;
+
+    initRestrictedLayers();
+    initNicknameLayers();
+    initMapSettings( useScaleDenominator );
+  }
+
+  const QgsProject &QgsRenderer::project() const
+  {
+    return *mProject;
+  }
+
+  const QgsWmsParameters &QgsRenderer::parameters() const
+  {
+    return mWmsParameters;
+  }
+
+  const QgsMapSettings &QgsRenderer::mapSettings() const
+  {
+    return mMapSettings;
+  }
+
+  void QgsRenderer::initMapSettings( const bool useScaleDenominator )
+  {
+    mMapSettings = QgsMapSettings();
+
+    // get layers parameters
+    QList<QgsMapLayer *> layers;
+    QList<QgsWmsParametersLayer> params = mWmsParameters.layersParameters();
+
+    // init layer restorer before doing anything
+    std::unique_ptr<QgsLayerRestorer> restorer;
+    restorer.reset( new QgsLayerRestorer( mNicknameLayers.values() ) );
+
+    // init stylized layers according to LAYERS/STYLES or SLD
+    QString sld = mWmsParameters.sldBody();
+    if ( !sld.isEmpty() )
+    {
+      layers = sldStylizedLayers( sld );
+    }
+    else
+    {
+      layers = stylizedLayers( params );
+    }
+
+    double scaleDenominator = -1;
+    if ( useScaleDenominator && ! mWmsParameters.scale().isEmpty() )
+      scaleDenominator = mWmsParameters.scaleAsDouble();
+
+    // remove unwanted layers (restricted layers, ...)
+    removeUnwantedLayers( layers, scaleDenominator );
+
+    // configure each layer with opacity, selection filter, ...
+    bool updateMapExtent = mWmsParameters.bbox().isEmpty();
+    for ( QgsMapLayer *layer : layers )
+    {
+      checkLayerReadPermissions( layer );
+
+      for ( const QgsWmsParametersLayer &param : params )
+      {
+        if ( param.mNickname == layerNickname( *layer ) )
+        {
+          setLayerOpacity( layer, param.mOpacity );
+
+          setLayerFilter( layer, param.mFilter );
+
+          setLayerSelection( layer, param.mSelection );
+
+          if ( updateMapExtent )
+            updateExtent( layer, mMapSettings );
+
+          break;
+        }
+      }
+
+      setLayerAccessControlFilter( layer );
+    }
+
+    // add highlight layers above others
+    layers = layers << highlightLayers( mWmsParameters.highlightLayersParameters() );
+
+    // create the output image and the painter
+    std::unique_ptr<QPainter> painter;
+    std::unique_ptr<QImage> image( createImage() );
+
+    // configure map settings (background, DPI, ...)
+    configureMapSettings( image.get(), mMapSettings );
+
+    // add layers to map settings (revert order for the rendering)
+    std::reverse( layers.begin(), layers.end() );
+    mMapSettings.setLayers( layers );
+  }
+
+  bool QgsRenderer::run( QgsLayerTreeModel &model )
+  {
+    bool rc = false;
+
+    const QgsLegendSettings settings = mWmsParameters.legendSettings();
+    QgsLegendRenderer renderer( &model, settings );
+
+    const QSizeF minSize = renderer.minimumSize();
+    const qreal dpmm = dotsPerMm();
+    const QSize s( minSize.width() * dpmm, minSize.height() * dpmm );
+
+    mImage.reset( createImage( s.width(), s.height(), false ) );
+
+    QPainter painter( mImage.get() );
+    painter.setRenderHint( QPainter::Antialiasing, true );
+    painter.scale( dpmm, dpmm );
+
+    renderer.drawLegend( &painter );
+    painter.end();
+
+    return rc;
+  }
 
   QImage *QgsRenderer::getLegendGraphics()
   {

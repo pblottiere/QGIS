@@ -19,8 +19,16 @@
  *                                                                         *
  ***************************************************************************/
 
+class QgsLayerTreeModel;
+class QgsLayerTree;
+class QgsRenderContext;
+
 namespace QgsWms
 {
+  class QgsRenderer;
+
+  typedef QSet<QString> SymbolSet;
+  typedef QHash<const QgsVectorLayer *, SymbolSet> HitTest;
 
   /**
    * Output GetLegendGRaphics response
@@ -29,6 +37,13 @@ namespace QgsWms
                                const QString &version, const QgsServerRequest &request,
                                QgsServerResponse &response );
 
+  QgsLayerTreeModel *legendTreeModel( const QgsWms::QgsRenderer &renderer, QgsLayerTree &rootGroup );
+
+  QList<int> legendNodeOrder( const QgsWms::QgsRenderer &renderer, const QgsVectorLayer *layer );
+
+  HitTest hitTest( const QgsWms::QgsRenderer &renderer );
+
+  void runHitTestLayer( QgsVectorLayer *vl, SymbolSet &usedSymbols, QgsRenderContext &context );
 } // namespace QgsWms
 
 

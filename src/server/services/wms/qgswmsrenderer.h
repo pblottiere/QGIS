@@ -23,6 +23,8 @@
 #include "qgsserversettings.h"
 #include "qgswmsparameters.h"
 #include "qgsfeaturefilter.h"
+#include "qgsmapsettings.h"
+
 #include <QDomDocument>
 #include <QMap>
 #include <QString>
@@ -32,7 +34,6 @@ class QgsPrintLayout;
 class QgsFeature;
 class QgsLayout;
 class QgsMapLayer;
-class QgsMapSettings;
 class QgsPointXY;
 class QgsRasterLayer;
 class QgsRectangle;
@@ -40,8 +41,8 @@ class QgsRenderContext;
 class QgsVectorLayer;
 class QgsAccessControl;
 class QgsDxfExport;
-class QgsLayerTreeModel;
 class QgsLayerTree;
+class QgsLayerTreeModel;
 
 class QImage;
 class QPaintDevice;
@@ -68,7 +69,28 @@ namespace QgsWms
                    const QgsProject *project,
                    const QgsWmsParameters &parameters );
 
+      QgsRenderer( QgsServerInterface *serverIface,
+                   const QgsProject *project );
+
       ~QgsRenderer();
+
+      void setParameters( const QgsWmsParameters &parameters,
+                          bool useScaleDenominator = false );
+      const QgsWmsParameters &parameters() const;
+
+      const QgsMapSettings &mapSettings() const;
+
+      const QgsProject &project() const;
+
+      // bool legend( const QgsLayerTreeModel &model, QImage &image );
+
+      bool run( QgsLayerTreeModel &model );
+
+      // QByteArray bytes();
+
+      // QImage image();
+
+      // QList<int> legendNodeOrder( const QgsVectorLayer &layer ) const;
 
       /**
        * Returns the map legend as an image (or a null pointer in case of error). The caller takes ownership
@@ -192,6 +214,8 @@ namespace QgsWms
        */
       void configureMapSettings( const QPaintDevice *paintDevice, QgsMapSettings &mapSettings ) const;
 
+      void initMapSettings( bool useScaleDenominator );
+
       QDomDocument featureInfoDocument( QList<QgsMapLayer *> &layers, const QgsMapSettings &mapSettings,
                                         const QImage *outputImage, const QString &version ) const;
 
@@ -292,7 +316,7 @@ namespace QgsWms
 
     private:
 
-      const QgsWmsParameters &mWmsParameters;
+      QgsWmsParameters mWmsParameters;
 
 #ifdef HAVE_SERVER_PYTHON_PLUGINS
       //! The access control helper
@@ -306,6 +330,9 @@ namespace QgsWms
       QMap<QString, QgsMapLayer *> mNicknameLayers;
       QMap<QString, QList<QgsMapLayer *> > mLayerGroups;
       QList<QgsMapLayer *> mTemporaryLayers;
+
+      QgsMapSettings mMapSettings;
+      std::unique_ptr<QImage> mImage;
 
     public:
 
