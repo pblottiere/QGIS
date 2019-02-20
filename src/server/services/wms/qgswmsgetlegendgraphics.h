@@ -19,6 +19,8 @@
  *                                                                         *
  ***************************************************************************/
 
+#include "qgslayertreemodellegendnode.h"
+
 class QgsLayerTreeModel;
 class QgsLayerTree;
 class QgsRenderContext;
@@ -41,9 +43,7 @@ namespace QgsWms
 
   QList<int> legendNodeOrder( const QgsWms::QgsRenderer &renderer, const QgsVectorLayer *layer );
 
-  HitTest hitTest( const QgsWms::QgsRenderer &renderer );
-
-  void runHitTestLayer( QgsVectorLayer *vl, SymbolSet &usedSymbols, QgsRenderContext &context );
+  QgsLayerTreeModelLegendNode *legendNode( QgsLayerTreeModel *legendModel, const QString &rule );
 } // namespace QgsWms
 
 

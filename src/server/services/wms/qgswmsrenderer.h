@@ -24,6 +24,7 @@
 #include "qgswmsparameters.h"
 #include "qgsfeaturefilter.h"
 #include "qgsmapsettings.h"
+#include "qgslayertreemodellegendnode.h"
 
 #include <QDomDocument>
 #include <QMap>
@@ -38,6 +39,7 @@ class QgsPointXY;
 class QgsRasterLayer;
 class QgsRectangle;
 class QgsRenderContext;
+class QgsLayerRestorer;
 class QgsVectorLayer;
 class QgsAccessControl;
 class QgsDxfExport;
@@ -76,6 +78,9 @@ namespace QgsWms
 
       void setParameters( const QgsWmsParameters &parameters,
                           bool useScaleDenominator = false );
+
+      void unsetParameters();
+
       const QgsWmsParameters &parameters() const;
 
       const QgsMapSettings &mapSettings() const;
@@ -86,9 +91,13 @@ namespace QgsWms
 
       bool run( QgsLayerTreeModel &model );
 
+      bool run( QgsLayerTreeModelLegendNode &model );
+
+      QSet<QString> symbols( const QgsVectorLayer &layer ) const;
+
       // QByteArray bytes();
 
-      // QImage image();
+      const QImage *image() const;
 
       // QList<int> legendNodeOrder( const QgsVectorLayer &layer ) const;
 
@@ -98,7 +107,7 @@ namespace QgsWms
       QImage *getLegendGraphics();
 
       typedef QSet<QString> SymbolSet;
-      typedef QHash<QgsVectorLayer *, SymbolSet> HitTest;
+      typedef QHash<const QgsVectorLayer *, SymbolSet> HitTest;
 
       /**
        * Returns the map as an image (or a null pointer in case of error). The caller takes ownership
@@ -214,7 +223,7 @@ namespace QgsWms
        */
       void configureMapSettings( const QPaintDevice *paintDevice, QgsMapSettings &mapSettings ) const;
 
-      void initMapSettings( bool useScaleDenominator );
+      void configureLayers( bool useScaleDenominator );
 
       QDomDocument featureInfoDocument( QList<QgsMapLayer *> &layers, const QgsMapSettings &mapSettings,
                                         const QImage *outputImage, const QString &version ) const;
@@ -333,6 +342,7 @@ namespace QgsWms
 
       QgsMapSettings mMapSettings;
       std::unique_ptr<QImage> mImage;
+      std::unique_ptr<QgsLayerRestorer> mRestorer;
 
     public:
 

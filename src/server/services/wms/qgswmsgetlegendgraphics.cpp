@@ -105,11 +105,10 @@ namespace QgsWms
 
     if ( !wmsParameters.rule().isEmpty() )
     {
-      /*QgsLayerTreeModelLegendNode *node = legendNode( model, wmsParameters.rule() );
-      if ( renderer.legend( node, image ) )
-      {
-        // write image into response
-      }*/
+      QgsLayerTreeModelLegendNode *node = legendNode( model.get(),
+                                                      wmsParameters.rule() );
+      if ( node )
+        renderer.run( *node );
     } else
     {
       renderer.run( *model );
@@ -117,27 +116,14 @@ namespace QgsWms
 
     root.clear();
 
-    // writeImage( response, *result,  format, renderer.getImageQuality() );
-
-    // renderer.reset(); */
-
-    //QgsRenderer renderer2( serverIface, project, wmsParameters );
-    std::unique_ptr<QImage> result( renderer.getLegendGraphics() );
-
-    if ( result )
-    {
-      writeImage( response, *result,  format, renderer.getImageQuality() );
-      /*if ( cacheManager )
-      {
-        QByteArray content = response.data();
-        if ( !content.isEmpty() )
-          cacheManager->setCachedImage( &content, project, request, accessControl );
-      }*/
-    }
-    else
+    if ( ! renderer.image() )
     {
       throw QgsServiceException( QStringLiteral( "UnknownError" ),
                                  QStringLiteral( "Failed to compute GetLegendGraphics image" ) );
+    }
+    else
+    {
+      writeImage( response, *renderer.image(),  format, renderer.getImageQuality() );
     }
   }
 
@@ -266,15 +252,13 @@ namespace QgsWms
 
   QList<int> legendNodeOrder( const QgsWms::QgsRenderer &renderer, const QgsVectorLayer *layer )
   {
-    HitTest test = hitTest( renderer );
-
-    const SymbolSet &usedSymbols = test[layer];
+    const QSet<QString> symbols = renderer.symbols(*layer);
     QList<int> order;
     int i = 0;
     for ( const QgsLegendSymbolItem &legendItem : layer->renderer()->legendSymbolItems() )
     {
       QString sProp = QgsSymbolLayerUtils::symbolProperties( legendItem.legacyRuleKey() );
-      if ( usedSymbols.contains( sProp ) )
+      if ( symbols.contains( sProp ) )
         order.append( i );
       ++i;
     }
@@ -282,55 +266,16 @@ namespace QgsWms
     return order;
   }
 
-  HitTest hitTest( const QgsWms::QgsRenderer &renderer )
+  QgsLayerTreeModelLegendNode *legendNode( QgsLayerTreeModel *legendModel, const QString &rule )
   {
-    HitTest hitTest;
-    const QgsMapSettings settings = renderer.mapSettings();
-    QgsRenderContext context = QgsRenderContext::fromMapSettings( settings );
-
-    for ( const QString &id : settings.layerIds() )
+    for ( QgsLayerTreeLayer *nodeLayer : legendModel->rootGroup()->findLayers() )
     {
-      QgsVectorLayer *vl = qobject_cast<QgsVectorLayer *>( renderer.project().mapLayer( id ) );
-      if ( !vl || !vl->renderer() )
-        continue;
-
-      if ( vl->hasScaleBasedVisibility() && vl->isInScaleRange( settings.scale() ) )
+      for ( QgsLayerTreeModelLegendNode *legendNode : legendModel->layerLegendNodes( nodeLayer ) )
       {
-        hitTest[vl] = SymbolSet(); // no symbols -> will not be shown
-        continue;
+        if ( legendNode->data( Qt::DisplayRole ).toString() == rule )
+          return legendNode;
       }
-
-      QgsCoordinateTransform tr = renderer.mapSettings().layerTransform( vl );
-      context.setCoordinateTransform( tr );
-      context.setExtent( tr.transformBoundingBox( settings.extent(), QgsCoordinateTransform::ReverseTransform ) );
-
-      SymbolSet &usedSymbols = hitTest[vl];
-      runHitTestLayer( vl, usedSymbols, context );
     }
-
-    return hitTest;
-  }
-
-  void runHitTestLayer( QgsVectorLayer *vl, SymbolSet &usedSymbols, QgsRenderContext &context )
-  {
-    std::unique_ptr< QgsFeatureRenderer > r( vl->renderer()->clone() );
-    bool moreSymbolsPerFeature = r->capabilities() & QgsFeatureRenderer::MoreSymbolsPerFeature;
-    r->startRender( context, vl->fields() );
-    QgsFeature f;
-    QgsFeatureRequest request( context.extent() );
-    request.setFlags( QgsFeatureRequest::ExactIntersect );
-    QgsFeatureIterator fi = vl->getFeatures( request );
-    while ( fi.nextFeature( f ) )
-    {
-      context.expressionContext().setFeature( f );
-      if ( moreSymbolsPerFeature )
-      {
-        for ( QgsSymbol *s : r->originalSymbolsForFeature( f, context ) )
-          usedSymbols.insert( QgsSymbolLayerUtils::symbolProperties( s ) );
-      }
-      else
-        usedSymbols.insert( QgsSymbolLayerUtils::symbolProperties( r->originalSymbolForFeature( f, context ) ) );
-    }
-    r->stopRender( context );
+    return nullptr;
   }
 } // namespace QgsWms

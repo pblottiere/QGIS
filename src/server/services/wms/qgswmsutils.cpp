@@ -114,7 +114,7 @@ namespace QgsWms
 
 
   // Write image response
-  void writeImage( QgsServerResponse &response, QImage &img, const QString &formatStr,
+  void writeImage( QgsServerResponse &response, const QImage &img, const QString &formatStr,
                    int imageQuality )
   {
     ImageOutputFormat outputFormat = parseImageFormat( formatStr );
