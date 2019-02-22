@@ -97,6 +97,23 @@ namespace QgsWms
       throw QgsBadRequestException( QStringLiteral( "FormatNotSpecified" ),
                                     QStringLiteral( "FORMAT is mandatory for GetLegendGraphic operation" ) );
 
+    // QgsRendererContext context = QgsRendererContext::fromParameters( parameters );
+    // context.setProject( project );
+    // context.setInterface( serverIface );
+    // context.setFlag( ~USE_HIGHLIGHT_LAYERS );
+    // context.setFlag( USE_SCALE_DENOMINATOR );
+    // context.setFlag( USE_BBOX );
+    // context.setFlag( USE_SLD );
+    //
+    // QgsLayerTree root;
+    // std::unique_ptr<QgsLayerTreeModel> model;
+    // model.reset( legendTreeModel( renderer, root ) );
+    //
+    // QgsRenderer renderer( context );
+    // renderer.render( model );
+    //
+    // QImage *result = render.image();
+
     QgsRenderer renderer( serverIface, project );
     renderer.setParameters( wmsParameters, true );
 

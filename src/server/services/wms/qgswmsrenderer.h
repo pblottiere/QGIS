@@ -53,6 +53,22 @@ class QgsLayerTreeGroup;
 
 namespace QgsWms
 {
+  // Dans le renderer:
+  // - configuration des layers
+  // - layer restorer
+  // - create image
+  // - config map settings
+  // - hit tests
+  // - rendu
+  //
+  // Dans le context renderer:
+  // - utilisation des paramètres pour déduire infos de rendu avec flags
+  //   (bbox, sld, backgroud, size, ...)
+  // - parsing paramètres pour récupérer layers (string) sur lesquelles
+  //   travailler (unwanted layers, restrictied layers, permissions, ...)
+  // - accès server interface (1 seul ifdef planqué :))
+  // - accès layer à partir identifiant (gestion interne nickname)
+  // - have_server_python_plugins
 
   /**
    * \ingroup server
@@ -85,26 +101,13 @@ namespace QgsWms
 
       const QgsMapSettings &mapSettings() const;
 
-      const QgsProject &project() const;
-
-      // bool legend( const QgsLayerTreeModel &model, QImage &image );
-
       bool run( QgsLayerTreeModel &model );
 
       bool run( QgsLayerTreeModelLegendNode &model );
 
       QSet<QString> symbols( const QgsVectorLayer &layer ) const;
 
-      // QByteArray bytes();
-
       const QImage *image() const;
-
-      // QList<int> legendNodeOrder( const QgsVectorLayer &layer ) const;
-
-      /**
-       * Returns the map legend as an image (or a null pointer in case of error). The caller takes ownership
-      of the image object*/
-      QImage *getLegendGraphics();
 
       typedef QSet<QString> SymbolSet;
       typedef QHash<const QgsVectorLayer *, SymbolSet> HitTest;
@@ -113,12 +116,7 @@ namespace QgsWms
        * Returns the map as an image (or a null pointer in case of error). The caller takes ownership
       of the image object). If an instance to existing hit test structure is passed, instead of rendering
       it will fill the structure with symbols that would be used for rendering */
-      QImage *getMap( HitTest *hitTest = nullptr );
-
-      /**
-       * Identical to getMap( HitTest* hitTest ) and updates the map settings actually used.
-        \since QGIS 3.0 */
-      QImage *getMap( QgsMapSettings &mapSettings, HitTest *hitTest = nullptr );
+      QImage *getMap();
 
       /**
        * Returns the map as DXF data
@@ -167,7 +165,7 @@ namespace QgsWms
       void removeNonIdentifiableLayers( QList<QgsMapLayer *> &layers ) const;
 
       // Rendering step for layers
-      QPainter *layersRendering( const QgsMapSettings &mapSettings, QImage &image, HitTest *hitTest = nullptr ) const;
+      QPainter *layersRendering( const QgsMapSettings &mapSettings, QImage &image ) const;
 
       // Rendering step for annotations
       void annotationsRendering( QPainter *painter ) const;
@@ -198,9 +196,6 @@ namespace QgsWms
 
       // Check layer read permissions
       void checkLayerReadPermissions( QgsMapLayer *layer ) const;
-
-      // Build a layer tree model for legend
-      QgsLayerTreeModel *buildLegendTreeModel( const QList<QgsMapLayer *> &layers, double scaleDenominator, QgsLayerTree &rootGroup );
 
       // Returns default dots per mm
       qreal dotsPerMm() const;

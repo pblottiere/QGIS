@@ -153,11 +153,6 @@ namespace QgsWms
     mRestorer.reset(nullptr);
   }
 
-  const QgsProject &QgsRenderer::project() const
-  {
-    return *mProject;
-  }
-
   const QgsWmsParameters &QgsRenderer::parameters() const
   {
     return mWmsParameters;
@@ -849,13 +844,7 @@ namespace QgsWms
     return true;
   }
 
-  QImage *QgsRenderer::getMap( HitTest *hitTest )
-  {
-    QgsMapSettings mapSettings;
-    return getMap( mapSettings, hitTest );
-  }
-
-  QImage *QgsRenderer::getMap( QgsMapSettings &mapSettings, HitTest *hitTest )
+  QImage *QgsRenderer::getMap()
   {
     // check size
     if ( !checkMaximumWidthHeight() )
@@ -865,7 +854,7 @@ namespace QgsWms
     }
 
     // get layers parameters
-    QList<QgsMapLayer *> layers;
+    /*QList<QgsMapLayer *> layers;
     QList<QgsWmsParametersLayer> params = mWmsParameters.layersParameters();
 
     // init layer restorer before doing anything
@@ -903,7 +892,7 @@ namespace QgsWms
           setLayerSelection( layer, param.mSelection );
 
           if ( updateMapExtent )
-            updateExtent( layer, mapSettings );
+            updateExtent( layer, mMapSettings );
 
           break;
         }
@@ -924,10 +913,17 @@ namespace QgsWms
 
     // add layers to map settings (revert order for the rendering)
     std::reverse( layers.begin(), layers.end() );
-    mapSettings.setLayers( layers );
+    mapSettings.setLayers( layers );*/
+
+    std::unique_ptr<QPainter> painter;
+    std::unique_ptr<QImage> image( createImage() );
+
+    // configure map settings (background, DPI, ...)
+    QgsMapSettings settings = mMapSettings;
+    configureMapSettings( image.get(), settings );
 
     // rendering step for layers
-    painter.reset( layersRendering( mapSettings, *image, hitTest ) );
+    painter.reset( layersRendering( settings, *image ) );
 
     // rendering step for annotations
     annotationsRendering( painter.get() );
@@ -3107,41 +3103,33 @@ namespace QgsWms
     mTemporaryLayers.clear();
   }
 
-  QPainter *QgsRenderer::layersRendering( const QgsMapSettings &mapSettings, QImage &image, HitTest *hitTest ) const
+  QPainter *QgsRenderer::layersRendering( const QgsMapSettings &mapSettings, QImage &image ) const
   {
     QPainter *painter = nullptr;
-    if ( hitTest )
-    {
-      runHitTest( mapSettings, *hitTest );
-      painter = new QPainter();
-    }
-    else
-    {
-      QgsFeatureFilterProviderGroup filters;
-      filters.addProvider( &mFeatureFilter );
+    QgsFeatureFilterProviderGroup filters;
+    filters.addProvider( &mFeatureFilter );
 #ifdef HAVE_SERVER_PYTHON_PLUGINS
-      mAccessControl->resolveFilterFeatures( mapSettings.layers() );
-      filters.addProvider( mAccessControl );
+    mAccessControl->resolveFilterFeatures( mapSettings.layers() );
+    filters.addProvider( mAccessControl );
 #endif
-      QgsMapRendererJobProxy renderJob( mSettings.parallelRendering(), mSettings.maxThreads(), &filters );
-      renderJob.render( mapSettings, &image );
-      painter = renderJob.takePainter();
+    QgsMapRendererJobProxy renderJob( mSettings.parallelRendering(), mSettings.maxThreads(), &filters );
+    renderJob.render( mapSettings, &image );
+    painter = renderJob.takePainter();
 
-      if ( !renderJob.errors().isEmpty() )
+    if ( !renderJob.errors().isEmpty() )
+    {
+      QString layerWMSName;
+      QString firstErrorLayerId = renderJob.errors().at( 0 ).layerID;
+      QgsMapLayer *errorLayer = mProject->mapLayer( firstErrorLayerId );
+      if ( errorLayer )
       {
-        QString layerWMSName;
-        QString firstErrorLayerId = renderJob.errors().at( 0 ).layerID;
-        QgsMapLayer *errorLayer = mProject->mapLayer( firstErrorLayerId );
-        if ( errorLayer )
-        {
-          layerWMSName = layerNickname( *errorLayer );
-        }
-
-        //Log first error
-        QString errorMsg = QStringLiteral( "Map rendering error in layer '%1'" ).arg( firstErrorLayerId );
-        QgsMessageLog::logMessage( errorMsg, QStringLiteral( "Server" ), Qgis::Critical );
-        throw QgsServerException( QStringLiteral( "Map rendering error in layer '%1'" ).arg( layerWMSName ) );
+        layerWMSName = layerNickname( *errorLayer );
       }
+
+      //Log first error
+      QString errorMsg = QStringLiteral( "Map rendering error in layer '%1'" ).arg( firstErrorLayerId );
+      QgsMessageLog::logMessage( errorMsg, QStringLiteral( "Server" ), Qgis::Critical );
+      throw QgsServerException( QStringLiteral( "Map rendering error in layer '%1'" ).arg( layerWMSName ) );
     }
 
     return painter;
