@@ -156,45 +156,31 @@ namespace QgsWms
 
   QImage *QgsRenderer::getLegendGraphics()
   {
-    // check parameters
-    if ( mWmsParameters.allLayersNickname().isEmpty() )
-      throw QgsBadRequestException( QStringLiteral( "LayerNotSpecified" ),
-                                    QStringLiteral( "LAYER is mandatory for GetLegendGraphic operation" ) );
-
-    if ( mWmsParameters.format() == QgsWmsParameters::Format::NONE )
-      throw QgsBadRequestException( QStringLiteral( "FormatNotSpecified" ),
-                                    QStringLiteral( "FORMAT is mandatory for GetLegendGraphic operation" ) );
-
-    double scaleDenominator = -1;
-    if ( ! mWmsParameters.scale().isEmpty() )
-      scaleDenominator = mWmsParameters.scaleAsDouble();
-
-    QgsLegendSettings legendSettings = mWmsParameters.legendSettings();
+    const QgsWmsParameters parameters = mContext.parameters();
+    QgsLegendSettings legendSettings = parameters.legendSettings();
 
     // get layers
     std::unique_ptr<QgsLayerRestorer> restorer;
-    restorer.reset( new QgsLayerRestorer( mNicknameLayers.values() ) );
+    restorer.reset( new QgsLayerRestorer( mContext.layers() ) );
 
-    QList<QgsMapLayer *> layers;
-    QList<QgsWmsParametersLayer> params = mWmsParameters.layersParameters();
-
-    QString sld = mWmsParameters.sldBody();
-    if ( !sld.isEmpty() )
-      layers = sldStylizedLayers( sld );
-    else
-      layers = stylizedLayers( params );
-
-    removeUnwantedLayers( layers, scaleDenominator );
-    std::reverse( layers.begin(), layers.end() );
-
-    // check permissions
-    for ( QgsMapLayer *ml : layers )
-      checkLayerReadPermissions( ml );
+    const bool useSld = !mContext.parameters().sldBody().isEmpty();
+    QList<QgsMapLayer *> layers = mContext.layersToRender();
+    for ( auto layer : layers )
+    {
+      if ( useSld )
+      {
+        setLayerSld( layer, mContext.sld( *layer ) );
+      }
+      else
+      {
+        setLayerStyle( layer, mContext.style( *layer ) );
+      }
+    }
 
     // build layer tree model for legend
     QgsLayerTree rootGroup;
     std::unique_ptr<QgsLayerTreeModel> legendModel;
-    legendModel.reset( buildLegendTreeModel( layers, scaleDenominator, rootGroup ) );
+    legendModel.reset( buildLegendTreeModel( layers, mContext.scaleDenominator(), rootGroup ) );
 
     // rendering step
     qreal dpmm = dotsPerMm();
@@ -3107,6 +3093,27 @@ namespace QgsWms
     }
 
     return painter;
+  }
+
+  void QgsRenderer::setLayerStyle( QgsMapLayer *layer, const QString &style ) const
+  {
+    if ( style.isEmpty() )
+    {
+      return;
+    }
+
+    bool rc = layer->styleManager()->setCurrentStyle( style );
+    if ( ! rc )
+    {
+      throw QgsMapServiceException( QStringLiteral( "StyleNotDefined" ), QStringLiteral( "Style \"%1\" does not exist for layer \"%2\"" ).arg( style, layer->name() ) );
+    }
+  }
+
+  void QgsRenderer::setLayerSld( QgsMapLayer *layer, const QDomElement &sld ) const
+  {
+    QString err;
+    layer->readSld( sld, err );
+    layer->setCustomProperty( "readSLD", true );
   }
 
   void QgsRenderer::setLayerOpacity( QgsMapLayer *layer, int opacity ) const

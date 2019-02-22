@@ -18,9 +18,9 @@
 #ifndef QGSWMSRENDERCONTEXT_H
 #define QGSWMSRENDERCONTEXT_H
 
-#include <qgswmsparameters.h>
-#include <qgsproject.h>
-#include <qgsserverinterface.h>
+#include "qgswmsparameters.h"
+#include "qgsproject.h"
+#include "qgsserverinterface.h"
 
 namespace QgsWms
 {
@@ -32,6 +32,16 @@ namespace QgsWms
         UseScaleDenominator    = 0x01,
       };
       Q_DECLARE_FLAGS( Flags, Flag )
+
+      enum Error
+      {
+        None,
+        Exception,
+        MapServiceException,
+        BadRequestException,
+        SecurityException,
+        ServerException
+      };
 
       QgsWmsRenderContext() = default;
 
@@ -45,20 +55,67 @@ namespace QgsWms
 
       const QgsProject *project() const;
 
-      // void setInterface( QgsServerInterface *interface );
+      void setFlag( Flag flag, bool on = true );
 
-      // void setFlag( Flag flag, bool on = true );
+      bool isValid() const;
 
-      // bool testFlag( Flag flag ) const;
+      Error error() const;
+
+      QString errorMessage() const;
+
+      QString errorType() const;
+
+      QList<QgsMapLayer *> layers() const;
+
+      QList<QgsMapLayer *> layersToRender() const;
+
+      QDomElement sld( const QgsMapLayer &layer ) const;
+
+      QString style( const QgsMapLayer &layer ) const;
+
+      double scaleDenominator() const;
 
 #ifdef HAVE_SERVER_PYTHON_PLUGINS
       QgsAccessControl *accessControl();
 #endif
 
     private:
-      const QgsProject *mProject;
-      QgsServerInterface *mInterface;
+      QString layerNickname( const QgsMapLayer &layer ) const;
+
+      void initNicknameLayers();
+      void initRestrictedLayers();
+      void initLayerGroupsRecursive( const QgsLayerTreeGroup *group, const QString &groupName );
+
+      void searchLayersToRender();
+      void searchLayersToRenderSld();
+      void searchLayersToRenderStyle();
+      void removeUnwantedLayers();
+
+      void checkLayerReadPermissions();
+
+      bool layerScaleVisibility( const QString &name ) const;
+
+      const QgsProject *mProject = nullptr;
+      QgsServerInterface *mInterface = nullptr;
       QgsWmsParameters mParameters;
+      Flags mFlags = nullptr;
+      Error mError = None;
+      QString mErrorMessage;
+      QString mErrorType;
+
+      // nickname of all layers defined within the project
+      QMap<QString, QgsMapLayer *> mNicknameLayers;
+
+      // map of layers to use for rendering
+      QMap<QString, QgsMapLayer *> mLayersToRender;
+
+      // list of layers which are not usable
+      QStringList mRestrictedLayers;
+
+      QMap<QString, QList<QgsMapLayer *> > mLayerGroups;
+
+      QMap<QString, QDomElement> mSlds;
+      QMap<QString, QString> mStyles;
   };
 };
 

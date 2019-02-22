@@ -39,6 +39,22 @@ namespace QgsWms
 
     QgsWmsParameters wmsParameters( QUrlQuery( request.url() ) );
 
+    // check parameters
+    if ( wmsParameters.allLayersNickname().isEmpty() )
+    {
+      const QString err = QStringLiteral( "LayerNotSpecified" );
+      const QString msg = QStringLiteral( "LAYER is mandatory" );
+
+      throw QgsBadRequestException( err, msg );
+    }
+
+    if ( wmsParameters.format() == QgsWmsParameters::Format::NONE )
+    {
+      const QString err = QStringLiteral( "FormatNotSpecified" );
+      const QString msg = QStringLiteral( "FORMAT is mandatory" );
+      throw QgsBadRequestException( err, msg );
+    }
+
     // Get cached image
     QgsAccessControl *accessControl = nullptr;
     QgsServerCacheManager *cacheManager = nullptr;
@@ -81,7 +97,21 @@ namespace QgsWms
     }
 
     QgsWmsRenderContext context( project, serverIface );
+    context.setFlag( QgsWmsRenderContext::UseScaleDenominator );
     context.setParameters( wmsParameters );
+
+    if ( ! context.isValid() )
+    {
+      if ( context.error() == QgsWmsRenderContext::SecurityException )
+      {
+        throw QgsSecurityException( context.errorMessage() );
+      }
+      else
+      {
+        throw QgsBadRequestException( context.errorType(),
+                                      context.errorMessage() );
+      }
+    }
 
     QgsRenderer renderer( context );
 
