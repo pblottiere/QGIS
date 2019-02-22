@@ -21,6 +21,7 @@
 #include "qgswmsutils.h"
 #include "qgswmsgetlegendgraphics.h"
 #include "qgswmsrenderer.h"
+#include "qgswmsrendercontext.h"
 
 #include <QImage>
 
@@ -79,7 +80,10 @@ namespace QgsWms
       }
     }
 
-    QgsRenderer renderer( serverIface, project, wmsParameters );
+    QgsWmsRenderContext context( project, serverIface );
+    context.setParameters( wmsParameters );
+
+    QgsRenderer renderer( context );
 
     std::unique_ptr<QImage> result( renderer.getLegendGraphics() );
 

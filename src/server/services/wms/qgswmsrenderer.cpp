@@ -121,9 +121,27 @@ namespace QgsWms
 #ifdef HAVE_SERVER_PYTHON_PLUGINS
     , mAccessControl( serverIface->accessControls() )
 #endif
-    , mSettings( *serverIface->serverSettings() )
     , mProject( project )
   {
+    mContext = QgsWmsRenderContext( project, serverIface );
+    mProject = project;
+
+    mWmsParameters.dump();
+
+    initRestrictedLayers();
+    initNicknameLayers();
+  }
+
+  QgsRenderer::QgsRenderer( const QgsWmsRenderContext &context )
+    : mContext( context )
+  {
+#ifdef HAVE_SERVER_PYTHON_PLUGINS
+    mAccessControl = mContext.accessControl();
+#endif
+
+    mProject = mContext.project();
+
+    mWmsParameters = mContext.parameters();
     mWmsParameters.dump();
 
     initRestrictedLayers();
@@ -3067,7 +3085,7 @@ namespace QgsWms
       mAccessControl->resolveFilterFeatures( mapSettings.layers() );
       filters.addProvider( mAccessControl );
 #endif
-      QgsMapRendererJobProxy renderJob( mSettings.parallelRendering(), mSettings.maxThreads(), &filters );
+      QgsMapRendererJobProxy renderJob( mContext.settings().parallelRendering(), mContext.settings().maxThreads(), &filters );
       renderJob.render( mapSettings, &image );
       painter = renderJob.takePainter();
 

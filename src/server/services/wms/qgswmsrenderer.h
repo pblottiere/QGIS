@@ -23,6 +23,8 @@
 #include "qgsserversettings.h"
 #include "qgswmsparameters.h"
 #include "qgsfeaturefilter.h"
+#include "qgswmsrendercontext.h"
+
 #include <QDomDocument>
 #include <QMap>
 #include <QString>
@@ -67,6 +69,8 @@ namespace QgsWms
       QgsRenderer( QgsServerInterface *serverIface,
                    const QgsProject *project,
                    const QgsWmsParameters &parameters );
+
+      QgsRenderer( const QgsWmsRenderContext &context );
 
       ~QgsRenderer();
 
@@ -295,7 +299,10 @@ namespace QgsWms
 
       void handlePrintErrors( const QgsLayout *layout ) const;
 
-      const QgsWmsParameters &mWmsParameters;
+    private:
+
+      QgsWmsRenderContext mContext;
+      QgsWmsParameters mWmsParameters;
 
 #ifdef HAVE_SERVER_PYTHON_PLUGINS
       //! The access control helper
@@ -303,7 +310,6 @@ namespace QgsWms
 #endif
       QgsFeatureFilter mFeatureFilter;
 
-      const QgsServerSettings &mSettings;
       const QgsProject *mProject = nullptr;
       QStringList mRestrictedLayers;
       QMap<QString, QgsMapLayer *> mNicknameLayers;
