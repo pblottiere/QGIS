@@ -54,6 +54,9 @@ namespace QgsWms
     }
 
     QgsRenderer renderer( context );
+    std::unique_ptr<QImage> result( renderer.getMap() );
+
+    if ( result )
     {
       QString format = params.value( QStringLiteral( "FORMAT" ), QStringLiteral( "PNG" ) );
       writeImage( response, *result, format, renderer.imageQuality() );
