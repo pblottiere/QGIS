@@ -55,6 +55,11 @@ void QgsWmsRenderContext::setFlag( const Flag flag, const bool on )
   }
 }
 
+bool QgsWmsRenderContext::testFlag( Flag flag ) const
+{
+  return mFlags.testFlag( flag );
+}
+
 QgsWmsParameters QgsWmsRenderContext::parameters() const
 {
   return mParameters;
@@ -116,9 +121,25 @@ QString QgsWmsRenderContext::errorType() const
   return mErrorType;
 }
 
+QgsWmsParametersLayer QgsWmsRenderContext::parameters( const QgsMapLayer &layer ) const
+{
+  QgsWmsParametersLayer parameters;
+
+  for ( const auto &params : mParameters.layersParameters() )
+  {
+    if ( params.mNickname == layerNickname( layer ) )
+    {
+      parameters = params;
+      break;
+    }
+  }
+
+  return parameters;
+}
+
 QList<QgsMapLayer *> QgsWmsRenderContext::layersToRender() const
 {
-  return mLayersToRender.values();
+  return mLayersToRender;
 }
 
 QList<QgsMapLayer *> QgsWmsRenderContext::layers() const
@@ -136,6 +157,18 @@ double QgsWmsRenderContext::scaleDenominator() const
   }
 
   return denominator;
+}
+
+bool QgsWmsRenderContext::updateExtent() const
+{
+  bool update = false;
+
+  if ( mFlags & UpdateExtent && ! mParameters.bbox().isEmpty() )
+  {
+    update = true;
+  }
+
+  return update;
 }
 
 QString QgsWmsRenderContext::layerNickname( const QgsMapLayer &layer ) const
@@ -280,7 +313,7 @@ void QgsWmsRenderContext::searchLayersToRenderSld()
       if ( mNicknameLayers.contains( lname ) )
       {
         mSlds[lname] = namedElem;
-        mLayersToRender[ lname ] = mNicknameLayers[ lname ];
+        mLayersToRender.append( mNicknameLayers[ lname ] );
       }
       else if ( mLayerGroups.contains( lname ) )
       {
@@ -315,7 +348,7 @@ void QgsWmsRenderContext::searchLayersToRenderStyle()
         mStyles[nickname] = style;
       }
 
-      mLayersToRender[ nickname ] = mNicknameLayers[ nickname ];
+      mLayersToRender.append( mNicknameLayers[ nickname ] );
     }
     else if ( mLayerGroups.contains( nickname ) )
     {
@@ -333,7 +366,7 @@ void QgsWmsRenderContext::searchLayersToRenderStyle()
 
       for ( const auto name : layersFromGroup )
       {
-        mLayersToRender[ name ] = mNicknameLayers[ name ];
+        mLayersToRender.append( mNicknameLayers[ name ] );
       }
     }
     else
@@ -347,8 +380,14 @@ void QgsWmsRenderContext::searchLayersToRenderStyle()
 
 bool QgsWmsRenderContext::layerScaleVisibility( const QString &name ) const
 {
-  const QgsMapLayer *layer = mNicknameLayers[ name ];
   bool visible = false;
+
+  if ( ! mNicknameLayers.contains( name ) )
+  {
+    return visible;
+  }
+
+  const QgsMapLayer *layer = mNicknameLayers[ name ];
   bool scaleBasedVisibility = layer->hasScaleBasedVisibility();
   bool useScaleConstraint = ( scaleDenominator() > 0 && scaleBasedVisibility );
 
@@ -362,24 +401,23 @@ bool QgsWmsRenderContext::layerScaleVisibility( const QString &name ) const
 
 void QgsWmsRenderContext::removeUnwantedLayers()
 {
-  for ( const QString &name : mLayersToRender.keys() )
+  for ( const QgsMapLayer *layer : mLayersToRender )
   {
-    if ( !layerScaleVisibility( name ) )
+    const QString nickname = layerNickname( *layer );
+
+    if ( !layerScaleVisibility( nickname ) )
       continue;
 
-    if ( mRestrictedLayers.contains( name ) )
+    if ( mRestrictedLayers.contains( nickname ) )
       continue;
   }
 }
 
 void QgsWmsRenderContext::checkLayerReadPermissions()
 {
-  std::cout << "checkLayerReadPermissions 0" << std::endl;
 #ifdef HAVE_SERVER_PYTHON_PLUGINS
-  std::cout << "checkLayerReadPermissions 1" << std::endl;
-  for ( auto layer : mLayersToRender.values() )
+  for ( const auto layer : mLayersToRender )
   {
-    std::cout << "checkLayerReadPermissions 2: " << layer->name().toStdString() << std::endl;
     if ( !accessControl()->layerReadPermission( layer ) )
     {
       mError = SecurityException;

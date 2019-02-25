@@ -30,6 +30,12 @@ namespace QgsWms
       enum Flag
       {
         UseScaleDenominator    = 0x01,
+        UseOpacity             = 0x02,
+        UseFilter              = 0x04,
+        UseSelection           = 0x08,
+        AddHighlightLayers     = 0x10,
+        UpdateExtent           = 0x20,
+        SetAccessControl       = 0x40
       };
       Q_DECLARE_FLAGS( Flags, Flag )
 
@@ -57,6 +63,8 @@ namespace QgsWms
 
       void setFlag( Flag flag, bool on = true );
 
+      bool testFlag( Flag flag ) const;
+
       bool isValid() const;
 
       Error error() const;
@@ -74,6 +82,10 @@ namespace QgsWms
       QString style( const QgsMapLayer &layer ) const;
 
       double scaleDenominator() const;
+
+      bool updateExtent() const;
+
+      QgsWmsParametersLayer parameters( const QgsMapLayer &layer ) const;
 
 #ifdef HAVE_SERVER_PYTHON_PLUGINS
       QgsAccessControl *accessControl();
@@ -107,7 +119,7 @@ namespace QgsWms
       QMap<QString, QgsMapLayer *> mNicknameLayers;
 
       // map of layers to use for rendering
-      QMap<QString, QgsMapLayer *> mLayersToRender;
+      QList<QgsMapLayer *> mLayersToRender;
 
       // list of layers which are not usable
       QStringList mRestrictedLayers;
