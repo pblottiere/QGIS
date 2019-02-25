@@ -45,7 +45,6 @@ namespace QgsWms
 
     // build document
     QgsRenderer renderer( context );
-    // QgsRenderer renderer( serverIface, project, wmsParameters );
 
     QString infoFormat = params.value( QStringLiteral( "INFO_FORMAT" ), QStringLiteral( "text/plain" ) );
 
