@@ -904,115 +904,43 @@ namespace QgsWms
 
   QByteArray QgsRenderer::getFeatureInfo( const QString &version )
   {
-    // Verifying Mandatory parameters
-    // The QUERY_LAYERS parameter is Mandatory
-    QStringList queryLayers = mWmsParameters.queryLayersNickname();
-    if ( queryLayers.isEmpty() )
-    {
-      QString msg = QObject::tr( "QUERY_LAYERS parameter is required for GetFeatureInfo" );
-      throw QgsBadRequestException( QStringLiteral( "LayerNotQueryable" ), msg );
-    }
-
-    // The I/J parameters are Mandatory if they are not replaced by X/Y or FILTER or FILTER_GEOM
-    const bool ijDefined = !mWmsParameters.i().isEmpty() && !mWmsParameters.j().isEmpty();
-    const bool xyDefined = !mWmsParameters.x().isEmpty() && !mWmsParameters.y().isEmpty();
-    const bool filtersDefined = !mWmsParameters.filters().isEmpty();
-    const bool filterGeomDefined = !mWmsParameters.filterGeom().isEmpty();
-
-    if ( !ijDefined && !xyDefined && !filtersDefined && !filterGeomDefined )
-    {
-      throw QgsBadRequestException( QStringLiteral( "ParameterMissing" ),
-                                    QStringLiteral( "I/J parameters are required for GetFeatureInfo" ) );
-    }
-
-    QgsWmsParameters::Format infoFormat = mWmsParameters.infoFormat();
-    if ( infoFormat == QgsWmsParameters::Format::NONE )
-    {
-      throw QgsBadRequestException( QStringLiteral( "InvalidFormat" ),
-                                    QStringLiteral( "Invalid INFO_FORMAT parameter" ) );
-    }
-
-    // get layers parameters
-    QList<QgsMapLayer *> layers;
-    QList<QgsWmsParametersLayer> params = mWmsParameters.layersParameters();
-
     // init layer restorer before doing anything
     std::unique_ptr<QgsLayerRestorer> restorer;
     restorer.reset( new QgsLayerRestorer( mNicknameLayers.values() ) );
 
-    // init stylized layers according to LAYERS/STYLES or SLD
-    QString sld = mWmsParameters.sldBody();
-    if ( !sld.isEmpty() )
-      layers = sldStylizedLayers( sld );
-    else
-      layers = stylizedLayers( params );
-
-    // add QUERY_LAYERS to list of available layers for more flexibility
-    for ( const QString &queryLayer : queryLayers )
-    {
-      if ( mNicknameLayers.contains( queryLayer )
-           && !layers.contains( mNicknameLayers[queryLayer] ) )
-      {
-        layers.append( mNicknameLayers[queryLayer] );
-      }
-    }
-
-    // create the mapSettings and the output image
+    // create the output image
     int imageWidth = mWmsParameters.widthAsInt();
     int imageHeight = mWmsParameters.heightAsInt();
 
-    // Provide default image width/height values if format is not image
     if ( !( imageWidth && imageHeight ) &&  ! mWmsParameters.infoFormatIsImage() )
     {
       imageWidth = 10;
       imageHeight = 10;
     }
 
+    std::unique_ptr<QImage> image( createImage( imageWidth, imageHeight ) );
+
+    // configure map settings
     QgsMapSettings mapSettings;
-    std::unique_ptr<QImage> outputImage( createImage( imageWidth, imageHeight ) );
+    configureMapSettings( image.get(), mapSettings );
 
-    // configure map settings (background, DPI, ...)
-    configureMapSettings( outputImage.get(), mapSettings );
-
-    QgsMessageLog::logMessage( "mapSettings.destinationCrs(): " +  mapSettings.destinationCrs().authid() );
-    QgsMessageLog::logMessage( "mapSettings.extent(): " +  mapSettings.extent().toString() );
-    QgsMessageLog::logMessage( QStringLiteral( "mapSettings width = %1 height = %2" ).arg( mapSettings.outputSize().width() ).arg( mapSettings.outputSize().height() ) );
-    QgsMessageLog::logMessage( QStringLiteral( "mapSettings.mapUnitsPerPixel() = %1" ).arg( mapSettings.mapUnitsPerPixel() ) );
-
-    QgsScaleCalculator scaleCalc( ( outputImage->logicalDpiX() + outputImage->logicalDpiY() ) / 2, mapSettings.destinationCrs().mapUnits() );
+    // compute a custom scale denominator
+    QgsScaleCalculator scaleCalc( ( image->logicalDpiX() + image->logicalDpiY() ) / 2, mapSettings.destinationCrs().mapUnits() );
     QgsRectangle mapExtent = mapSettings.extent();
-    double scaleDenominator = scaleCalc.calculate( mapExtent, outputImage->width() );
+    double scaleDenominator = scaleCalc.calculate( mapExtent, image->width() );
 
-    // remove unwanted layers (restricted layers, ...)
-    removeUnwantedLayers( layers, scaleDenominator );
-    // remove non identifiable layers
-    //removeNonIdentifiableLayers( layers );
+    mContext.setScaleDenominator( scaleDenominator );
 
-    for ( QgsMapLayer *layer : layers )
-    {
-      checkLayerReadPermissions( layer );
-
-      for ( const QgsWmsParametersLayer &param : params )
-      {
-        if ( param.mNickname == layerNickname( *layer ) )
-        {
-          setLayerFilter( layer, param.mFilter );
-
-          break;
-        }
-      }
-
-      setLayerAccessControlFilter( layer );
-    }
-
-    // add layers to map settings (revert order for the rendering)
-    std::reverse( layers.begin(), layers.end() );
+    // configure layers
+    QList<QgsMapLayer *> layers = mContext.layersToRender();
     mapSettings.setLayers( layers );
+    configureLayers( layers, &mapSettings );
 
-    QDomDocument result = featureInfoDocument( layers, mapSettings, outputImage.get(), version );
+    QDomDocument result = featureInfoDocument( layers, mapSettings, image.get(), version );
 
     QByteArray ba;
 
+    const QgsWmsParameters::Format infoFormat = mWmsParameters.infoFormat();
     if ( infoFormat == QgsWmsParameters::Format::TEXT )
       ba = convertFeatureInfoToText( result );
     else if ( infoFormat == QgsWmsParameters::Format::HTML )

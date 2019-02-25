@@ -151,12 +151,22 @@ double QgsWmsRenderContext::scaleDenominator() const
 {
   double denominator = -1;
 
-  if ( mFlags & UseScaleDenominator && ! mParameters.scale().isEmpty() )
+  if ( mScaleDenominator >= 0 )
+  {
+    denominator = mScaleDenominator;
+  }
+  else if ( mFlags & UseScaleDenominator && ! mParameters.scale().isEmpty() )
   {
     denominator = mParameters.scaleAsDouble();
   }
 
   return denominator;
+}
+
+void QgsWmsRenderContext::setScaleDenominator( double scaleDenominator )
+{
+  mScaleDenominator = scaleDenominator;
+  removeUnwantedLayers();
 }
 
 bool QgsWmsRenderContext::updateExtent() const
@@ -278,6 +288,18 @@ void QgsWmsRenderContext::searchLayersToRender()
   else
   {
     searchLayersToRenderStyle();
+  }
+
+  if ( mFlags & AddQueryLayers )
+  {
+    for ( const QString &layer : mParameters.queryLayersNickname() )
+    {
+      if ( mNicknameLayers.contains( layer )
+           && !mLayersToRender.contains( mNicknameLayers[layer] ) )
+      {
+        mLayersToRender.append( mNicknameLayers[layer] );
+      }
+    }
   }
 }
 
@@ -401,7 +423,9 @@ bool QgsWmsRenderContext::layerScaleVisibility( const QString &name ) const
 
 void QgsWmsRenderContext::removeUnwantedLayers()
 {
-  for ( const QgsMapLayer *layer : mLayersToRender )
+  QList<QgsMapLayer *> layers;
+
+  for ( QgsMapLayer *layer : mLayersToRender )
   {
     const QString nickname = layerNickname( *layer );
 
@@ -410,7 +434,11 @@ void QgsWmsRenderContext::removeUnwantedLayers()
 
     if ( mRestrictedLayers.contains( nickname ) )
       continue;
+
+    layers.append( layer );
   }
+
+  mLayersToRender = layers;
 }
 
 void QgsWmsRenderContext::checkLayerReadPermissions()

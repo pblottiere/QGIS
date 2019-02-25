@@ -29,11 +29,9 @@ namespace QgsWms
 {
 
   void writeGetMap( QgsServerInterface *serverIface, const QgsProject *project,
-                    const QString &version, const QgsServerRequest &request,
+                    const QString &, const QgsServerRequest &request,
                     QgsServerResponse &response )
   {
-    Q_UNUSED( version );
-
     QgsServerRequest::Parameters params = request.parameters();
 
     QgsWmsParameters wmsParameters( QUrlQuery( request.url() ) );

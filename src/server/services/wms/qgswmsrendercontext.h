@@ -35,7 +35,8 @@ namespace QgsWms
         UseSelection           = 0x08,
         AddHighlightLayers     = 0x10,
         UpdateExtent           = 0x20,
-        SetAccessControl       = 0x40
+        SetAccessControl       = 0x40,
+        AddQueryLayers         = 0x80
       };
       Q_DECLARE_FLAGS( Flags, Flag )
 
@@ -83,6 +84,8 @@ namespace QgsWms
 
       double scaleDenominator() const;
 
+      void setScaleDenominator( double scaleDenominator );
+
       bool updateExtent() const;
 
       QgsWmsParametersLayer parameters( const QgsMapLayer &layer ) const;
@@ -111,6 +114,7 @@ namespace QgsWms
       QgsServerInterface *mInterface = nullptr;
       QgsWmsParameters mParameters;
       Flags mFlags = nullptr;
+      double mScaleDenominator = -1.0;
       Error mError = None;
       QString mErrorMessage;
       QString mErrorType;
