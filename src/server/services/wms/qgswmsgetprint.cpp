@@ -24,12 +24,34 @@
 
 namespace QgsWms
 {
-  void writeGetPrint( QgsServerInterface *serverIface, const QgsProject *project,
-                      const QString &, const QgsServerRequest &request,
+  void writeGetPrint( QgsServerInterface *serverIface,
+                      const QgsProject *project, const QString &,
+                      const QgsServerRequest &request,
                       QgsServerResponse &response )
   {
+    QgsServerRequest::Parameters params = request.parameters();
+
+    // init context
     const QgsWmsParameters wmsParameters( QUrlQuery( request.url() ) );
-    QgsRenderer renderer( serverIface, project, wmsParameters );
+
+    QgsWmsRenderContext context( project, serverIface );
+    context.setFlag( QgsWmsRenderContext::UpdateExtent );
+    context.setFlag( QgsWmsRenderContext::UseOpacity );
+    context.setFlag( QgsWmsRenderContext::UseFilter );
+    context.setFlag( QgsWmsRenderContext::UseSelection );
+    context.setFlag( QgsWmsRenderContext::SetAccessControl );
+    context.setFlag( QgsWmsRenderContext::AddHighlightLayers );
+    context.setParameters( wmsParameters );
+
+    // check mandatory parameters
+    if ( wmsParameters.composerTemplate().isEmpty() )
+    {
+      throw QgsBadRequestException( QStringLiteral( "ParameterMissing" ),
+                                    QStringLiteral( "The TEMPLATE parameter is required" ) );
+    }
+
+    // rendering
+    QgsRenderer renderer( context );
 
     const QgsWmsParameters::Format format = wmsParameters.format();
     QString contentType;

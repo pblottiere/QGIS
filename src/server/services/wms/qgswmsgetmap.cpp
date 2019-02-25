@@ -39,6 +39,7 @@ namespace QgsWms
     QgsWmsParameters wmsParameters( QUrlQuery( request.url() ) );
 
     QgsWmsRenderContext context( project, serverIface );
+    context.setFlag( QgsWmsRenderContext::UpdateExtent );
     context.setFlag( QgsWmsRenderContext::UseOpacity );
     context.setFlag( QgsWmsRenderContext::UseFilter );
     context.setFlag( QgsWmsRenderContext::UseSelection );
