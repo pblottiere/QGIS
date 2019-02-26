@@ -28,6 +28,7 @@
 #include "qgsprojectversion.h"
 #include "qgsogcutils.h"
 #include "qgsserverparameters.h"
+#include "qgsdxfexport.h"
 
 namespace QgsWms
 {
@@ -167,7 +168,8 @@ namespace QgsWms
         WITH_GEOMETRY,
         WITH_MAPTIP,
         WMTVER,
-        ATLAS_PK
+        ATLAS_PK,
+        FORMAT_OPTIONS
       };
       Q_ENUM( Name )
 
@@ -315,6 +317,16 @@ namespace QgsWms
         JSON
       };
       Q_ENUM( Format )
+
+      enum DxfFormatOption
+      {
+        SCALE,
+        MODE,
+        LAYERATTRIBUTES,
+        USE_TITLE_AS_LAYERNAME,
+        CODEC
+      };
+      Q_ENUM( DxfFormatOption )
 
       /**
        * Constructor for WMS parameters with specific values.
@@ -1163,6 +1175,18 @@ namespace QgsWms
        * \since QGIS 3.6
       */
       QStringList atlasPk() const;
+
+      QMap<DxfFormatOption, QString> dxfFormatOptions() const;
+
+      QStringList dxfLayerAttributes() const;
+
+      bool dxfUseLayerTitleAsName() const;
+
+      double dxfScale() const;
+
+      QgsDxfExport::SymbologyExport dxfMode() const;
+
+      QString dxfCodec() const;
 
     private:
       bool loadParameter( const QString &name, const QString &value ) override;
