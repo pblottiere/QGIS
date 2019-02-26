@@ -770,119 +770,50 @@ namespace QgsWms
     return image.release();
   }
 
-  QgsDxfExport QgsRenderer::getDxf( const QMap<QString, QString> &options )
+  QgsDxfExport QgsRenderer::getDxf()
   {
-    QgsDxfExport dxf;
-
-    // set extent
-    QgsRectangle extent = mWmsParameters.bboxAsRectangle();
-    dxf.setExtent( extent );
-
-    // get layers parameters
-    QList<QgsMapLayer *> layers;
-    QList<QgsWmsParametersLayer> params = mWmsParameters.layersParameters();
-
     // init layer restorer before doing anything
     std::unique_ptr<QgsLayerRestorer> restorer;
-    restorer.reset( new QgsLayerRestorer( mNicknameLayers.values() ) );
+    restorer.reset( new QgsLayerRestorer( mContext.layers() ) );
 
-    // init stylized layers according to LAYERS/STYLES or SLD
-    QString sld = mWmsParameters.sldBody();
-    if ( !sld.isEmpty() )
-    {
-      layers = sldStylizedLayers( sld );
-    }
-    else
-    {
-      layers = stylizedLayers( params );
-    }
+    // configure layers
+    QList<QgsMapLayer *> layers = mContext.layersToRender();
+    configureLayers( layers );
 
-    // layer attributes options
-    QStringList layerAttributes;
-    QMap<QString, QString>::const_iterator layerAttributesIt = options.find( QStringLiteral( "LAYERATTRIBUTES" ) );
-    if ( layerAttributesIt != options.constEnd() )
-    {
-      layerAttributes = options.value( QStringLiteral( "LAYERATTRIBUTES" ) ).split( ',' );
-    }
-
-    // only wfs layers are allowed to be published
-    QStringList wfsLayerIds = QgsServerProjectUtils::wfsLayerIds( *mProject );
-
-    // get dxf layers
+    // prepare dxf layers
     QList< QgsDxfExport::DxfLayer > dxfLayers;
-    int layerIdx = -1;
-    for ( QgsMapLayer *layer : layers )
+
+    const QStringList attributes = mWmsParameters.dxfLayerAttributes();
+    int index = 0;
+    for ( auto layer : layers )
     {
-      layerIdx++;
+      if ( attributes.size() <= index )
+      {
+        continue;
+      }
+
       if ( layer->type() != QgsMapLayer::VectorLayer )
-        continue;
-      if ( !wfsLayerIds.contains( layer->id() ) )
-        continue;
-
-      checkLayerReadPermissions( layer );
-
-      for ( const QgsWmsParametersLayer &param : params )
       {
-        if ( param.mNickname == layerNickname( *layer ) )
-        {
-          setLayerOpacity( layer, param.mOpacity );
-
-          setLayerFilter( layer, param.mFilter );
-
-          break;
-        }
+        continue; // should not happen if the context is properly configured
       }
 
-      setLayerAccessControlFilter( layer );
-
-      // cast for dxf layers
       QgsVectorLayer *vlayer = static_cast<QgsVectorLayer *>( layer );
+      const int attr = vlayer->fields().indexFromName( attributes[ index ] );
+      dxfLayers.append( QgsDxfExport::DxfLayer( vlayer, attr ) );
 
-      // get the layer attribute used in dxf
-      int layerAttribute = -1;
-      if ( layerAttributes.size() > layerIdx )
-      {
-        layerAttribute = vlayer->fields().indexFromName( layerAttributes.at( layerIdx ) );
-      }
-
-      dxfLayers.append( QgsDxfExport::DxfLayer( vlayer, layerAttribute ) );
+      index ++;
     }
 
-    // add layers to dxf
+    // prepare dxf export
+    QgsDxfExport dxf;
+    dxf.setExtent( mWmsParameters.bboxAsRectangle() );
     dxf.addLayers( dxfLayers );
+    dxf.setLayerTitleAsName( mWmsParameters.dxfUseLayerTitleAsName() );
+    dxf.setSymbologyExport( mWmsParameters.dxfMode() );
 
-    dxf.setLayerTitleAsName( options.contains( QStringLiteral( "USE_TITLE_AS_LAYERNAME" ) ) );
-
-    //MODE
-    QMap<QString, QString>::const_iterator modeIt = options.find( QStringLiteral( "MODE" ) );
-
-    QgsDxfExport::SymbologyExport se;
-    if ( modeIt == options.constEnd() )
+    if ( mWmsParameters.dxfFormatOptions().contains( QgsWmsParameters::DxfFormatOption::SCALE ) )
     {
-      se = QgsDxfExport::NoSymbology;
-    }
-    else
-    {
-      if ( modeIt->compare( QStringLiteral( "SymbolLayerSymbology" ), Qt::CaseInsensitive ) == 0 )
-      {
-        se = QgsDxfExport::SymbolLayerSymbology;
-      }
-      else if ( modeIt->compare( QStringLiteral( "FeatureSymbology" ), Qt::CaseInsensitive ) == 0 )
-      {
-        se = QgsDxfExport::FeatureSymbology;
-      }
-      else
-      {
-        se = QgsDxfExport::NoSymbology;
-      }
-    }
-    dxf.setSymbologyExport( se );
-
-    //SCALE
-    QMap<QString, QString>::const_iterator scaleIt = options.find( QStringLiteral( "SCALE" ) );
-    if ( scaleIt != options.constEnd() )
-    {
-      dxf.setSymbologyScale( scaleIt->toDouble() );
+      dxf.setSymbologyScale( mWmsParameters.dxfScale() );
     }
 
     return dxf;
