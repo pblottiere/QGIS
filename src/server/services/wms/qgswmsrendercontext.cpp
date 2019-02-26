@@ -435,6 +435,20 @@ void QgsWmsRenderContext::removeUnwantedLayers()
     if ( mRestrictedLayers.contains( nickname ) )
       continue;
 
+    if ( mFlags & UseWfsLayersOnly )
+    {
+      if ( layer->type() != QgsMapLayer::VectorLayer )
+      {
+        continue;
+      }
+
+      const QStringList wfsLayers = QgsServerProjectUtils::wfsLayerIds( *mProject );
+      if ( ! wfsLayers.contains( layer->id() ) )
+      {
+        continue;
+      }
+    }
+
     layers.append( layer );
   }
 
