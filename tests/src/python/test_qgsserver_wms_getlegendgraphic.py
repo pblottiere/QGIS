@@ -570,7 +570,7 @@ class TestQgsServerWMSGetLegendGraphic(QgsServerTestBase):
         }.items())])
 
         r, h = self._result(self._execute_request(qs))
-        self._img_diff_error(r, h, "WMS_GetLegendGraphic_ScaleSymbol_Min", max_size_diff=QSize(1, 1))
+        self._img_diff_error(r, h, "WMS_GetLegendGraphic_ScaleSymbol_Min", max_size_diff=QSize(15, 15))
 
         # 1:1000000000 min
         qs = "?" + "&".join(["%s=%s" % i for i in list({
