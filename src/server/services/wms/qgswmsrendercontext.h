@@ -38,7 +38,7 @@ namespace QgsWms
         SetAccessControl       = 0x40,
         AddQueryLayers         = 0x80,
         UseWfsLayersOnly       = 0x100,
-        AddExternalLayer       = 0x200
+        AddExternalLayers      = 0x200
       };
       Q_DECLARE_FLAGS( Flags, Flag )
 
