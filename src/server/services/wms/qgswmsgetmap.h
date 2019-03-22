@@ -19,6 +19,8 @@
  *                                                                         *
  ***************************************************************************/
 
+#include "qgswmsrendercontext.h"
+
 namespace QgsWms
 {
 
@@ -29,4 +31,5 @@ namespace QgsWms
                     const QString &version,  const QgsServerRequest &request,
                     QgsServerResponse &response );
 
+  bool checkMaximumWidthHeight( const QgsWmsRenderContext &context );
 } // namespace QgsWms

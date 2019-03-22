@@ -818,66 +818,13 @@ namespace QgsWms
 
   QImage *QgsRenderer::getMap( QgsMapSettings &mapSettings, HitTest *hitTest )
   {
-    // check size
-    if ( !checkMaximumWidthHeight() )
-    {
-      throw QgsBadRequestException( QStringLiteral( "Size error" ),
-                                    QStringLiteral( "The requested map size is too large" ) );
-    }
-
-    // get layers parameters
-    QList<QgsMapLayer *> layers;
-    QList<QgsWmsParametersLayer> params = mWmsParameters.layersParameters();
-
     // init layer restorer before doing anything
     std::unique_ptr<QgsLayerRestorer> restorer;
-    restorer.reset( new QgsLayerRestorer( mNicknameLayers.values() ) );
+    restorer.reset( new QgsLayerRestorer( mContext.layers() ) );
 
-    // init stylized layers according to LAYERS/STYLES or SLD
-    QString sld = mWmsParameters.sldBody();
-    if ( !sld.isEmpty() )
-    {
-      layers = sldStylizedLayers( sld );
-    }
-    else
-    {
-      layers = stylizedLayers( params );
-    }
-
-    // remove unwanted layers (restricted layers, ...)
-    removeUnwantedLayers( layers );
-
-    // configure each layer with opacity, selection filter, ...
-    bool updateMapExtent = mWmsParameters.bbox().isEmpty();
-    for ( QgsMapLayer *layer : layers )
-    {
-      checkLayerReadPermissions( layer );
-
-      for ( const QgsWmsParametersLayer &param : params )
-      {
-        if ( param.mNickname == layerNickname( *layer ) )
-        {
-          setLayerOpacity( layer, param.mOpacity );
-
-          setLayerFilter( layer, param.mFilter );
-
-          setLayerSelection( layer, param.mSelection );
-
-          if ( updateMapExtent )
-            updateExtent( layer, mapSettings );
-
-          break;
-        }
-      }
-
-      setLayerAccessControlFilter( layer );
-    }
-
-    // add external layers
-    layers = layers << externalLayers( mWmsParameters.externalLayersParameters() );
-
-    // add highlight layers above others
-    layers = layers << highlightLayers( mWmsParameters.highlightLayersParameters() );
+    // configure layers
+    QList<QgsMapLayer *> layers = mContext.layersToRender();
+    configureLayers( layers, &mapSettings );
 
     // create the output image and the painter
     std::unique_ptr<QPainter> painter;
@@ -886,8 +833,7 @@ namespace QgsWms
     // configure map settings (background, DPI, ...)
     configureMapSettings( image.get(), mapSettings );
 
-    // add layers to map settings (revert order for the rendering)
-    std::reverse( layers.begin(), layers.end() );
+    // add layers to map settings
     mapSettings.setLayers( layers );
 
     // rendering step for layers
@@ -2039,51 +1985,6 @@ namespace QgsWms
         startGroup = -1;
       }
     }
-  }
-
-  bool QgsRenderer::checkMaximumWidthHeight() const
-  {
-    //test if maxWidth / maxHeight set and WIDTH / HEIGHT parameter is in the range
-    int wmsMaxWidth = QgsServerProjectUtils::wmsMaxWidth( *mProject );
-    int width = mWmsParameters.widthAsInt();
-    if ( wmsMaxWidth != -1 && width > wmsMaxWidth )
-    {
-      return false;
-    }
-
-    int wmsMaxHeight = QgsServerProjectUtils::wmsMaxHeight( *mProject );
-    int height = mWmsParameters.heightAsInt();
-    if ( wmsMaxHeight != -1 && height > wmsMaxHeight )
-    {
-      return false;
-    }
-
-    // Sanity check from internal QImage checks (see qimage.cpp)
-    // this is to report a meaningful error message in case of
-    // image creation failure and to differentiate it from out
-    // of memory conditions.
-
-    // depth for now it cannot be anything other than 32, but I don't like
-    // to hardcode it: I hope we will support other depths in the future.
-    uint depth = 32;
-    switch ( mWmsParameters.format() )
-    {
-      case QgsWmsParameters::Format::JPG:
-      case QgsWmsParameters::Format::PNG:
-      default:
-        depth = 32;
-    }
-
-    const int bytes_per_line = ( ( width * depth + 31 ) >> 5 ) << 2; // bytes per scanline (must be multiple of 4)
-
-    if ( std::numeric_limits<int>::max() / depth < static_cast<uint>( width )
-         || bytes_per_line <= 0
-         || height <= 0
-         || std::numeric_limits<int>::max() / static_cast<uint>( bytes_per_line ) < static_cast<uint>( height )
-         || std::numeric_limits<int>::max() / sizeof( uchar * ) < static_cast<uint>( height ) )
-      return false;
-
-    return true;
   }
 
   void QgsRenderer::convertFeatureInfoToSia2045( QDomDocument &doc ) const
