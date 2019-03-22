@@ -21,24 +21,29 @@
 #include "qgswmsutils.h"
 #include "qgswmsgetlegendgraphics.h"
 #include "qgswmsrenderer.h"
+#include "qgswmsrendercontext.h"
 
 #include <QImage>
 
 namespace QgsWms
 {
-
   void writeGetLegendGraphics( QgsServerInterface *serverIface, const QgsProject *project,
-                               const QString &version, const QgsServerRequest &request,
+                               const QString &, const QgsServerRequest &request,
                                QgsServerResponse &response )
   {
-    Q_UNUSED( version );
+    // get parameters from query
+    QgsWmsParameters parameters( QUrlQuery( request.url() ) );
 
-    QgsServerRequest::Parameters params = request.parameters();
-    QString format = params.value( QStringLiteral( "FORMAT" ), QStringLiteral( "PNG" ) );
+    // check mandatory parameters
+    checkMandatoryParameters( parameters );
 
-    QgsWmsParameters wmsParameters( QUrlQuery( request.url() ) );
+    // init render context
+    QgsWmsRenderContext context( project, serverIface );
+    context.setFlag( QgsWmsRenderContext::UseScaleDenominator );
+    context.setParameters( parameters );
 
     // Get cached image
+    const QString format = request.parameters().value( QStringLiteral( "FORMAT" ), QStringLiteral( "PNG" ) );
     QgsAccessControl *accessControl = nullptr;
     QgsServerCacheManager *cacheManager = nullptr;
 #ifdef HAVE_SERVER_PYTHON_PLUGINS
@@ -79,8 +84,8 @@ namespace QgsWms
       }
     }
 
-    QgsRenderer renderer( serverIface, project, wmsParameters );
-
+    // legend rendering
+    QgsRenderer renderer( context );
     std::unique_ptr<QImage> result( renderer.getLegendGraphics() );
 
     if ( result )
@@ -100,9 +105,15 @@ namespace QgsWms
     }
   }
 
+  void checkMandatoryParameters( const QgsWmsParameters &parameters )
+  {
+    // check parameters
+    if ( parameters.allLayersNickname().isEmpty() )
+      throw QgsBadRequestException( QStringLiteral( "LayerNotSpecified" ),
+                                    QStringLiteral( "LAYER is mandatory for GetLegendGraphic operation" ) );
 
+    if ( parameters.format() == QgsWmsParameters::Format::NONE )
+      throw QgsBadRequestException( QStringLiteral( "FormatNotSpecified" ),
+                                    QStringLiteral( "FORMAT is mandatory for GetLegendGraphic operation" ) );
+  }
 } // namespace QgsWms
-
-
-
-

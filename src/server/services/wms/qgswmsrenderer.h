@@ -300,7 +300,7 @@ namespace QgsWms
 
       void handlePrintErrors( const QgsLayout *layout ) const;
 
-      void configureLayers( QList<QgsMapLayer *> &layers, QgsMapSettings *settings );
+      void configureLayers( QList<QgsMapLayer *> &layers, QgsMapSettings *settings = nullptr );
 
       void setLayerStyle( QgsMapLayer *layer, const QString &style ) const;
 
