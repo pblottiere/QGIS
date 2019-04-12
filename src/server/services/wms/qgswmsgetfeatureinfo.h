@@ -19,6 +19,8 @@
  *                                                                         *
  ***************************************************************************/
 
+#include "qgswmsparameters.h"
+
 namespace QgsWms
 {
 
@@ -29,8 +31,12 @@ namespace QgsWms
                             const QString &version, const QgsServerRequest &request,
                             QgsServerResponse &response );
 
+  namespace QgsWmsGetFeatureInfo
+  {
+    void checkParameters( const QgsWmsParameters &parameters );
+
+    void updateCrs( QgsWmsParameters &parameters );
+
+    void updateSize( QgsWmsParameters &parameters );
+  }
 } // namespace QgsWms
-
-
-
-

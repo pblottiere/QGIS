@@ -21,6 +21,7 @@
 #include "qgswmsutils.h"
 #include "qgswmsgetfeatureinfo.h"
 #include "qgswmsrenderer.h"
+#include "qgswmsserviceexception.h"
 
 namespace QgsWms
 {
@@ -30,6 +31,17 @@ namespace QgsWms
   {
     // get wms parameters from query
     QgsWmsParameters parameters( QUrlQuery( request.url() ) );
+
+    // check parameters validity
+    QgsWmsGetFeatureInfo::checkParameters( parameters );
+
+    // if FILTER is defined, the CRS parameter is not mandatory and a
+    // default one may be used for the rendering
+    QgsWmsGetFeatureInfo::updateCrs( parameters );
+
+    // if WIDTH, HEIGHT and INFO_FORMAT are not defined, a default size is
+    // still necessary
+    QgsWmsGetFeatureInfo::updateSize( parameters );
 
     // prepare render context
     QgsWmsRenderContext context( project, serverIface );
@@ -44,5 +56,65 @@ namespace QgsWms
 
     QgsRenderer renderer( context );
     response.write( renderer.getFeatureInfo( version ) );
+  }
+
+  namespace QgsWmsGetFeatureInfo
+  {
+    void checkParameters( const QgsWmsParameters &parameters )
+    {
+      if ( parameters.queryLayersNickname().isEmpty() )
+      {
+        throw QgsBadRequestException( QgsServiceException::QGIS_MissingParameterValue,
+                                      parameters[QgsWmsParameter::QUERY_LAYERS] );
+      }
+
+      // The I/J parameters are mandatory if they are not replaced by X/Y or
+      // FILTER or FILTER_GEOM
+      const bool ij = !parameters.i().isEmpty() && !parameters.j().isEmpty();
+      const bool xy = !parameters.x().isEmpty() && !parameters.y().isEmpty();
+      const bool filters = !parameters.filters().isEmpty();
+      const bool filterGeom = !parameters.filterGeom().isEmpty();
+
+      if ( !ij && !xy && !filters && !filterGeom )
+      {
+        QgsWmsParameter parameter = parameters[QgsWmsParameter::I];
+
+        if ( parameters.j().isEmpty() )
+          parameter = parameters[QgsWmsParameter::J];
+
+        throw QgsBadRequestException( QgsServiceException::QGIS_MissingParameterValue, parameter );
+      }
+
+      const QgsWmsParameters::Format infoFormat = parameters.infoFormat();
+      if ( infoFormat == QgsWmsParameters::Format::NONE )
+      {
+        throw QgsBadRequestException( QgsServiceException::OGC_InvalidFormat,
+                                      parameters[QgsWmsParameter::INFO_FORMAT] );
+      }
+    }
+
+    void updateCrs( QgsWmsParameters &parameters )
+    {
+      const bool ij = !parameters.i().isEmpty() && !parameters.j().isEmpty();
+      const bool xy = !parameters.x().isEmpty() && !parameters.y().isEmpty();
+      const bool filters = !parameters.filters().isEmpty();
+
+      if ( filters && !ij && !xy && parameters.crs().isEmpty() )
+      {
+        parameters.set( QgsWmsParameter::CRS, QStringLiteral( "EPSG:4326" ) );
+      }
+    }
+
+    void updateSize( QgsWmsParameters &parameters )
+    {
+      const int width = parameters.widthAsInt();
+      const int height = parameters.heightAsInt();
+
+      if ( !( width && height ) &&  ! parameters.infoFormatIsImage() )
+      {
+        parameters.set( QgsWmsParameter::WIDTH, 10 );
+        parameters.set( QgsWmsParameter::HEIGHT, 10 );
+      }
+    }
   }
 } // namespace QgsWms

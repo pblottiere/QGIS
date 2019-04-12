@@ -866,91 +866,51 @@ namespace QgsWms
 
   QByteArray QgsRenderer::getFeatureInfo( const QString &version )
   {
-    // Verifying Mandatory parameters
-    // The QUERY_LAYERS parameter is Mandatory
-    if ( mWmsParameters.queryLayersNickname().isEmpty() )
-    {
-      throw QgsBadRequestException( QgsServiceException::QGIS_MissingParameterValue,
-                                    mWmsParameters[QgsWmsParameter::QUERY_LAYERS] );
-    }
-
-    // The I/J parameters are Mandatory if they are not replaced by X/Y or FILTER or FILTER_GEOM
-    const bool ijDefined = !mWmsParameters.i().isEmpty() && !mWmsParameters.j().isEmpty();
-    const bool xyDefined = !mWmsParameters.x().isEmpty() && !mWmsParameters.y().isEmpty();
-    const bool filtersDefined = !mWmsParameters.filters().isEmpty();
-    const bool filterGeomDefined = !mWmsParameters.filterGeom().isEmpty();
-
-    if ( !ijDefined && !xyDefined && !filtersDefined && !filterGeomDefined )
-    {
-      QgsWmsParameter parameter = mWmsParameters[QgsWmsParameter::I];
-
-      if ( mWmsParameters.j().isEmpty() )
-        parameter = mWmsParameters[QgsWmsParameter::J];
-
-      throw QgsBadRequestException( QgsServiceException::QGIS_MissingParameterValue, parameter );
-    }
-
-    const QgsWmsParameters::Format infoFormat = mWmsParameters.infoFormat();
-    if ( infoFormat == QgsWmsParameters::Format::NONE )
-    {
-      throw QgsBadRequestException( QgsServiceException::OGC_InvalidFormat,
-                                    mWmsParameters[QgsWmsParameter::INFO_FORMAT] );
-    }
-
-    // create the mapSettings and the output image
-    int imageWidth = mWmsParameters.widthAsInt();
-    int imageHeight = mWmsParameters.heightAsInt();
-
-    if ( !( imageWidth && imageHeight ) &&  ! mWmsParameters.infoFormatIsImage() )
-    {
-      imageWidth = 10;
-      imageHeight = 10;
-    }
-
-    std::unique_ptr<QImage> outputImage( createImage( imageWidth, imageHeight ) );
+    std::unique_ptr<QImage> image( createImage() );
 
     // init layer restorer before doing anything
     std::unique_ptr<QgsLayerRestorer> restorer;
     restorer.reset( new QgsLayerRestorer( mContext.layers() ) );
 
-    // The CRS parameter is considered as mandatory in configureMapSettings
-    // but in the case of filter parameter, CRS parameter has not to be mandatory
-    bool mandatoryCrsParam = true;
-    if ( filtersDefined && !ijDefined && !xyDefined && mWmsParameters.crs().isEmpty() )
-    {
-      mandatoryCrsParam = false;
-    }
-
     // configure map settings (background, DPI, ...)
-    QgsMapSettings mapSettings;
-    configureMapSettings( outputImage.get(), mapSettings, mandatoryCrsParam );
+    QgsMapSettings settings;
+    configureMapSettings( image.get(), settings );
 
     // compute scale denominator
-    QgsScaleCalculator scaleCalc( ( outputImage->logicalDpiX() + outputImage->logicalDpiY() ) / 2, mapSettings.destinationCrs().mapUnits() );
-    const double scaleDenominator = scaleCalc.calculate( mWmsParameters.bboxAsRectangle(), outputImage->width() );
+    QgsScaleCalculator calc( ( image->logicalDpiX() + image->logicalDpiY() ) / 2, settings.destinationCrs().mapUnits() );
+    const double denominator = calc.calculate( mWmsParameters.bboxAsRectangle(), image->width() );
 
     // configure layers
     QgsWmsRenderContext context = mContext;
-    context.setScaleDenominator( scaleDenominator );
+    context.setScaleDenominator( denominator );
 
     QList<QgsMapLayer *> layers = context.layersToRender();
-    configureLayers( layers, &mapSettings );
+    configureLayers( layers, &settings );
 
     // add layers to map settings
-    mapSettings.setLayers( layers );
+    settings.setLayers( layers );
 
-    QDomDocument result = featureInfoDocument( layers, mapSettings, outputImage.get(), version );
+    QDomDocument result = featureInfoDocument( layers, settings, image.get(), version );
 
     QByteArray ba;
 
+    const QgsWmsParameters::Format infoFormat = mWmsParameters.infoFormat();
     if ( infoFormat == QgsWmsParameters::Format::TEXT )
+    {
       ba = convertFeatureInfoToText( result );
+    }
     else if ( infoFormat == QgsWmsParameters::Format::HTML )
+    {
       ba = convertFeatureInfoToHtml( result );
+    }
     else if ( infoFormat == QgsWmsParameters::Format::JSON )
+    {
       ba = convertFeatureInfoToJson( layers, result );
+    }
     else
+    {
       ba = result.toByteArray();
+    }
 
     return ba;
   }
