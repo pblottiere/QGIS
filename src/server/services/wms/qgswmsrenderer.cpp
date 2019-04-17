@@ -1000,7 +1000,7 @@ namespace QgsWms
     return image.release();
   }
 
-  void QgsRenderer::configureMapSettings( const QPaintDevice *paintDevice, QgsMapSettings &mapSettings, bool mandatoryCrsParam ) const
+  void QgsRenderer::configureMapSettings( const QPaintDevice *paintDevice, QgsMapSettings &mapSettings ) const
   {
     if ( !paintDevice )
     {
@@ -1023,10 +1023,6 @@ namespace QgsWms
     {
       crs = QString( "EPSG:4326" );
       mapExtent.invert();
-    }
-    else if ( crs.isEmpty() && !mandatoryCrsParam )
-    {
-      crs = QString( "EPSG:4326" );
     }
 
     QgsCoordinateReferenceSystem outputCRS;
