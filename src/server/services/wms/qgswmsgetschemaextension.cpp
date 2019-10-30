@@ -49,7 +49,7 @@ namespace QgsWms
     QDir resourcesDir = QFileInfo( QgsApplication::serverResourcesPath() ).absoluteDir();
     QFileInfo xsdFileInfo( resourcesDir, QStringLiteral( "schemaExtension.xsd" ) );
 
-    QgsMessageLog::logMessage( QStringLiteral("Abs path: %1").arg( xsdFileInfo.absoluteFilePath() ), QStringLiteral( "Server" ), Qgis:Critical );
+    QgsMessageLog::logMessage( QStringLiteral("Abs path: %1").arg( xsdFileInfo.absoluteFilePath() ), QStringLiteral( "Server" ), Qgis::Critical );
 
     if ( !xsdFileInfo.exists() )
     {
