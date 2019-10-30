@@ -49,6 +49,8 @@ namespace QgsWms
     QDir resourcesDir = QFileInfo( QgsApplication::serverResourcesPath() ).absoluteDir();
     QFileInfo xsdFileInfo( resourcesDir, QStringLiteral( "schemaExtension.xsd" ) );
 
+    QgsMessageLog::logMessage( QStringLiteral("Abs path: %1").arg( xsdFileInfo.absoluteFilePath() ) );
+
     if ( !xsdFileInfo.exists() )
     {
       QgsMessageLog::logMessage( QStringLiteral( "Error, xsd file 'schemaExtension.xsd' does not exist" ),
