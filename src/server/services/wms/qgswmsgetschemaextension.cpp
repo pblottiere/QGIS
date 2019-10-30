@@ -51,6 +51,12 @@ namespace QgsWms
 
     QgsMessageLog::logMessage( QStringLiteral("Abs path: %1").arg( xsdFileInfo.absoluteFilePath() ), QStringLiteral( "Server" ), Qgis::Critical );
 
+    QgsMessageLog::logMessage( QStringLiteral("Dir: %1").arg( xsdFileInfo.dir().absolutePath() ), QStringLiteral( "Server" ), Qgis::Critical );
+    if ( !xsdFileInfo.dir().exists() )
+    {
+      QgsMessageLog::logMessage( QStringLiteral("Dir DOES NOT EXIST"), QStringLiteral( "Server" ), Qgis::Critical );
+    }
+
     if ( !xsdFileInfo.exists() )
     {
       QgsMessageLog::logMessage( QStringLiteral( "Error, xsd file 'schemaExtension.xsd' does not exist" ),
