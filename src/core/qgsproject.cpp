@@ -2469,6 +2469,7 @@ QString QgsProject::layerIsEmbedded( const QString &id ) const
 bool QgsProject::createEmbeddedLayer( const QString &layerId, const QString &projectFilePath, QList<QDomNode> &brokenNodes,
                                       bool saveFlag, QgsProject::ReadFlags flags )
 {
+  std::cout << "QgsProject::createEmbeddedLayer 0" << std::endl;
   QgsDebugCall;
 
   static QString sPrevProjectFilePath;
@@ -2477,6 +2478,7 @@ bool QgsProject::createEmbeddedLayer( const QString &layerId, const QString &pro
 
   QDateTime projectFileTimestamp = QFileInfo( projectFilePath ).lastModified();
 
+  std::cout << "QgsProject::createEmbeddedLayer 1" << std::endl;
   if ( projectFilePath != sPrevProjectFilePath || projectFileTimestamp != sPrevProjectFileTimestamp )
   {
     sPrevProjectFilePath.clear();
@@ -2499,6 +2501,7 @@ bool QgsProject::createEmbeddedLayer( const QString &layerId, const QString &pro
   // does project store paths absolute or relative?
   bool useAbsolutePaths = true;
 
+  std::cout << "QgsProject::createEmbeddedLayer 2" << std::endl;
   QDomElement propertiesElem = sProjectDocument.documentElement().firstChildElement( QStringLiteral( "properties" ) );
   if ( !propertiesElem.isNull() )
   {
@@ -2509,18 +2512,21 @@ bool QgsProject::createEmbeddedLayer( const QString &layerId, const QString &pro
     }
   }
 
+  std::cout << "QgsProject::createEmbeddedLayer 3" << std::endl;
   QgsReadWriteContext embeddedContext;
   if ( !useAbsolutePaths )
     embeddedContext.setPathResolver( QgsPathResolver( projectFilePath ) );
   embeddedContext.setProjectTranslator( this );
   embeddedContext.setTransformContext( transformContext() );
 
+  std::cout << "QgsProject::createEmbeddedLayer 4" << std::endl;
   QDomElement projectLayersElem = sProjectDocument.documentElement().firstChildElement( QStringLiteral( "projectlayers" ) );
   if ( projectLayersElem.isNull() )
   {
     return false;
   }
 
+  std::cout << "QgsProject::createEmbeddedLayer 5" << std::endl;
   QDomNodeList mapLayerNodes = projectLayersElem.elementsByTagName( QStringLiteral( "maplayer" ) );
   for ( int i = 0; i < mapLayerNodes.size(); ++i )
   {
@@ -2549,6 +2555,7 @@ bool QgsProject::createEmbeddedLayer( const QString &layerId, const QString &pro
     }
   }
 
+  std::cout << "QgsProject::createEmbeddedLayer 6" << std::endl;
   return false;
 }
 

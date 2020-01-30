@@ -334,6 +334,7 @@ QList<QgsMapLayer *> QgsLayerDefinition::loadLayerDefinitionLayers( const QStrin
 
 void QgsLayerDefinition::DependencySorter::init( const QDomDocument &doc )
 {
+  std::cout << "QgsLayerDefinition::DependencySorter::init 0" << std::endl;
   // Determine a loading order of layers based on a graph of dependencies
   QMap< QString, QVector< QString > > dependencies;
   QStringList sortedLayers;
@@ -343,8 +344,10 @@ void QgsLayerDefinition::DependencySorter::init( const QDomDocument &doc )
   QDomNodeList nl = doc.elementsByTagName( QStringLiteral( "maplayer" ) );
   layerIds.reserve( nl.count() );
   QVector<QString> deps; //avoid expensive allocation for list for every iteration
+  std::cout << "QgsLayerDefinition::DependencySorter::init 1" << std::endl;
   for ( int i = 0; i < nl.count(); i++ )
   {
+    std::cout << "QgsLayerDefinition::DependencySorter::init 2" << std::endl;
     deps.resize( 0 ); // preserve capacity - don't use clear
     QDomNode node = nl.item( i );
 
@@ -443,9 +446,26 @@ QgsLayerDefinition::DependencySorter::DependencySorter( const QString &fileName 
   , mHasMissingDependency( false )
 {
   QDomDocument doc;
-  QFile pFile( fileName );
-  ( void )pFile.open( QIODevice::ReadOnly );
-  ( void )doc.setContent( &pFile );
+
+  std::cout << "QgsLayerDefinition::DependencySorter::DependencySorter 0" << std::endl;
+  // if ( fileName.endsWith( QLatin1String( ".qgz" ), Qt::CaseInsensitive ) )
+  // {
+  //   std::cout << "QgsLayerDefinition::DependencySorter::DependencySorter 1" << std::endl;
+  //   QgsProjectArchive archive;
+  //   archive.unzip( fileName );
+  //   std::cout << "QGS file: " << archive.projectFile().toStdString() << std::endl;
+
+  //   QFile pFile( archive.projectFile() );
+  //   ( void )pFile.open( QIODevice::ReadOnly );
+  //   ( void )doc.setContent( &pFile );
+  // }
+  // else
+  {
+    QFile pFile( fileName );
+    ( void )pFile.open( QIODevice::ReadOnly );
+    ( void )doc.setContent( &pFile );
+  }
+
   init( doc );
 }
 

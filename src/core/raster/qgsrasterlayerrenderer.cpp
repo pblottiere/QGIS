@@ -66,6 +66,7 @@ QgsRasterLayerRenderer::QgsRasterLayerRenderer( QgsRasterLayer *layer, QgsRender
   : QgsMapLayerRenderer( layer->id(), &rendererContext )
   , mFeedback( new QgsRasterLayerRendererFeedback( this ) )
 {
+  std::cout << "QgsRasterLayerRenderer::QgsRasterLayerRenderer 0" << std::endl;
   QgsMapToPixel mapToPixel = rendererContext.mapToPixel();
   if ( rendererContext.mapToPixel().mapRotation() )
   {
@@ -83,14 +84,17 @@ QgsRasterLayerRenderer::QgsRasterLayerRenderer( QgsRasterLayer *layer, QgsRender
   QgsRectangle myProjectedViewExtent;
   QgsRectangle myProjectedLayerExtent;
 
+  std::cout << "QgsRasterLayerRenderer::QgsRasterLayerRenderer 1" << std::endl;
   if ( rendererContext.coordinateTransform().isValid() )
   {
+    std::cout << "QgsRasterLayerRenderer::QgsRasterLayerRenderer 1.0" << std::endl;
     QgsDebugMsgLevel( QStringLiteral( "coordinateTransform set -> project extents." ), 4 );
     if ( rendererContext.extent().xMinimum() == std::numeric_limits<double>::lowest() &&
          rendererContext.extent().yMinimum() == std::numeric_limits<double>::lowest() &&
          rendererContext.extent().xMaximum() == std::numeric_limits<double>::max() &&
          rendererContext.extent().yMaximum() == std::numeric_limits<double>::max() )
     {
+      std::cout << "QgsRasterLayerRenderer::QgsRasterLayerRenderer 1.1" << std::endl;
       // We get in this situation if the view CRS is geographical and the
       // extent goes beyond -180,-90,180,90. To avoid reprojection issues to the
       // layer CRS, then this dummy extent is returned by QgsMapRendererJob::reprojectToLayerExtent()
@@ -100,12 +104,15 @@ QgsRasterLayerRenderer::QgsRasterLayerRenderer( QgsRasterLayer *layer, QgsRender
     }
     else
     {
+      std::cout << "QgsRasterLayerRenderer::QgsRasterLayerRenderer 1.2" << std::endl;
       try
       {
+        std::cout << "QgsRasterLayerRenderer::QgsRasterLayerRenderer 1.3" << std::endl;
         myProjectedViewExtent = rendererContext.coordinateTransform().transformBoundingBox( rendererContext.extent() );
       }
       catch ( QgsCsException &cs )
       {
+        std::cout << "QgsRasterLayerRenderer::QgsRasterLayerRenderer 1.4" << std::endl;
         QgsMessageLog::logMessage( QObject::tr( "Could not reproject view extent: %1" ).arg( cs.what() ), QObject::tr( "Raster" ) );
         myProjectedViewExtent.setMinimal();
       }
@@ -113,21 +120,25 @@ QgsRasterLayerRenderer::QgsRasterLayerRenderer( QgsRasterLayer *layer, QgsRender
 
     try
     {
+      std::cout << "QgsRasterLayerRenderer::QgsRasterLayerRenderer 1.5" << std::endl;
       myProjectedLayerExtent = rendererContext.coordinateTransform().transformBoundingBox( layer->extent() );
     }
     catch ( QgsCsException &cs )
     {
+      std::cout << "QgsRasterLayerRenderer::QgsRasterLayerRenderer 1.6" << std::endl;
       QgsMessageLog::logMessage( QObject::tr( "Could not reproject layer extent: %1" ).arg( cs.what() ), QObject::tr( "Raster" ) );
       myProjectedLayerExtent.setMinimal();
     }
   }
   else
   {
+    std::cout << "QgsRasterLayerRenderer::QgsRasterLayerRenderer 1.7" << std::endl;
     QgsDebugMsgLevel( QStringLiteral( "coordinateTransform not set" ), 4 );
     myProjectedViewExtent = rendererContext.extent();
     myProjectedLayerExtent = layer->extent();
   }
 
+  std::cout << "QgsRasterLayerRenderer::QgsRasterLayerRenderer 2" << std::endl;
   // clip raster extent to view extent
   QgsRectangle myRasterExtent = layer->ignoreExtents() ? myProjectedViewExtent : myProjectedViewExtent.intersect( myProjectedLayerExtent );
   if ( myRasterExtent.isEmpty() )
@@ -164,6 +175,7 @@ QgsRasterLayerRenderer::QgsRasterLayerRenderer( QgsRasterLayer *layer, QgsRender
     mRasterViewPort->mDestCRS = QgsCoordinateReferenceSystem(); // will be invalid
   }
 
+  std::cout << "QgsRasterLayerRenderer::QgsRasterLayerRenderer 3" << std::endl;
   // get dimensions of clipped raster image in device coordinate space (this is the size of the viewport)
   mRasterViewPort->mTopLeftPoint = mapToPixel.transform( myRasterExtent.xMinimum(), myRasterExtent.yMaximum() );
   mRasterViewPort->mBottomRightPoint = mapToPixel.transform( myRasterExtent.xMaximum(), myRasterExtent.yMinimum() );
@@ -217,12 +229,14 @@ QgsRasterLayerRenderer::QgsRasterLayerRenderer( QgsRasterLayer *layer, QgsRender
   // TODO: is it necessary? Probably WMS only?
   layer->dataProvider()->setDpi( 25.4 * rendererContext.scaleFactor() );
 
+  std::cout << "QgsRasterLayerRenderer::QgsRasterLayerRenderer 4" << std::endl;
 
   // copy the whole raster pipe!
   mPipe = new QgsRasterPipe( *layer->pipe() );
   QgsRasterRenderer *rasterRenderer = mPipe->renderer();
   if ( rasterRenderer && !( rendererContext.flags() & QgsRenderContext::RenderPreviewJob ) )
     layer->refreshRendererIfNeeded( rasterRenderer, rendererContext.extent() );
+  std::cout << "QgsRasterLayerRenderer::QgsRasterLayerRenderer 5" << std::endl;
 }
 
 QgsRasterLayerRenderer::~QgsRasterLayerRenderer()
@@ -235,6 +249,7 @@ QgsRasterLayerRenderer::~QgsRasterLayerRenderer()
 
 bool QgsRasterLayerRenderer::render()
 {
+  std::cout << "QgsRasterLayerRenderer::render 0" << std::endl;
   if ( !mRasterViewPort )
     return true; // outside of layer extent - nothing to do
 
@@ -259,10 +274,12 @@ bool QgsRasterLayerRenderer::render()
   }
 
   // Drawer to pipe?
+  std::cout << "QgsRasterLayerRenderer::render 1" << std::endl;
   QgsRasterIterator iterator( mPipe->last() );
   QgsRasterDrawer drawer( &iterator );
   drawer.draw( renderContext()->painter(), mRasterViewPort, &renderContext()->mapToPixel(), mFeedback );
 
+  std::cout << "QgsRasterLayerRenderer::render 2" << std::endl;
   const QStringList errors = mFeedback->errors();
   for ( const QString &error : errors )
   {

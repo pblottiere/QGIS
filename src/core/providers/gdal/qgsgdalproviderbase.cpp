@@ -281,8 +281,10 @@ int CPL_STDCALL _gdalProgressFnWithFeedback( double dfComplete, const char *pszM
 
 CPLErr QgsGdalProviderBase::gdalRasterIO( GDALRasterBandH hBand, GDALRWFlag eRWFlag, int nXOff, int nYOff, int nXSize, int nYSize, void *pData, int nBufXSize, int nBufYSize, GDALDataType eBufType, int nPixelSpace, int nLineSpace, QgsRasterBlockFeedback *feedback )
 {
+  std::cout << "QgsGdalProviderBase::gdalRaster 0" << std::endl;
   GDALRasterIOExtraArg extra;
   INIT_RASTERIO_EXTRA_ARG( extra );
+  std::cout << "QgsGdalProviderBase::gdalRaster 1" << std::endl;
   if ( false && feedback )  // disabled!
   {
     // Currently the cancellation is disabled... When RasterIO call is canceled,
@@ -293,7 +295,9 @@ CPLErr QgsGdalProviderBase::gdalRasterIO( GDALRasterBandH hBand, GDALRWFlag eRWF
     extra.pfnProgress = _gdalProgressFnWithFeedback;
     extra.pProgressData = ( void * ) feedback;
   }
+  std::cout << "QgsGdalProviderBase::gdalRaster 2" << std::endl;
   CPLErr err = GDALRasterIOEx( hBand, eRWFlag, nXOff, nYOff, nXSize, nYSize, pData, nBufXSize, nBufYSize, eBufType, nPixelSpace, nLineSpace, &extra );
+  std::cout << "QgsGdalProviderBase::gdalRaster 3" << std::endl;
 
   return err;
 }

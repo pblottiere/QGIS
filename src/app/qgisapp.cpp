@@ -11592,13 +11592,22 @@ void QgisApp::addMapLayer( QgsMapLayer *mapLayer )
 
 void QgisApp::embedLayers()
 {
+  std::cout << "QgisApp::embedLayers 0" << std::endl;
   //dialog to select groups/layers from other project files
   QgsProjectLayerGroupDialog d( this );
   if ( d.exec() == QDialog::Accepted && d.isValid() )
   {
+    std::cout << "QgisApp::embedLayers 1" << std::endl;
     QgsCanvasRefreshBlocker refreshBlocker;
 
     QString projectFile = d.selectedProjectFile();
+
+    QgsProjectArchive archive;
+    if ( projectFile.endsWith( QLatin1String( ".qgz" ), Qt::CaseInsensitive ) )
+    {
+      archive.unzip( projectFile );
+      projectFile = archive.projectFile();
+    }
 
     //groups
     QStringList groups = d.selectedGroups();
@@ -11615,17 +11624,23 @@ void QgisApp::embedLayers()
     QList<QDomNode> brokenNodes;
 
     // resolve dependencies
+    std::cout << "QgisApp::embedLayers 2" << std::endl;
     QgsLayerDefinition::DependencySorter depSorter( projectFile );
     QStringList sortedIds = depSorter.sortedLayerIds();
     QStringList layerIds = d.selectedLayerIds();
     const auto constSortedIds = sortedIds;
     for ( const QString &id : constSortedIds )
     {
+      std::cout << "QgisApp::embedLayers 3" << std::endl;
       const auto constLayerIds = layerIds;
       for ( const QString &selId : constLayerIds )
       {
+        std::cout << "QgisApp::embedLayers 4" << std::endl;
         if ( selId == id )
+        {
+          std::cout << "QgisApp::embedLayers 5" << std::endl;
           QgsProject::instance()->createEmbeddedLayer( selId, projectFile, brokenNodes );
+        }
       }
     }
   }
