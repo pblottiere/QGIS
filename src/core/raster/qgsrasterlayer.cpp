@@ -242,6 +242,7 @@ void QgsRasterLayer::reload()
 
 QgsMapLayerRenderer *QgsRasterLayer::createMapRenderer( QgsRenderContext &rendererContext )
 {
+  std::cout << "QgsRasterLayer::createMapRenderer" << std::endl;
   return new QgsRasterLayerRenderer( this, rendererContext );
 }
 

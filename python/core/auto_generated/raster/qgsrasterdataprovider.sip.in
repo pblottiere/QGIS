@@ -487,6 +487,8 @@ and it's possible that there is renderable content outside of these extents.
 .. versionadded:: 3.10.0
 %End
 
+    qint64 bytes() const;
+
   signals:
 
     void statusChanged( const QString & ) const;
@@ -509,6 +511,7 @@ Returns ``True`` if user no data contains value
 %Docstring
 Copy member variables from other raster data provider. Useful for implementation of clone() method in subclasses
 %End
+
 
 
 

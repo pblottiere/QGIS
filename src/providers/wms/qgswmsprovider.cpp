@@ -638,6 +638,9 @@ QImage *QgsWmsProvider::draw( QgsRectangle const &viewExtent, int pixelWidth, in
 
     QgsWmsImageDownloadHandler handler( dataSourceUri(), url, mSettings.authorization(), image, feedback );
     handler.downloadBlocking();
+
+    QgsWmsStatistics::Stat &stat = QgsWmsStatistics::statForUri( dataSourceUri() );
+    stat.bytes += handler.bytes();
   }
   else
   {
@@ -880,6 +883,10 @@ QImage *QgsWmsProvider::draw( QgsRectangle const &viewExtent, int pixelWidth, in
 
       QgsWmsTiledImageDownloadHandler handler( dataSourceUri(), mSettings.authorization(), mTileReqNo, requestsFinal, image, viewExtent, mSettings.mSmoothPixmapTransform, feedback );
       handler.downloadBlocking();
+
+      QgsWmsStatistics::Stat &stat = QgsWmsStatistics::statForUri( dataSourceUri() );
+      stat.bytes += handler.bytes();
+      QgsDebugMsgLevel( QStringLiteral( "PLAFF!!!!! %1" ).arg( stat.bytes ), 3 );
     }
 
     QgsDebugMsgLevel( QStringLiteral( "TILE CACHE total: %1 / %2" ).arg( QgsTileCache::totalCost() ).arg( QgsTileCache::maxCost() ), 3 );
@@ -911,6 +918,8 @@ bool QgsWmsProvider::readBlock( int bandNo, QgsRectangle  const &viewExtent, int
   QgsDebugMsgLevel( QStringLiteral( "image height = %1 bytesPerLine = %2" ).arg( image->height() ) . arg( image->bytesPerLine() ), 3 );
   size_t myExpectedSize = pixelWidth * pixelHeight * 4;
   size_t myImageSize = image->height() *  image->bytesPerLine();
+
+  std::cout << "!!!!!!!!!!!!!!!!!!!!!!!!!!!! readBlock: " << myImageSize << std::endl;
   if ( myExpectedSize != myImageSize )   // should not happen
   {
     QgsMessageLog::logMessage( tr( "unexpected image size" ), tr( "WMS" ) );
@@ -1552,6 +1561,10 @@ bool QgsWmsProvider::isValid() const
   return mValid;
 }
 
+qint64 QgsWmsProvider::bytes() const
+{
+  return QgsWmsStatistics::statForUri( dataSourceUri() ).bytes;
+}
 
 QString QgsWmsProvider::wmsVersion()
 {
@@ -3677,6 +3690,10 @@ void QgsWmsImageDownloadHandler::cacheReplyFinished()
     QgsDebugMsg( "contentType: " + contentType );
     QByteArray text = mCacheReply->readAll();
     QImage myLocalImage = QImage::fromData( text );
+
+    mBytes += text.size();
+    std::cout << "QgsWmsImageDownloadHandler::bytes: " << mCacheReply->bytesAvailable() << std::endl;
+
     if ( !myLocalImage.isNull() )
     {
       QPainter p( mCachedImage );
@@ -3977,6 +3994,7 @@ void QgsWmsTiledImageDownloadHandler::tileReplyFinished()
                   r.height() / cr );
 
       QgsDebugMsgLevel( QStringLiteral( "tile reply: length %1" ).arg( reply->bytesAvailable() ), 2 );
+      mBytes += reply->bytesAvailable();
 
       QImage myLocalImage = QImage::fromData( reply->readAll() );
 

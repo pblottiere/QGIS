@@ -31,6 +31,7 @@
 QgsRasterInterface::QgsRasterInterface( QgsRasterInterface *input )
   : mInput( input )
 {
+  std::cout << "new RasterInterface!!!!" << std::endl;
 }
 
 void QgsRasterInterface::initStatistics( QgsRasterBandStats &statistics,

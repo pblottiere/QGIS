@@ -157,6 +157,8 @@ class QgsWmsProvider : public QgsRasterDataProvider
 
     bool isValid() const override;
 
+    qint64 bytes() const override;
+
 #if 0
 
     /**
@@ -488,6 +490,8 @@ class QgsWmsImageDownloadHandler : public QObject
 
     void downloadBlocking();
 
+    qint64 bytes() const { return mBytes; }
+
   protected slots:
     void cacheReplyFinished();
     void cacheReplyProgress( qint64 bytesReceived, qint64 bytesTotal );
@@ -504,6 +508,8 @@ class QgsWmsImageDownloadHandler : public QObject
     QEventLoop *mEventLoop = nullptr;
 
     QgsRasterBlockFeedback *mFeedback = nullptr;
+
+    qint64 mBytes = 0;
 };
 
 
@@ -517,6 +523,8 @@ class QgsWmsTiledImageDownloadHandler : public QObject
     ~QgsWmsTiledImageDownloadHandler() override;
 
     void downloadBlocking();
+
+    qint64 bytes() const { return mBytes; }
 
   protected slots:
     void tileReplyFinished();
@@ -551,6 +559,8 @@ class QgsWmsTiledImageDownloadHandler : public QObject
     QList<QNetworkReply *> mReplies;
 
     QgsRasterBlockFeedback *mFeedback = nullptr;
+
+    qint64 mBytes = 0;
 };
 
 
@@ -564,6 +574,7 @@ class QgsWmsStatistics
       int errors = 0;
       int cacheHits = 0;
       int cacheMisses = 0;
+      qint64 bytes = 0;
     };
 
     //! Gets reference to layer's statistics - insert to map if does not exist yet

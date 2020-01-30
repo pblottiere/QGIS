@@ -219,7 +219,9 @@ QgsRasterLayerRenderer::QgsRasterLayerRenderer( QgsRasterLayer *layer, QgsRender
 
 
   // copy the whole raster pipe!
+  QgsDebugMsgLevel( QStringLiteral( "new QgsRasterPipe BEFORE" ), 3 );
   mPipe = new QgsRasterPipe( *layer->pipe() );
+  QgsDebugMsgLevel( QStringLiteral( "new QgsRasterPipe AFTER" ), 3 );
   QgsRasterRenderer *rasterRenderer = mPipe->renderer();
   if ( rasterRenderer && !( rendererContext.flags() & QgsRenderContext::RenderPreviewJob ) )
     layer->refreshRendererIfNeeded( rasterRenderer, rendererContext.extent() );

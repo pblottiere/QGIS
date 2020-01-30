@@ -546,6 +546,8 @@ class CORE_EXPORT QgsRasterDataProvider : public QgsDataProvider, public QgsRast
      */
     virtual bool ignoreExtents() const;
 
+    virtual qint64 bytes() const { return mBytes; }
+
   signals:
 
     /**
@@ -608,6 +610,8 @@ class CORE_EXPORT QgsRasterDataProvider : public QgsDataProvider, public QgsRast
      *  for each band, indexed from 0
     */
     QList< QgsRasterRangeList > mUserNoDataValue;
+
+    qint64 mBytes = 0;
 
     mutable QgsRectangle mExtent;
 
