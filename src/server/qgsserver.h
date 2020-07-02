@@ -32,6 +32,7 @@
 #include "qgsconfigcache.h"
 #include "qgscapabilitiescache.h"
 #include "qgsserviceregistry.h"
+#include "qgsserversharedmemory.h"
 #include "qgsserversettings.h"
 #include "qgsserverplugins.h"
 #include "qgsserverinterfaceimpl.h"
@@ -124,10 +125,13 @@ class SERVER_EXPORT QgsServer
      */
     static void setupNetworkAccessManager();
 
+    static void setupSharedMemorySegment();
+
     // Status
     static QString *sConfigFilePath;
     static QgsCapabilitiesCache *sCapabilitiesCache;
     static QgsServerInterfaceImpl *sServerInterface;
+    static QgsServerSharedMemory *sSharedMemory;
     //! Initialization must run once for all servers
     static bool sInitialized;
 

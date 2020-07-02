@@ -57,6 +57,7 @@
 QString *QgsServer::sConfigFilePath = nullptr;
 QgsCapabilitiesCache *QgsServer::sCapabilitiesCache = nullptr;
 QgsServerInterfaceImpl *QgsServer::sServerInterface = nullptr;
+QgsServerSharedMemory *QgsServer::sSharedMemory = nullptr;
 // Initialization must run once for all servers
 bool QgsServer::sInitialized = false;
 
@@ -93,6 +94,66 @@ void QgsServer::setupNetworkAccessManager()
   QgsMessageLog::logMessage( QStringLiteral( "cacheDirectory: %1" ).arg( cache->cacheDirectory() ), QStringLiteral( "Server" ), Qgis::Info );
   QgsMessageLog::logMessage( QStringLiteral( "maximumCacheSize: %1" ).arg( cache->maximumCacheSize() ), QStringLiteral( "Server" ), Qgis::Info );
   nam->setCache( cache );
+}
+
+void QgsServer::setupSharedMemorySegment()
+{
+  const QString shm { qgetenv( "QGIS_SERVER_SHM_KEY" ) };
+  if ( shm.isEmpty() )
+    return;
+
+  sSharedMemory = new QgsServerSharedMemory( shm, false );
+
+  // sSharedMemory = new QSharedMemory();
+  // sSharedMemory->setKey(shm);
+
+  // std::cout << shm.toStdString() << std::endl;
+
+  // // if (sSharedMemory->isAttached())
+  // // {
+  // //   sSharedMemory->detach();
+  // // }
+
+  // // std::cout << sSharedMemory->detach() << std::endl;
+
+  // const int n = 10;
+
+  // struct SharedData {
+  //   double fourDoubles[4];
+  //   int andAnInt;
+  //   unsigned char port[10];
+  // };
+
+  // struct Data {
+  //   int n;
+  //   SharedData data[n];
+  // };
+
+  // sSharedMemory->create(sizeof(Data));
+
+  // sSharedMemory->lock();
+  // Data* d = static_cast<Data*>(sSharedMemory->data());
+  // d->n = n;
+  // d->data[0].fourDoubles[0] = 1.0;
+  // memcpy(d->data[0].port, "coucou0", 7);
+  // memcpy(d->data[1].port, "coucou1", 7);
+
+  // SharedData* p = static_cast<SharedData*>(sSharedMemory->data());
+  // p->fourDoubles[0] = 1.0;
+  // p->andAnInt = 42;
+  // memcpy(p->port, "coucou", 6);
+  // sSharedMemory->unlock();
+
+  // Data* p2 = static_cast<Data*>(sSharedMemory->data());
+  // std::cout << p2->data[0].port << std::endl;
+  // std::cout << p2->data[1].port << std::endl;
+
+  // std::cout << sSharedMemory->size() << std::endl;
+  // SharedData* p2 = static_cast<SharedData*>(sSharedMemory->data());
+  // std::cout << p2->andAnInt << std::endl;
+  // std::cout << p2->port << std::endl;
+
+  // sSharedMemory->detach();
 }
 
 QFileInfo QgsServer::defaultProjectFile()
@@ -223,6 +284,7 @@ bool QgsServer::init()
   sSettings()->logSummary();
 
   setupNetworkAccessManager();
+  setupSharedMemorySegment();
   QDomImplementation::setInvalidDataPolicy( QDomImplementation::DropInvalidChars );
 
   // Instantiate the plugin directory so that providers are loaded
