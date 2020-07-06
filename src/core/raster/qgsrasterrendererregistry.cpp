@@ -106,6 +106,7 @@ QList< QgsRasterRendererRegistryEntry > QgsRasterRendererRegistry::entries() con
 
 QgsRasterRenderer *QgsRasterRendererRegistry::defaultRendererForDrawingStyle( QgsRaster::DrawingStyle drawingStyle, QgsRasterDataProvider *provider ) const
 {
+  std::cout << "QgsRasterRendererRegistry::defaultRendererForDrawingStyle 0" << std::endl;
   if ( !provider || provider->bandCount() < 1 )
   {
     return nullptr;
@@ -150,6 +151,7 @@ QgsRasterRenderer *QgsRasterRendererRegistry::defaultRendererForDrawingStyle( Qg
     }
     case QgsRaster::MultiBandColor:
     {
+      std::cout << "QgsRasterRendererRegistry::defaultRendererForDrawingStyle 1" << std::endl;
       QgsSettings s;
 
       int redBand = s.value( QStringLiteral( "/Raster/defaultRedBand" ), 1 ).toInt();
@@ -166,6 +168,20 @@ QgsRasterRenderer *QgsRasterRendererRegistry::defaultRendererForDrawingStyle( Qg
       if ( blueBand < 0 || blueBand > provider->bandCount() )
       {
         blueBand = -1;
+      }
+
+      if ( provider->hasDefaultBands() )
+      {
+        std::cout << "QgsRasterRendererRegistry::defaultRendererForDrawingStyle hasDefaultBands" << std::endl;
+        const QList<int> defaultBands = provider->defaultBands();
+
+        redBand = defaultBands[0];
+        greenBand = defaultBands[1];
+        blueBand = defaultBands[2];
+
+        std::cout << "red band: " << redBand << std::endl;
+        std::cout << "green band: " << greenBand << std::endl;
+        std::cout << "blue band: " << blueBand << std::endl;
       }
 
       renderer = new QgsMultiBandColorRenderer( provider, redBand, greenBand, blueBand );

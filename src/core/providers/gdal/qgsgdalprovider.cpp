@@ -132,6 +132,7 @@ QgsGdalProvider::QgsGdalProvider( const QString &uri, const QgsError &error )
   , mpLightRefCounter( new QAtomicInt( 1 ) )
   , mUpdate( false )
 {
+  std::cout << "QgsGdalProvider::QgsGdalProvider 0" << std::endl;
   mGeoTransform[0] = 0;
   mGeoTransform[1] = 1;
   mGeoTransform[2] = 0;
@@ -149,6 +150,7 @@ QgsGdalProvider::QgsGdalProvider( const QString &uri, const ProviderOptions &opt
   , mpLightRefCounter( new QAtomicInt( 1 ) )
   , mUpdate( update )
 {
+  std::cout << "QgsGdalProvider::QgsGdalProvider 1" << std::endl;
   mGeoTransform[0] = 0;
   mGeoTransform[1] = 1;
   mGeoTransform[2] = 0;
@@ -200,6 +202,7 @@ QgsGdalProvider::QgsGdalProvider( const QgsGdalProvider &other )
   , mUpdate( false )
 {
   mDriverName = other.mDriverName;
+  std::cout << "QgsGdalProvider::QgsGdalProvider 2: " << mDriverName.toStdString() << std::endl;
 
   // The JP2OPENJPEG driver might consume too much memory on large datasets
   // so make sure to really use a single one.
@@ -258,6 +261,7 @@ QgsGdalProvider::QgsGdalProvider( const QgsGdalProvider &other )
   mSubLayers = other.mSubLayers;
   mMaskBandExposedAsAlpha = other.mMaskBandExposedAsAlpha;
   mBandCount = other.mBandCount;
+  mDefaultBands = other.mDefaultBands;
   copyBaseSettings( other );
 }
 
@@ -2671,6 +2675,33 @@ void QgsGdalProvider::initBaseDataset()
     mGdalDataset = mGdalBaseDataset;
   }
 
+  std::cout << "QgsGdalProvider::initBaseDataset 0" << std::endl;
+  if ( mDriverName.compare( QStringLiteral("ENVI") ) == 0 )
+  {
+    QString item = GDALGetMetadataItem( mGdalBaseDataset, "default_bands", "ENVI" );
+
+    if ( !item.isEmpty() )
+    {
+      // default_bands = {<band R>, <band G>, <band B>}
+      const QStringList items = item.remove("{").remove("}").split(",");
+      const QVector<int> default_bands;
+      for ( const QString &item : items )
+      {
+        bool ok;
+        const int band = int(item.toFloat(&ok));
+
+        if (ok)
+          mDefaultBands << band;
+      }
+
+      // we should have 3 bands RGB
+      if (mDefaultBands.size() != 3)
+      {
+        mDefaultBands.clear();
+      }
+    }
+  }
+
   if ( !hasGeoTransform )
   {
     // Initialize the affine transform matrix
@@ -2972,6 +3003,16 @@ bool QgsGdalProvider::setNoDataValue( int bandNo, double noDataValue )
   mSrcHasNoDataValue[bandNo - 1] = true;
   mUseSrcNoDataValue[bandNo - 1] = true;
   return true;
+}
+
+bool QgsGdalProvider::hasDefaultBands() const
+{
+  return !mDefaultBands.isEmpty();
+}
+
+QList<int> QgsGdalProvider::defaultBands() const
+{
+  return mDefaultBands;
 }
 
 bool QgsGdalProvider::remove()

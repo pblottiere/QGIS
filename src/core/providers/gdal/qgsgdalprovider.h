@@ -192,6 +192,9 @@ class QgsGdalProvider : public QgsRasterDataProvider, QgsGdalProviderBase
 
     static QMap<QString, QString> supportedMimes();
 
+    bool hasDefaultBands() const override;
+    QList<int> defaultBands() const override;
+
     bool isEditable() const override;
     bool setEditable( bool enabled ) override;
     bool write( void *data, int band, int width, int height, int xOffset, int yOffset ) override;

@@ -578,6 +578,7 @@ void QgsRasterLayer::init()
 
 void QgsRasterLayer::setDataProvider( QString const &provider, const QgsDataProvider::ProviderOptions &options )
 {
+  std::cout << "QgsRasterLayer::setDataProvider 0" << std::endl;
   QgsDebugMsgLevel( QStringLiteral( "Entered" ), 4 );
   mValid = false; // assume the layer is invalid until we determine otherwise
 
@@ -716,6 +717,7 @@ void QgsRasterLayer::setDataProvider( QString const &provider, const QgsDataProv
   }
   else if ( mRasterType == Multiband )
   {
+    std::cout << "QgsRasterLayer::setDataProvider 1" << std::endl;
     setRendererForDrawingStyle( QgsRaster::MultiBandColor );  //sensible default
   }
   else                        //GrayOrUndefined

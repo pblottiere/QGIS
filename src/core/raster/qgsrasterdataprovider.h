@@ -425,6 +425,10 @@ class CORE_EXPORT QgsRasterDataProvider : public QgsDataProvider, public QgsRast
      */
     virtual bool isEditable() const { return false; }
 
+    virtual bool hasDefaultBands() const { return false; }
+
+    virtual QList<int> defaultBands() const { return mDefaultBands; }
+
     /**
      * Turns on/off editing mode of the provider. When in editing mode, it is possible
      * to overwrite data of the provider using writeBlock() calls.
@@ -608,6 +612,8 @@ class CORE_EXPORT QgsRasterDataProvider : public QgsDataProvider, public QgsRast
      *  for each band, indexed from 0
     */
     QList< QgsRasterRangeList > mUserNoDataValue;
+
+    QList<int> mDefaultBands;
 
     mutable QgsRectangle mExtent;
 
