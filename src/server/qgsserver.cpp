@@ -57,7 +57,6 @@
 QString *QgsServer::sConfigFilePath = nullptr;
 QgsCapabilitiesCache *QgsServer::sCapabilitiesCache = nullptr;
 QgsServerInterfaceImpl *QgsServer::sServerInterface = nullptr;
-QgsServerSharedMemory *QgsServer::sSharedMemory = nullptr;
 // Initialization must run once for all servers
 bool QgsServer::sInitialized = false;
 
@@ -75,6 +74,13 @@ QgsServer::QgsServer()
   }
   init();
   mConfigCache = QgsConfigCache::instance();
+
+  const QString shm { qgetenv( "QGIS_SERVER_SHM_KEY" ) };
+  if ( shm.isEmpty() )
+    return;
+
+  mSharedMemory.setKey( shm );
+  mSharedMemory.write();
 }
 
 QFileInfo QgsServer::defaultAdminSLD()
@@ -98,11 +104,12 @@ void QgsServer::setupNetworkAccessManager()
 
 void QgsServer::setupSharedMemorySegment()
 {
-  const QString shm { qgetenv( "QGIS_SERVER_SHM_KEY" ) };
-  if ( shm.isEmpty() )
-    return;
+  // const QString shm { qgetenv( "QGIS_SERVER_SHM_KEY" ) };
+  // if ( shm.isEmpty() )
+  //   return;
 
-  sSharedMemory = new QgsServerSharedMemory( shm, false );
+  // mSharedMemory.setKey(shm);
+  // mSharedMemory.write();
 
   // sSharedMemory = new QSharedMemory();
   // sSharedMemory->setKey(shm);
@@ -284,7 +291,7 @@ bool QgsServer::init()
   sSettings()->logSummary();
 
   setupNetworkAccessManager();
-  setupSharedMemorySegment();
+  // setupSharedMemorySegment();
   QDomImplementation::setInvalidDataPolicy( QDomImplementation::DropInvalidChars );
 
   // Instantiate the plugin directory so that providers are loaded

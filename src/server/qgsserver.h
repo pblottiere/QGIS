@@ -131,7 +131,6 @@ class SERVER_EXPORT QgsServer
     static QString *sConfigFilePath;
     static QgsCapabilitiesCache *sCapabilitiesCache;
     static QgsServerInterfaceImpl *sServerInterface;
-    static QgsServerSharedMemory *sSharedMemory;
     //! Initialization must run once for all servers
     static bool sInitialized;
 
@@ -140,6 +139,7 @@ class SERVER_EXPORT QgsServer
 
     //! cache
     QgsConfigCache *mConfigCache = nullptr;
+    QgsServerSharedMemory mSharedMemory;
 
     //! Initialize locale
     static void initLocale();

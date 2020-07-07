@@ -21,6 +21,7 @@
 
 #include <memory>
 #include <QString>
+#include <QSharedMemory>
 
 #include "qgis_server.h"
 #include "qgis_sip.h"
@@ -41,11 +42,14 @@ class SERVER_EXPORT QgsServerSharedMemory
         QString mPort;
     };
 
-    QgsServerSharedMemory( const QString &key, bool readOnly = true );
+    QgsServerSharedMemory( const QString &key = QString() );
 
     ~QgsServerSharedMemory();
 
-    bool write( const QgsServerSharedMemory::Settings &settings );
+    void setKey( const QString &key );
+
+    // bool write( const QgsServerSharedMemory::Settings &settings );
+    bool write();
 
     QgsServerSharedMemory::Settings read( const QString &uid ) const;
 
@@ -59,7 +63,7 @@ class SERVER_EXPORT QgsServerSharedMemory
       Settings settings[MAX_INSTANCES];
     };
 
-    std::unique_ptr<QSharedMemory> mSharedMemory;
+    QSharedMemory mSharedMemory;
 };
 
 #endif
