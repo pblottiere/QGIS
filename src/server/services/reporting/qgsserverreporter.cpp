@@ -1,11 +1,11 @@
 /***************************************************************************
-                           dummy.cpp
+                           qgsserverreporter.cpp
 
-  Sample service implementation
+  Reporter
   -----------------------------
-  begin                : 2016-12-13
-  copyright            : (C) 2016 by David Marteau
-  email                : david dot marteau at 3liz dot com
+  begin                : 2020-10-15
+  copyright            : (C) 2020 by Paul Blottiere
+  email                : blottiere.paul@gmail.com
  ***************************************************************************/
 
 /***************************************************************************
@@ -20,8 +20,14 @@
 #include <QDebug>
 #include <iostream>
 
+#include "qgsconfigcache.h"
 #include "qgsserverreporter.h"
 
+
+QgsServerReporting::QgsServerReporting( QgsServerInterface *serverIface )
+  : mServerIface( serverIface )
+{
+}
 
 void QgsServerReporting::run()
 {
@@ -29,14 +35,20 @@ void QgsServerReporting::run()
   mTimer->setSingleShot( false );
   mTimer->setInterval( 1000 );
 
-  QgsServerReporter reporter;
+  QgsServerReporter reporter( mServerIface );
   connect( mTimer, &QTimer::timeout, &reporter, &QgsServerReporter::report );
   mTimer->start( 1000 );
 
   exec();
 }
 
+QgsServerReporter::QgsServerReporter( QgsServerInterface *serverIface )
+  : mServerIface( serverIface )
+{
+}
+
 void QgsServerReporter::report()
 {
-  std::cout << "REPORT!!!!" << std::endl;
+  const QList<QString> projects = QgsConfigCache::instance()->projects();
+  const QgsServerSettings *settings = mServerIface->serverSettings();
 }

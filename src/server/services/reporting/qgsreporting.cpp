@@ -24,18 +24,16 @@
 class QgsReportingModule: public QgsServiceModule
 {
   public:
-    QgsReportingModule()
-    {
-      QObject::connect( &mReporting, &QgsServerReporting::finished, &mReporting, &QObject::deleteLater );
-      mReporting.start();
-    }
-
     void registerSelf( QgsServiceRegistry &registry, QgsServerInterface *serverIface ) override
     {
+      mReporting = new QgsServerReporting( serverIface );
+
+      QObject::connect( mReporting, &QgsServerReporting::finished, mReporting, &QObject::deleteLater );
+      mReporting->start();
     }
 
   private:
-    QgsServerReporting mReporting;
+    QgsServerReporting *mReporting = nullptr;
 };
 
 // Entry points

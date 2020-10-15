@@ -21,6 +21,7 @@
 #include "qgsstorebadlayerinfo.h"
 #include "qgsserverprojectutils.h"
 
+#include <QMutexLocker>
 #include <QFile>
 
 QgsConfigCache *QgsConfigCache::instance()
@@ -35,12 +36,19 @@ QgsConfigCache *QgsConfigCache::instance()
 
 QgsConfigCache::QgsConfigCache()
 {
+  mMutex.reset( new QMutex( QMutex::Recursive ) );
   QObject::connect( &mFileSystemWatcher, &QFileSystemWatcher::fileChanged, this, &QgsConfigCache::removeChangedEntry );
 }
 
+QList<QString> QgsConfigCache::projects() const
+{
+  QMutexLocker locker( mMutex.get() );
+  return mProjectCache.keys();
+}
 
 const QgsProject *QgsConfigCache::project( const QString &path, QgsServerSettings *settings )
 {
+  QMutexLocker locker( mMutex.get() );
   if ( ! mProjectCache[ path ] )
   {
     std::unique_ptr<QgsProject> prj( new QgsProject() );
@@ -157,6 +165,7 @@ QDomDocument *QgsConfigCache::xmlDocument( const QString &filePath )
 
 void QgsConfigCache::removeChangedEntry( const QString &path )
 {
+  QMutexLocker locker( mMutex.get() );
   mProjectCache.remove( path );
 
   //xml document must be removed last, as other config cache destructors may require it

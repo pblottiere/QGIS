@@ -36,6 +36,8 @@ Removes an entry from cache.
 :param path: The path of the project
 %End
 
+    QList<QString> projects() const;
+
     const QgsProject *project( const QString &path, QgsServerSettings *settings = 0 );
 %Docstring
 If the project is not cached yet, then the project is read from the

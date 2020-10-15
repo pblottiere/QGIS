@@ -20,6 +20,7 @@
 
 #include "qgsconfig.h"
 
+#include <QMutex>
 #include <QCache>
 #include <QFileSystemWatcher>
 #include <QObject>
@@ -51,6 +52,8 @@ class SERVER_EXPORT QgsConfigCache : public QObject
      */
     void removeEntry( const QString &path );
 
+    QList<QString> projects() const;
+
     /**
      * If the project is not cached yet, then the project is read from the
      * path. If the project is not available, then NULLPTR is returned.
@@ -76,6 +79,8 @@ class SERVER_EXPORT QgsConfigCache : public QObject
 
     QCache<QString, QDomDocument> mXmlDocumentCache;
     QCache<QString, QgsProject> mProjectCache;
+
+    std::unique_ptr<QMutex> mMutex;
 
   private slots:
     //! Removes changed entry from this cache
