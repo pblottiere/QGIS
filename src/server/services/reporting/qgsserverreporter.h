@@ -17,8 +17,10 @@
  *                                                                         *
  ***************************************************************************/
 
+#include <QUrl>
 #include <QTimer>
 #include <QThread>
+#include <QNetworkAccessManager>
 
 #include "qgis_server.h"
 #include "qgsserverinterface.h"
@@ -26,6 +28,7 @@
 #ifndef QGSREPORTER
 #define QGSREPORTER
 
+class QgsServerReporter;
 
 class SERVER_EXPORT QgsServerReporting : public QThread
 {
@@ -36,8 +39,8 @@ class SERVER_EXPORT QgsServerReporting : public QThread
     void run() override;
 
   private:
-    QgsServerInterface *mServerIface = nullptr;
     QTimer *mTimer = nullptr;
+    QgsServerInterface *mServerIface = nullptr;
 };
 
 
@@ -51,6 +54,8 @@ class SERVER_EXPORT QgsServerReporter : public QObject
     void report();
 
   private:
+    QUrl mUrl;
+    QNetworkAccessManager *mNam = nullptr;
     QgsServerInterface *mServerIface = nullptr;
 };
 

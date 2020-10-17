@@ -17,9 +17,14 @@
  *                                                                         *
  ***************************************************************************/
 
-#include <QDebug>
 #include <iostream>
 
+#include <QNetworkRequest>
+
+#include "inja/inja.hpp"
+#include "nlohmann/json_fwd.hpp"
+
+#include "qgsjsonutils.h"
 #include "qgsconfigcache.h"
 #include "qgsserverreporter.h"
 
@@ -43,12 +48,32 @@ void QgsServerReporting::run()
 }
 
 QgsServerReporter::QgsServerReporter( QgsServerInterface *serverIface )
-  : mServerIface( serverIface )
+  : mUrl( "http://localhost:8989" )
+  , mServerIface( serverIface )
 {
+  mNam = new QNetworkAccessManager();
 }
 
 void QgsServerReporter::report()
 {
   const QList<QString> projects = QgsConfigCache::instance()->projects();
+  json json_projects = json::array();
+  for ( const QString &project : projects )
+  {
+    json_projects.push_back( project.toStdString() );
+  }
+
   const QgsServerSettings *settings = mServerIface->serverSettings();
+
+  json data;
+  data["projects"] = json_projects;
+  data["settings"]["max"] = settings->apiWfs3MaxLimit();
+
+  const std::string data_str = data.dump();
+  const QByteArray data_json( data_str.data(), int( data_str.size() ) );
+
+  QNetworkRequest request( mUrl );
+  request.setHeader( QNetworkRequest::ContentTypeHeader,
+                     QStringLiteral( "application/json" ) );
+  mNam->post( request, data_json );
 }

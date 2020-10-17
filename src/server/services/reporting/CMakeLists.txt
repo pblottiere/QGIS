@@ -3,6 +3,8 @@
 # Files
 
 SET (reporting_SRCS
+  ${CMAKE_SOURCE_DIR}/external/inja/inja.hpp
+  ${CMAKE_SOURCE_DIR}/external/nlohmann/json.hpp
   qgsreporting.cpp
   qgsserverreporter.cpp
 )
