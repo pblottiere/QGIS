@@ -111,6 +111,10 @@ Executes a request by passing the given ``context`` to the API handlers.
 Returns the server interface
 %End
 
+    bool registerPlugin( QgsServerPlugin *plugin /Transfer/ );
+
+    QgsServerPlugin *plugin() /KeepReference/;
+
 };
 
 

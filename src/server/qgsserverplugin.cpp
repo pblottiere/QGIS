@@ -1,11 +1,9 @@
 /***************************************************************************
-                          qgsserverapi.cpp
-
-  Class defining the service interface for QGIS server APIs.
-  -------------------
-  begin                : 2019-04-16
-  copyright            : (C) 2019 by Alessandro Pasotti
-  email                : elpaso at itopen dot it
+                              qgsserverplugins.h
+                              -------------------------
+  begin                : August 28, 2014
+  copyright            : (C) 2014 by Alessandro Pasotti - ItOpen
+  email                : apasotti at gmail dot com
  ***************************************************************************/
 
 /***************************************************************************
@@ -17,32 +15,15 @@
  *                                                                         *
  ***************************************************************************/
 
+#include <iostream>
+#include "qgsserverplugin.h"
 
-
-#include "qgsserverapi.h"
-
-QgsServerApi::QgsServerApi( QgsServerInterface *serverIface )
-  : mServerIface( serverIface )
+QgsServerPlugin::QgsServerPlugin( const QString &name )
+  : mName( name )
 {
 }
 
-bool QgsServerApi::accept( const QUrl &url ) const
+QVariant QgsServerPlugin::run( const QString &, const QVariant &data ) const
 {
-  return url.path().contains( rootPath() );
-}
-
-QgsServerInterface *QgsServerApi::serverIface() const
-{
-  return mServerIface;
-}
-
-bool QgsServerApi::registerPlugin( QgsServerPlugin *plugin )
-{
-  mPlugin = plugin;
-  return true;
-}
-
-QgsServerPlugin *QgsServerApi::plugin()
-{
-  return mPlugin;
-}
+  return QVariant();
+};

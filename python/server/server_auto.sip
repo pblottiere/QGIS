@@ -44,3 +44,6 @@
 %If ( HAVE_SERVER_PYTHON_PLUGINS )
 %Include auto_generated/qgsservercachemanager.sip
 %End
+%If ( HAVE_SERVER_PYTHON_PLUGINS )
+%Include auto_generated/qgsserverplugin.sip
+%End

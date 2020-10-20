@@ -21,13 +21,31 @@
 #include "qgsserverreporter.h"
 
 // Module
+class QgsReportingApi: public QgsServerApi
+{
+  public:
+    QgsReportingApi( QgsServerInterface *iface )
+      : QgsServerApi( iface )
+    {
+    }
+
+    void executeRequest( const QgsServerApiContext & ) const {};
+
+    const QString name() const { return QString( "reporting" ); };
+    const QString description() const { return QString(); };
+    const QString rootPath() const { return QString( "/reporting" ); };
+
+};
+
 class QgsReportingModule: public QgsServiceModule
 {
   public:
     void registerSelf( QgsServiceRegistry &registry, QgsServerInterface *serverIface ) override
     {
-      mReporting = new QgsServerReporting( serverIface );
+      QgsReportingApi *api = new QgsReportingApi( serverIface );
+      registry.registerApi( api );
 
+      mReporting = new QgsServerReporting( serverIface );
       QObject::connect( mReporting, &QgsServerReporting::finished, mReporting, &QObject::deleteLater );
       mReporting->start();
     }

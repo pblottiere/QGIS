@@ -85,6 +85,9 @@ Register an access control filter
 Gets the registered access control filters
 %End
 
+    virtual void registerPlugin( const QString &apiName, QgsServerPlugin *plugin /Transfer/ ) = 0;
+    virtual QgsServerPlugin *plugin() const = 0;
+
     virtual void registerServerCache( QgsServerCacheFilter *serverCache /Transfer/, int priority = 0 ) = 0;
 %Docstring
 Register a server cache filter

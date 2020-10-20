@@ -32,6 +32,7 @@
 #include "qgsaccesscontrol.h"
 #include "qgsservercachefilter.h"
 #include "qgsservercachemanager.h"
+#include "qgsserverplugin.h"
 #else
 class QgsAccessControl;
 class QgsAccessControlFilter;
@@ -120,6 +121,9 @@ class SERVER_EXPORT QgsServerInterface
 
     //! Gets the registered access control filters
     virtual QgsAccessControl *accessControls() const = 0;
+
+    virtual void registerPlugin( const QString &apiName, QgsServerPlugin *plugin SIP_TRANSFER ) = 0;
+    virtual QgsServerPlugin *plugin() const = 0;
 
     /**
      * Register a server cache filter

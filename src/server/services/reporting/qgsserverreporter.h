@@ -19,6 +19,7 @@
 
 #include <QUrl>
 #include <QTimer>
+#include <QMutex>
 #include <QThread>
 #include <QNetworkAccessManager>
 
@@ -55,6 +56,7 @@ class SERVER_EXPORT QgsServerReporter : public QObject
 
   private:
     QUrl mUrl;
+    std::unique_ptr<QMutex> mMutex;
     QNetworkAccessManager *mNam = nullptr;
     QgsServerInterface *mServerIface = nullptr;
 };

@@ -73,6 +73,7 @@ SET (QGIS_SERVER_HDRS
 
 IF (WITH_SERVER_PLUGINS)
   SET(QGIS_SERVER_SRCS ${QGIS_SERVER_SRCS}
+    qgsserverplugin.cpp
     qgsserverplugins.cpp
     qgsserverfilter.cpp
     qgsaccesscontrolfilter.cpp

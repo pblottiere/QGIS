@@ -19,6 +19,7 @@
 
 #include "qgsserverinterfaceimpl.h"
 #include "qgsconfigcache.h"
+#include "qgsserverapi.h"
 
 //! Constructor
 QgsServerInterfaceImpl::QgsServerInterfaceImpl( QgsCapabilitiesCache *capCache, QgsServiceRegistry *srvRegistry, QgsServerSettings *settings )
@@ -82,6 +83,16 @@ void QgsServerInterfaceImpl::registerAccessControl( QgsAccessControlFilter *acce
   Q_UNUSED( accessControl )
   Q_UNUSED( priority )
 #endif
+}
+
+QgsServerPlugin *QgsServerInterfaceImpl::plugin() const
+{
+  return mPlugin;
+}
+
+void QgsServerInterfaceImpl::registerPlugin( const QString &apiName, QgsServerPlugin *plugin )
+{
+  mServiceRegistry->getApi( apiName )->registerPlugin( plugin );
 }
 
 //! Register a new access control filter

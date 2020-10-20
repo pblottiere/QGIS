@@ -1,0 +1,43 @@
+/************************************************************************
+ * This file has been generated automatically from                      *
+ *                                                                      *
+ * src/server/qgsserverplugin.h                                         *
+ *                                                                      *
+ * Do not edit manually ! Edit header and run scripts/sipify.pl again   *
+ ************************************************************************/
+
+
+
+
+
+
+class QgsServerPlugin
+{
+%Docstring
+Initializes Python server plugins and stores a list of server plugin names
+
+.. versionadded:: 2.8
+%End
+
+%TypeHeaderCode
+#include "qgsserverplugin.h"
+%End
+  public:
+
+    QgsServerPlugin( const QString &name );
+%Docstring
+Default constructor for QgsServerPlugin.
+%End
+    virtual ~QgsServerPlugin();
+
+    virtual QVariant run( const QString &action, const QVariant &data ) const;
+
+};
+
+/************************************************************************
+ * This file has been generated automatically from                      *
+ *                                                                      *
+ * src/server/qgsserverplugin.h                                         *
+ *                                                                      *
+ * Do not edit manually ! Edit header and run scripts/sipify.pl again   *
+ ************************************************************************/

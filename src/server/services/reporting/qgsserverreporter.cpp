@@ -27,6 +27,7 @@
 #include "qgsjsonutils.h"
 #include "qgsconfigcache.h"
 #include "qgsserverreporter.h"
+#include "qgsserverapi.h"
 
 
 QgsServerReporting::QgsServerReporting( QgsServerInterface *serverIface )
@@ -38,11 +39,11 @@ void QgsServerReporting::run()
 {
   mTimer = new QTimer();
   mTimer->setSingleShot( false );
-  mTimer->setInterval( 1000 );
+  mTimer->setInterval( 3000 );
 
   QgsServerReporter reporter( mServerIface );
   connect( mTimer, &QTimer::timeout, &reporter, &QgsServerReporter::report );
-  mTimer->start( 1000 );
+  mTimer->start( 3000 );
 
   exec();
 }
@@ -52,10 +53,12 @@ QgsServerReporter::QgsServerReporter( QgsServerInterface *serverIface )
   , mServerIface( serverIface )
 {
   mNam = new QNetworkAccessManager();
+  mMutex.reset( new QMutex( QMutex::Recursive ) );
 }
 
 void QgsServerReporter::report()
 {
+  QMutexLocker locker( mMutex.get() );
   const QList<QString> projects = QgsConfigCache::instance()->projects();
   json json_projects = json::array();
   for ( const QString &project : projects )
@@ -69,8 +72,17 @@ void QgsServerReporter::report()
   data["projects"] = json_projects;
   data["settings"]["max"] = settings->apiWfs3MaxLimit();
 
-  const std::string data_str = data.dump();
-  const QByteArray data_json( data_str.data(), int( data_str.size() ) );
+  QString data_str = QString::fromStdString( data.dump() );
+
+  // call plugin
+  QgsServerApi *api = mServerIface->serviceRegistry()->getApi( "reporting" );
+  if ( api )
+  {
+    const QVariant d = api->plugin()->run( "coucou", QVariant( data_str ) );
+    data_str = d.toString();
+  }
+
+  const QByteArray data_json( data_str.toUtf8(), int( data_str.size() ) );
 
   QNetworkRequest request( mUrl );
   request.setHeader( QNetworkRequest::ContentTypeHeader,

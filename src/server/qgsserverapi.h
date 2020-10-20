@@ -26,6 +26,7 @@
 #include <QRegularExpression>
 #include "qgsserverexception.h"
 #include "qgsserverrequest.h"
+#include "qgsserverplugin.h"
 
 class QgsServerResponse;
 class QgsProject;
@@ -125,9 +126,14 @@ class SERVER_EXPORT QgsServerApi
      */
     QgsServerInterface *serverIface() const;
 
+    bool registerPlugin( QgsServerPlugin *plugin SIP_TRANSFER );
+
+    QgsServerPlugin *plugin() SIP_KEEPREFERENCE;
+
   private:
 
     QgsServerInterface *mServerIface = nullptr;
+    QgsServerPlugin *mPlugin = nullptr;
 };
 
 

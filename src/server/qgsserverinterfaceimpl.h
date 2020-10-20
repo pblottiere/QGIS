@@ -52,6 +52,9 @@ class SERVER_EXPORT QgsServerInterfaceImpl : public QgsServerInterface
     void registerFilter( QgsServerFilter *filter, int priority = 0 ) override;
     QgsServerFiltersMap filters() override { return mFilters; }
 
+    void registerPlugin( const QString &apiName, QgsServerPlugin *plugin ) override;
+    QgsServerPlugin *plugin() const override;
+
     //! Register an access control filter
     void registerAccessControl( QgsAccessControlFilter *accessControl, int priority = 0 ) override;
 
@@ -97,6 +100,7 @@ class SERVER_EXPORT QgsServerInterfaceImpl : public QgsServerInterface
     QgsRequestHandler *mRequestHandler = nullptr;
     QgsServiceRegistry *mServiceRegistry = nullptr;
     QgsServerSettings *mServerSettings = nullptr;
+    QgsServerPlugin *mPlugin = nullptr;
 };
 
 #endif // QGSSERVERINTERFACEIMPL_H
