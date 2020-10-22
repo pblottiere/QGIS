@@ -24,6 +24,7 @@
 #include "inja/inja.hpp"
 #include "nlohmann/json_fwd.hpp"
 
+#include "qgsserverplugins.h"
 #include "qgsjsonutils.h"
 #include "qgsconfigcache.h"
 #include "qgsserverreporter.h"
@@ -59,18 +60,28 @@ QgsServerReporter::QgsServerReporter( QgsServerInterface *serverIface )
 void QgsServerReporter::report()
 {
   QMutexLocker locker( mMutex.get() );
+
+  json data;
   const QList<QString> projects = QgsConfigCache::instance()->projects();
   json json_projects = json::array();
   for ( const QString &project : projects )
   {
     json_projects.push_back( project.toStdString() );
   }
+  data["projects"] = json_projects;
+
+  data["about"]["QT_VERSION"] = QT_VERSION_STR;
+  data["about"]["PROJ_VERSION"] = PROJ_VERSION_MAJOR;
+  data["about"]["QGIS_VERSION"] = VERSION;
 
   const QgsServerSettings *settings = mServerIface->serverSettings();
+  data["settings"]["QGIS_SERVER_MAX_THREADS"] = settings->maxThreads();
+  data["settings"]["QGIS_SERVER_PARALLEL_RENDERING"] = settings->parallelRendering();
+  data["settings"]["QGIS_SERVER_CACHE_SIZE"] = settings->cacheSize();
+  data["settings"]["QGIS_SERVER_API_WFS3_MAX_LIMIT"] = settings->apiWfs3MaxLimit();
 
-  json data;
-  data["projects"] = json_projects;
-  data["settings"]["max"] = settings->apiWfs3MaxLimit();
+  json json_plugins = json::array();
+  data["plugins"] = json_plugins;
 
   QString data_str = QString::fromStdString( data.dump() );
 
