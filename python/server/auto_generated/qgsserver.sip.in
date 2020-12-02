@@ -27,6 +27,8 @@ The QgsServer class provides OGC web services.
 Creates the server instance
 %End
 
+    ~QgsServer();
+
     void putenv( const QString &var, const QString &val );
 %Docstring
 Set environment variable

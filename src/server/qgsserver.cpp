@@ -38,6 +38,7 @@
 #include "qgsserverapicontext.h"
 #include "qgsserverparameters.h"
 #include "qgsapplication.h"
+#include "qgsruntimeprofiler.h"
 
 #include <QDomDocument>
 #include <QNetworkDiskCache>
@@ -74,6 +75,13 @@ QgsServer::QgsServer()
   }
   init();
   mConfigCache = QgsConfigCache::instance();
+}
+
+QgsServer::~QgsServer()
+{
+  QStringList sl = QgsApplication::profiler()->childGroups( QString(), QStringLiteral( "server" ) );
+  for ( const QString &s : sl )
+    std::cout << s.toStdString() << ": " << QgsApplication::profiler()->profileTime( s, QStringLiteral( "server" ) ) << std::endl;
 }
 
 QFileInfo QgsServer::defaultAdminSLD()
@@ -372,7 +380,9 @@ void QgsServer::handleRequest( QgsServerRequest &request, QgsServerResponse &res
         // load the project if needed and not empty
         if ( ! configFilePath.isEmpty() )
         {
+          QgsApplication::profiler()->start( QStringLiteral( "read project" ), QStringLiteral( "server" ) );
           project = mConfigCache->project( configFilePath, sServerInterface->serverSettings() );
+          QgsApplication::profiler()->end( QStringLiteral( "server" ) );
         }
       }
 
@@ -419,7 +429,9 @@ void QgsServer::handleRequest( QgsServerRequest &request, QgsServerResponse &res
         QgsService *service = sServiceRegistry->getService( params.service(), params.version() );
         if ( service )
         {
+          QgsApplication::profiler()->start( QStringLiteral( "execute request" ), QStringLiteral( "server" ) );
           service->executeRequest( request, responseDecorator, project );
+          QgsApplication::profiler()->end( QStringLiteral( "server" ) );
         }
         else
         {

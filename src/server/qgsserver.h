@@ -54,6 +54,8 @@ class SERVER_EXPORT QgsServer
      */
     QgsServer();
 
+    ~QgsServer();
+
     /**
      * Set environment variable
      * \param var environment variable name
