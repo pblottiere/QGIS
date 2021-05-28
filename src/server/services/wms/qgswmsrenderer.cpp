@@ -1176,6 +1176,10 @@ namespace QgsWms
     {
       mapExtent.invert();
     }
+    else if ( QgsProjectVersion( 1, 3, 0 ) > mWmsParameters.versionAsNumber() && outputCRS.isGeographic() )
+    {
+      mapExtent.invert();
+    }
 
     mapSettings.setExtent( mapExtent );
 
