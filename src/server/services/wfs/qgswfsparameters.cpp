@@ -283,7 +283,7 @@ namespace QgsWfs
 
   QStringList QgsWfsParameters::propertyNames() const
   {
-    return mWfsParameters[ QgsWfsParameter::PROPERTYNAME ].toStringListWithExp();
+    return mWfsParameters[ QgsWfsParameter::PROPERTYNAME ].toStringList();
   }
 
   QString QgsWfsParameters::maxFeatures() const
