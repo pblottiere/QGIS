@@ -49,6 +49,7 @@ SET(QGIS_SERVER_SRCS
   qgsfeaturefilter.cpp
   qgsstorebadlayerinfo.cpp
   qgsserverquerystringparameter.cpp
+  monitor.cpp
 )
 
 SET (QGIS_SERVER_HDRS
@@ -65,6 +66,7 @@ SET (QGIS_SERVER_HDRS
   qgsserverquerystringparameter.h
   qgsserversettings.h
   qgsservicemodule.h
+  monitor.h
 )
 
 

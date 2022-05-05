@@ -29,6 +29,78 @@
 #include <QFontDatabase>
 #include <QString>
 
+#include "monitor.h"
+
+// class Worker : public QObject
+// {
+//     Q_OBJECT
+//
+// public slots:
+//     void doWork(const QString &parameter) {
+//         QString result;
+//         /* ... here is the expensive or blocking operation ... */
+//         emit resultReady(result);
+//     }
+//
+// signals:
+//     void resultReady(const QString &result);
+// };
+//
+// class Controller : public QObject
+// {
+//     Q_OBJECT
+//     QThread workerThread;
+// public:
+//     Controller() {
+//         Worker *worker = new Worker;
+//         worker->moveToThread(&workerThread);
+//         connect(&workerThread, &QThread::finished, worker, &QObject::deleteLater);
+//         connect(this, &Controller::operate, worker, &Worker::doWork);
+//         connect(worker, &Worker::resultReady, this, &Controller::handleResults);
+//         workerThread.start();
+//     }
+//     ~Controller() {
+//         workerThread.quit();
+//         workerThread.wait();
+//     }
+// public slots:
+//     void handleResults(const QString &);
+// signals:
+//     void operate(const QString &);
+// };
+
+// class WorkerThread : public QThread
+// {
+//     Q_OBJECT
+//     void run() override {
+//         QString result;
+//         /* ... here is the expensive or blocking operation ... */
+//         emit resultReady(result);
+//     }
+// signals:
+//     void resultReady(const QString &s);
+// };
+//
+// class MyObject : public QObject
+// {
+//   Q_OBJECT
+//
+//   public:
+//     void startWorkInAThread()
+//     {
+//       mThread = new WorkerThread();
+//       connect(mThread, &WorkerThread::resultReady, this, &MyObject::handleResults);
+//       connect(mThread, &WorkerThread::finished, mThread, &QObject::deleteLater);
+//       mThread->start();
+//     }
+//
+//   public slots:
+//     void handleResults(const QString &) { std::cout << "COUCOU" << std::endl; }
+//
+//   WorkerThread *mThread = nullptr;
+//
+// };
+
 int fcgi_accept()
 {
 #ifdef Q_OS_WIN
@@ -62,6 +134,18 @@ int main( int argc, char *argv[] )
   }
   // since version 3.0 QgsServer now needs a qApp so initialize QgsApplication
   QgsApplication app( argc, argv, withDisplay, QString(), QStringLiteral( "server" ) );
+
+  std::cout << "MAIN THREAD" << std::endl;
+  QgsApplication::setMaxThreads( 10 );
+  std::cout << QgsApplication::maxThreads() << std::endl;
+  std::cout << QThread::currentThreadId() << std::endl;
+
+  // QThread* thread = new QThread;
+  // Worker* worker = new Worker();
+  // worker->moveToThread(thread);
+  // QObject::connect(thread, &QThread::started, worker, &Worker::process);
+  // thread->start();
+
   QgsServer server;
 #ifdef HAVE_SERVER_PYTHON_PLUGINS
   server.initPython();
@@ -73,9 +157,14 @@ int main( int argc, char *argv[] )
   QFontDatabase fontDB;
 #endif
 
+
   // Starts FCGI loop
   while ( fcgi_accept() >= 0 )
   {
+    std::cout << "FCGI_ACCEPT THREAD" << std::endl;
+    // object.log();
+    std::cout << QThread::currentThreadId() << std::endl;
+
     QgsFcgiServerRequest  request;
     QgsFcgiServerResponse response( request.method() );
     if ( ! request.hasError() )

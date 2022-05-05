@@ -38,6 +38,8 @@
 #include "qgis_server.h"
 #include "qgsserverrequest.h"
 
+#include "monitor.h"
+
 class QgsServerResponse;
 class QgsProject;
 
@@ -136,6 +138,7 @@ class SERVER_EXPORT QgsServer
 
     //! cache
     QgsConfigCache *mConfigCache = nullptr;
+    QgsServerMonitor *mMonitor = nullptr;
 
     //! Initialize locale
     static void initLocale();

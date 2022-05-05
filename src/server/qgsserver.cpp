@@ -49,7 +49,6 @@
 #include <cstdlib>
 
 
-
 // Server status static initializers.
 // Default values are for C++, SIP bindings will override their
 // options in in init()
@@ -74,6 +73,9 @@ QgsServer::QgsServer()
   }
   init();
   mConfigCache = QgsConfigCache::instance();
+
+  // mMonitor = new QgsServerMonitor();
+  // mMonitor->init();
 }
 
 QFileInfo QgsServer::defaultAdminSLD()
