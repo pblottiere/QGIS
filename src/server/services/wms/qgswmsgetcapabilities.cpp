@@ -1679,6 +1679,13 @@ namespace QgsWms
         BBox.invert();
       }
 
+      std::cout << "================================="
+                std::cout << "minx: " << minx << std::endl;
+      std::cout << "maxx: " << maxx << std::endl;
+      std::cout << "miny: " << miny << std::endl;
+      std::cout << "maxy: " << maxy << std::endl;
+      std::cout << "authid: " << layerCrs.authid() << std::endl;
+
       //get project crs
       QgsCoordinateTransform t( layerCrs, project->crs(), project );
 

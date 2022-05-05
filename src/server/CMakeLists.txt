@@ -49,6 +49,7 @@ set(QGIS_SERVER_SRCS
   qgsfeaturefilter.cpp
   qgsstorebadlayerinfo.cpp
   qgsserverquerystringparameter.cpp
+  qgsserverprofiler.cpp
 )
 
 set (QGIS_SERVER_HDRS

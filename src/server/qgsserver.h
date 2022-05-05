@@ -37,6 +37,7 @@
 #include "qgsserverinterfaceimpl.h"
 #include "qgis_server.h"
 #include "qgsserverrequest.h"
+#include "qgsserverprofiler.h"
 
 class QgsServerResponse;
 class QgsProject;
@@ -141,5 +142,7 @@ class SERVER_EXPORT QgsServer
 
     //! Initialize locale
     static void initLocale();
+
+    QgsServerProfiling mProfiling;
 };
 #endif // QGSSERVER_H

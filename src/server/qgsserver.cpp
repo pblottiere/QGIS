@@ -38,7 +38,7 @@
 #include "qgsserverapicontext.h"
 #include "qgsserverparameters.h"
 #include "qgsapplication.h"
-#include "qgsruntimeprofiler.h"
+#include "qgsserverprofiler.h"
 
 #include <QDomDocument>
 #include <QNetworkDiskCache>
@@ -79,9 +79,28 @@ QgsServer::QgsServer()
 
 QgsServer::~QgsServer()
 {
-  QStringList sl = QgsApplication::profiler()->childGroups( QString(), QStringLiteral( "server" ) );
-  for ( const QString &s : sl )
-    std::cout << s.toStdString() << ": " << QgsApplication::profiler()->profileTime( s, QStringLiteral( "server" ) ) << std::endl;
+  mProfiling.dump();
+  // QStringList serverGroups;
+  // std::cout << "===========" << std::endl;
+  // for ( const QString &group: QgsApplication::profiler()->groups() )
+  // {
+  //   std::cout << group.toStdString() << std::endl;
+  //   if ( group.contains( "server" ) )
+  //   {
+  //     serverGroups << group;
+  //   }
+  // }
+
+  // std::cout << "===========" << std::endl;
+  // for ( const QString &group : serverGroups )
+  // {
+  //   std::cout << group.toStdString() << std::endl;
+  // }
+
+  // for ( const QString &s : QgsApplication::profiler()->childGroups( QString(), "projectload" ) )
+  // {
+  //   std::cout << s.toStdString() << " : " << QgsApplication::profiler()->profileTime( s, "projectload" ) << std::endl;
+  // }
 }
 
 QFileInfo QgsServer::defaultAdminSLD()
@@ -304,6 +323,8 @@ void QgsServer::putenv( const QString &var, const QString &val )
 
 void QgsServer::handleRequest( QgsServerRequest &request, QgsServerResponse &response, const QgsProject *project )
 {
+  QgsServerProfilingUnit unit( mProfiling );
+
   Qgis::MessageLevel logLevel = QgsServerLogger::instance()->logLevel();
   QElapsedTimer time; //used for measuring request time if loglevel < 1
 
@@ -380,9 +401,9 @@ void QgsServer::handleRequest( QgsServerRequest &request, QgsServerResponse &res
         // load the project if needed and not empty
         if ( ! configFilePath.isEmpty() )
         {
-          QgsApplication::profiler()->start( QStringLiteral( "read project" ), QStringLiteral( "server" ) );
+          QgsApplication::profiler()->start( "Read project", "server" );
           project = mConfigCache->project( configFilePath, sServerInterface->serverSettings() );
-          QgsApplication::profiler()->end( QStringLiteral( "server" ) );
+          QgsApplication::profiler()->end( "server" );
         }
       }
 
@@ -416,7 +437,9 @@ void QgsServer::handleRequest( QgsServerRequest &request, QgsServerResponse &res
         // Project is mandatory for OWS at this point
         if ( ! project )
         {
+          std::cout << "PROJECT FILE ERROR" << std::endl;
           throw QgsServerException( QStringLiteral( "Project file error. For OWS services: please provide a SERVICE and a MAP parameter pointing to a valid QGIS project file" ) );
+          std::cout << "PROJECT FILE ERROR END!!!!" << std::endl;
         }
 
         if ( ! params.fileName().isEmpty() )
@@ -429,9 +452,9 @@ void QgsServer::handleRequest( QgsServerRequest &request, QgsServerResponse &res
         QgsService *service = sServiceRegistry->getService( params.service(), params.version() );
         if ( service )
         {
-          QgsApplication::profiler()->start( QStringLiteral( "execute request" ), QStringLiteral( "server" ) );
+          QgsApplication::profiler()->start( "Execute request", "server" );
           service->executeRequest( request, responseDecorator, project );
-          QgsApplication::profiler()->end( QStringLiteral( "server" ) );
+          QgsApplication::profiler()->end( "server" );
         }
         else
         {
